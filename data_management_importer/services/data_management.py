@@ -15,13 +15,14 @@ def get_update_query_info(fields_vals: dict):
 
 
 class DataManagement:
-    def __init__(self, custom_database=None):
-        if custom_database:
-            self.db = custom_database
-        else:
-            self.db = MYSQLConnection()
+    def __init__(self):
+        self.db = MYSQLConnection()
         self.database = self.db.get_db_connection()
         self.spectrack = SpecTrack()
+
+    def reconnect(self):
+        self.db = MYSQLConnection()
+        self.database = self.db.get_db_connection()
 
     def get_data_management_tables(self):
         data = self.db.get_data("SHOW TABLES;")
