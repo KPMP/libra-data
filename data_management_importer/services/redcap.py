@@ -137,6 +137,18 @@ class Redcap:
                     if participant["redcap_protocol"] == "KPMP_HRT":
                         participant["redcap_tissue_type"] = "Healthy Reference"
 
+                    if participant["redcap_protocol"] == "KPMP_HRT":
+                        if participant['redcap_id'][0:3] == '163':
+                            participant['redcap_sample_type'] = 'Intra-operative Biopsy'
+
+                        if participant['redcap_id'][0:3] == '164':
+                            participant['redcap_sample_type'] = 'Transplant Pre-perfusion Biopsy'
+
+                        if participant['redcap_id'][0:3] == '165':
+                            participant['redcap_sample_type'] = 'Transplant Pre-perfusion Biopsy'
+
+
+
                     participant[
                         "redcap_tissue_source"
                     ] = "KPMP Recruitment Site"  # hard-coded value provided by Jonas
