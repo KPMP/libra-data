@@ -6,4 +6,3 @@ mysql-connector-python
 requests
 python_dotenv
 python-dateutil
-flask-mysql
