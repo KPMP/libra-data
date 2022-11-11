@@ -46,7 +46,7 @@ class DataManagement:
             )
             self.db.insert_data(
                 "INSERT INTO redcap_participant ( "
-                + "redcap_id, redcap_age_binned, redcap_sex, redcap_tissue_source, "
+                + "redcap_id, redcap_sex, redcap_age_binned, redcap_tissue_source, "
                 + "redcap_protocol, redcap_sample_type, redcap_tissue_type, redcap_clinical_data) "
                 + "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
                 (list(redcap_participant.values())),
