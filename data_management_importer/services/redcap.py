@@ -88,6 +88,20 @@ class Redcap:
         logger.debug("End: parse_redcap_records_by_participant")
         return ""
 
+    # HRT is a special case, we can't get sample_type from redcap directly, but we can get the value based off of the TIS location
+    # this could lead to issues in the future if the TIS starts to do multiple types of biopsies, but for now it is fine
+    # we can get the TIS location from the first 3 characters of the redcap_id
+    def get_sample_type_from_tis_mapping(self, participant):
+        if participant['redcap_id'][0:3] == '163': # Indiana
+            return 'Intra-operative Biopsy'
+
+        if participant['redcap_id'][0:3] == '164': # UCSF
+            return 'Transplant Pre-perfusion Biopsy'
+
+        if participant['redcap_id'][0:3] == '165': # Cincinnati
+            return 'Transplant Pre-perfusion Biopsy'
+
+
     def parse_participant_records(self):
         participant_records = []
         for redcap_chunk in self.redcap_data:
@@ -138,16 +152,7 @@ class Redcap:
                         participant["redcap_tissue_type"] = "Healthy Reference"
 
                     if participant["redcap_protocol"] == "KPMP_HRT":
-                        if participant['redcap_id'][0:3] == '163':
-                            participant['redcap_sample_type'] = 'Intra-operative Biopsy'
-
-                        if participant['redcap_id'][0:3] == '164':
-                            participant['redcap_sample_type'] = 'Transplant Pre-perfusion Biopsy'
-
-                        if participant['redcap_id'][0:3] == '165':
-                            participant['redcap_sample_type'] = 'Transplant Pre-perfusion Biopsy'
-
-
+                        participant["redcap_sample_type"] = self.get_sample_type_from_tis_mapping(participant)
 
                     participant[
                         "redcap_tissue_source"
