@@ -1,8 +1,0 @@
-pymongo
-flask
-flask_cors
-mongomock
-mysql-connector-python
-requests
-python_dotenv
-python-dateutil
