@@ -34,7 +34,7 @@ def add_dlu_file():
     return content["dluFileId"]
 
 @app.route("/v1/dlu/package/<package_id>/move", methods=["POST"])
-def add_dlu_file(package_id):
+def move_dlu_file(package_id):
     data_management = DataManagement()
     data_management.reconnect()
     return data_management.move_globus_files_to_dlu(package_id)
