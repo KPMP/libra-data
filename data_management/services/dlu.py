@@ -59,7 +59,8 @@ def create_dest_directory(dest_path: str):
         os.mkdir(dest_path)
     else:
         logger.info("Destination directory exists. Deleting metadata.json if it exists.")
-        os.remove(os.path.join(dest_path, "metadata.json"))
+        if os.path.join(dest_path, "metadata.json").exists():
+            os.remove(os.path.join(dest_path, "metadata.json"))
 
 
 def calculate_checksum(file_path: str):
