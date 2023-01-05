@@ -114,10 +114,10 @@ class DLUFileHandler:
         self.dlu_data_directory = DLU_DATA_DIRECTORY
 
     def move_files_from_globus(self, package_id: str):
-        logger.info("Moving files for package " + self.package_id)
+        logger.info("Moving files for package " + package_id)
         source_package_directory = self.globus_data_directory + '/' + package_id
         dest_package_directory = self.dlu_data_directory + DLU_PACKAGE_DIR_PREFIX + package_id
-        source_directory_info = DirectoryInfo(self.source_package_directory)
+        source_directory_info = DirectoryInfo(source_package_directory)
 
         # Make sure the directory is not empty and does not have more than one subdirectory.
         if source_directory_info.valid_for_dlu:
@@ -146,7 +146,7 @@ class DLUFileHandler:
             logger.error("Directory for package " + package_id + " failed validation.")
             return False
 
-    def update_mongo(self, package_id: str, directory_info: DirectoryInfo):
+    def update_mongo(self, package_id: str):
         directory_info = DirectoryInfo(self.dlu_data_directory + DLU_PACKAGE_DIR_PREFIX + package_id)
         files = []
         for file in directory_info.file_details:
