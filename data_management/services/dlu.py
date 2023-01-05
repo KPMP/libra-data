@@ -96,9 +96,9 @@ class DirectoryInfo:
                 })
 
     def check_if_valid_for_dlu(self):
-        directory_not_empty = len(self.contents) != 0
+        directory_not_empty = len(self.dir_contents) != 0
         # Nothing but a subdir
-        if self.dir_count == 1 and self.total_count == 1:
+        if self.dir_count == 1 and self.file_count == 1:
             self.valid_for_dlu = True
         # Items and no subdirectories
         elif self.dir_count == 0 and directory_not_empty:
@@ -107,9 +107,9 @@ class DirectoryInfo:
             self.valid_for_dlu = False
 
 
-def copy_from_src_to_dest(self, source_path: str, dest_path: str):
+def copy_from_src_to_dest(source_path: str, dest_path: str):
     logger.info("Copying files from " + source_path + " to " + dest_path)
-    shutil.copytree(self, source_path, dest_path)
+    shutil.copytree(source_path, dest_path)
 
 
 class DLUFileHandler:
@@ -133,7 +133,7 @@ class DLUFileHandler:
             # Set the source path to the subdirectory if it has only one and is valid.
             if source_directory_info.dir_count == 1 and source_directory_info.file_count == 0:
                 source_package_directory = os.path.join(source_package_directory,
-                                                        source_directory_info.contents[0])
+                                                        source_directory_info.dir_contents[0])
                 source_directory_info = DirectoryInfo(source_package_directory)
                 logger.info(
                     "Found one subdirectory (" + source_package_directory + "). Setting it as the main data directory.")
@@ -142,14 +142,14 @@ class DLUFileHandler:
                     logger.error("The subdirectory is not valid or there are too many nested subdirectories.")
                     os.sys.exit()
 
-            self.create_dest_directory(dest_package_directory)
-            self.copy_from_src_to_dest(source_package_directory, dest_package_directory)
+            create_dest_directory(dest_package_directory)
+            copy_from_src_to_dest(source_package_directory, dest_package_directory)
             file_list = filecmp.dircmp(source_package_directory, dest_package_directory)
             if file_list == 0:
                 logger.info("Package " + package_id + " moved successfully.")
                 return True
             else:
-                logger.error("The following files did not match: " + ",".join(file_list))
+                logger.error("The source and destination directory files do not match.")
                 return False
         else:
             logger.error("Directory for package " + package_id + " failed validation.")
