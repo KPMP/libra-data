@@ -145,12 +145,13 @@ class DLUFileHandler:
 
             create_dest_directory(dest_package_directory)
             copy_from_src_to_dest(source_package_directory, dest_package_directory)
-            file_list = filecmp.dircmp(source_package_directory, dest_package_directory)
-            if file_list == 0:
+            dir_cmp_obj = filecmp.dircmp(source_package_directory, dest_package_directory)
+            # The files that are in the source but not the destination
+            if len(dir_cmp_obj.left_only) == 0:
                 logger.info("Package " + package_id + " moved successfully.")
                 return True
             else:
-                logger.error("The source and destination directory files do not match.")
+                logger.error("The following files were not copied: " + dir_cmp_obj.left_only.join(","))
                 return False
         else:
             logger.error("Directory for package " + package_id + " failed validation.")
