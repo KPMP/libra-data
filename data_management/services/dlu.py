@@ -13,6 +13,8 @@ logger = logging.getLogger("ProcessLargeFileUpload")
 logger.setLevel(logging.INFO)
 
 DLU_PACKAGE_DIR_PREFIX = '/package_'
+GLOBUS_DATA_DIRECTORY = '/globus'
+DLU_DATA_DIRECTORY = '/data'
 
 def dlu_package_dict_to_tuple(dlu_inventory: dict):
     # Java timestamp is in milliseconds
@@ -108,8 +110,8 @@ class DLUFileHandler:
         self.package_collection = mongo_connection.packages
         self.state_url = "http://state-spring:3060/v1/state/host/upload_kpmp_org"
         self.cache_clear_url = "http://localhost:3030/v1/clearCache"
-        self.globus_data_directory = os.environ["globus_data_directory"]
-        self.dlu_data_directory = os.environ["dlu_data_directory"]
+        self.globus_data_directory = GLOBUS_DATA_DIRECTORY
+        self.dlu_data_directory = DLU_DATA_DIRECTORY
 
     def move_files_from_globus(self, package_id: str):
         logger.info("Moving files for package " + self.package_id)
