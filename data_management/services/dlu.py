@@ -59,7 +59,7 @@ def create_dest_directory(dest_path: str):
         os.mkdir(dest_path)
     else:
         logger.info("Destination directory exists. Deleting metadata.json if it exists.")
-        if os.path.join(dest_path, "metadata.json").exists():
+        if os.path.exists(dest_path, "metadata.json"):
             os.remove(os.path.join(dest_path, "metadata.json"))
 
 
