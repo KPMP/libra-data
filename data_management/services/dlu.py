@@ -53,13 +53,21 @@ def dlu_file_dict_to_tuple(dlu_file: dict):
     )
 
 
-def create_dest_directory(self, dest_path: str):
+def create_dest_directory(dest_path: str):
     if not os.path.exists(dest_path):
         logger.info("Destination directory " + dest_path + " does not exist. Creating.")
         os.mkdir(dest_path)
     else:
         logger.info("Destination directory exists. Deleting metadata.json if it exists.")
         os.remove(os.path.join(dest_path, "metadata.json"))
+
+
+def calculate_checksum(file_path: str):
+    with open(file_path, "rb") as f:
+        file_hash = hashlib.md5()
+        while chunk := f.read(8192):
+            file_hash.update(chunk)
+    return file_hash.hexdigest()
 
 
 class DirectoryInfo:
@@ -83,7 +91,7 @@ class DirectoryInfo:
                 self.file_details.append({
                     "name": item,
                     "path": full_path,
-                    "checksum": hashlib.md5(full_path),
+                    "checksum": calculate_checksum(full_path),
                     "size": os.path.getsize(full_path)
                 })
 
