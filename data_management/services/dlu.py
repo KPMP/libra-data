@@ -71,6 +71,7 @@ class DirectoryInfo:
         self.valid_for_dlu = False
         self.get_directory_information()
         self.check_if_valid_for_dlu()
+        self.directory_path = directory_path
 
     def get_directory_information(self):
         for item in self.dir_contents:
