@@ -109,7 +109,7 @@ class DirectoryInfo:
 
 def copy_from_src_to_dest(source_path: str, dest_path: str):
     logger.info("Copying files from " + source_path + " to " + dest_path)
-    shutil.copytree(source_path, dest_path)
+    shutil.copytree(source_path, dest_path, dirs_exist_ok=True)
 
 
 class DLUFileHandler:
