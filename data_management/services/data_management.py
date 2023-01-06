@@ -96,12 +96,12 @@ class DataManagement:
         # add the specimen ID to the end of the tuple for the WHERE clause
         new_values = values[1:] + (values[0],)
         query = (
-            "UPDATE data_management.spectrack_specimen SET spectrack_sample_id = %s, "
-            + "spectrack_sample_type_id = %s, spectrack_sample_type = %s, spectrack_derivative_parent = %s, spectrack_redcap_record_id = %s, "
-            + "spectrack_specimen_level = %s,"
-            + "spectrack_specimen_type_sample_type_code = %s, spectrack_specimen_kit_id = %s, spectrack_specimen_kit_type_name = %s, "
-            + "spectrack_specimen_kit_redcap_project_type = %s, spectrack_specimen_kit_collecting_org = %s, spectrack_biopsy_disease_category = %s, "
-            + "spectrack_biopsy_date = %s, spectrack_created_date = %s, spectrack_modified_date = %s WHERE spectrack_specimen_id = %s"
+                "UPDATE data_management.spectrack_specimen SET spectrack_sample_id = %s, "
+                + "spectrack_sample_type_id = %s, spectrack_sample_type = %s, spectrack_derivative_parent = %s, spectrack_redcap_record_id = %s, "
+                + "spectrack_specimen_level = %s,"
+                + "spectrack_specimen_type_sample_type_code = %s, spectrack_specimen_kit_id = %s, spectrack_specimen_kit_type_name = %s, "
+                + "spectrack_specimen_kit_redcap_project_type = %s, spectrack_specimen_kit_collecting_org = %s, spectrack_biopsy_disease_category = %s, "
+                + "spectrack_biopsy_date = %s, spectrack_created_date = %s, spectrack_modified_date = %s WHERE spectrack_specimen_id = %s"
         )
         self.db.insert_data(query, new_values)
 
@@ -125,10 +125,10 @@ class DataManagement:
     def insert_dlu_package(self, values: tuple):
         logger.info(f"inserting DLU package with id: {values[0]}")
         query = ("INSERT INTO dlu_package_inventory (dlu_package_id, dlu_created, dlu_submitter, dlu_tis, "
-        + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, known_specimen, redcap_id, user_package_ready, "
-        + "dvc_validation_complete, package_validated, ready_to_promote_dlu, promotion_dlu_succeeded, removed_from_globus, "
-        + "promotion_status, notes) "
-        + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+                 + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, known_specimen, redcap_id, user_package_ready, "
+                 + "dvc_validation_complete, package_validated, ready_to_promote_dlu, globus_dlu_failed, removed_from_globus, "
+                 + "promotion_status, notes) "
+                 + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
         self.db.insert_data(query, values)
         return query % values
 
@@ -147,17 +147,13 @@ class DataManagement:
     def move_globus_files_to_dlu(self, package_id: str):
         success = self.dlu_file_handler.move_files_from_globus(package_id)
         if success:
-            self.db.insert_data("UPDATE dlu_package_inventory SET promotion_dlu_succeeded = %s", (True,))
             self.update_dlu_files_in_mongo(package_id)
             self.dlu_file_handler.update_state(package_id)
-        else:
-            self.db.insert_data("UPDATE dlu_package_inventory SET promotion_dlu_succeeded = %s", (False,))
+        self.update_dlu_package(package_id, {"globus_dlu_failed": not success})
         return success
 
     def update_dlu_files_in_mongo(self, package_id: str):
         self.dlu_file_handler.update_mongo(package_id)
-
-
 
 
 if __name__ == "__main__":
