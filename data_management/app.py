@@ -39,4 +39,3 @@ def move_dlu_file(package_id):
     data_management.reconnect()
     success = data_management.move_globus_files_to_dlu(package_id)
     return {"Success": success}
-

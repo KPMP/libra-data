@@ -119,7 +119,7 @@ class DLUFileHandler:
         self.dmd_database = mysql_db.get_db_connection()
         self.package_collection = mongo_connection.packages
         self.state_url = "http://state-spring:3060/v1/state/host/upload_kpmp_org"
-        self.cache_clear_url = "http://localhost:3030/v1/clearCache"
+        self.cache_clear_url = "http://orion-spring:3030/v1/clearCache"
         self.globus_data_directory = GLOBUS_DATA_DIRECTORY
         self.dlu_data_directory = DLU_DATA_DIRECTORY
 
@@ -161,13 +161,12 @@ class DLUFileHandler:
         directory_info = DirectoryInfo(self.dlu_data_directory + DLU_PACKAGE_DIR_PREFIX + package_id)
         files = []
         for file in directory_info.file_details:
-            file_id = uuid.uuid4()
+            file_id = str(uuid.uuid4())
             files.append({
-                "dluFileName": file["name"],
-                "dluPackageId": package_id,
-                "dluFileId": file_id,
-                "dluFileSize": file["size"],
-                "dluMd5Checksum": file["checksum"],
+                "fileName": file["name"],
+                "_id": file_id,
+                "size": file["size"],
+                "md5Checksum": file["checksum"],
             })
         self.package_collection.update_one({"_id": package_id}, {"$set": {"files": files, "regenerateZip": True}})
 
