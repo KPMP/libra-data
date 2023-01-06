@@ -146,11 +146,17 @@ class DataManagement:
 
     def move_globus_files_to_dlu(self, package_id: str):
         success = self.dlu_file_handler.move_files_from_globus(package_id)
-        self.db.insert_data("UPDATE dlu_package_inventory SET promotion_dlu_succeeded = %s", (success,))
+        if success:
+            self.db.insert_data("UPDATE dlu_package_inventory SET promotion_dlu_succeeded = %s", (True,))
+            self.update_dlu_files_in_mongo(package_id)
+            self.dlu_file_handler.update_state(package_id)
+        else:
+            self.db.insert_data("UPDATE dlu_package_inventory SET promotion_dlu_succeeded = %s", (False,))
         return success
 
     def update_dlu_files_in_mongo(self, package_id: str):
         self.dlu_file_handler.update_mongo(package_id)
+
 
 
 
