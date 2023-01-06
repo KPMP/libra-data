@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 from lib.mysql_connection import MYSQLConnection
 from lib.mongo_connection import MongoConnection
@@ -171,13 +172,14 @@ class DLUFileHandler:
         self.package_collection.update_one({"_id": package_id}, {"$set": {"files": files, "regenerateZip": True}})
 
     def update_state(self, package_id: str):
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         data = {
             "packageId": package_id,
             "state": "UPLOAD_SUCCEEDED",
             "largeUploadChecked": True
         }
         try:
-            requests.post(self.state_url, data)
+            requests.post(self.state_url, data=json.dumps(data), headers=headers)
         except requests.exceptions.RequestException as e:
             logger.error("There was an error updating the state: " + e)
         requests.get(self.cache_clear_url)
