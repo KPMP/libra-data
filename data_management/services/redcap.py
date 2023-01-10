@@ -1,4 +1,4 @@
-from lib.mongo_connection import mongoConnection
+from lib.mongo_connection import MongoConnection
 from bson.objectid import ObjectId
 import os
 import datetime
@@ -11,7 +11,7 @@ logger.setLevel(logging.INFO)
 class Redcap:
     def __init__(self):
         logger.debug("Start: Redcap().__init__")
-        self.collection = mongoConnection().get_mongo_connection().redcap
+        self.collection = MongoConnection().get_mongo_connection().redcap
         self.redcap_data = []
         self.participant_data = []
         logger.debug("End: Redcap().__init__")

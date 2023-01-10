@@ -1,6 +1,8 @@
 from lib.mysql_connection import MYSQLConnection
+from lib.mongo_connection import MongoConnection
 from services.spectrack import SpecTrack
 import logging
+from services.dlu import DLUFileHandler
 
 logger = logging.getLogger("services-dataManagement")
 logger.setLevel(logging.INFO)
@@ -17,8 +19,10 @@ def get_update_query_info(fields_vals: dict):
 class DataManagement:
     def __init__(self):
         self.db = MYSQLConnection()
-        self.database = self.db.get_db_connection()
+        self.db.get_db_connection()
         self.spectrack = SpecTrack()
+        self.mongo_connection = MongoConnection().get_mongo_connection()
+        self.dlu_file_handler = DLUFileHandler(self.db, self.mongo_connection)
 
     def reconnect(self):
         self.db = MYSQLConnection()
@@ -92,12 +96,12 @@ class DataManagement:
         # add the specimen ID to the end of the tuple for the WHERE clause
         new_values = values[1:] + (values[0],)
         query = (
-            "UPDATE data_management.spectrack_specimen SET spectrack_sample_id = %s, "
-            + "spectrack_sample_type_id = %s, spectrack_sample_type = %s, spectrack_derivative_parent = %s, spectrack_redcap_record_id = %s, "
-            + "spectrack_specimen_level = %s,"
-            + "spectrack_specimen_type_sample_type_code = %s, spectrack_specimen_kit_id = %s, spectrack_specimen_kit_type_name = %s, "
-            + "spectrack_specimen_kit_redcap_project_type = %s, spectrack_specimen_kit_collecting_org = %s, spectrack_biopsy_disease_category = %s, "
-            + "spectrack_biopsy_date = %s, spectrack_created_date = %s, spectrack_modified_date = %s WHERE spectrack_specimen_id = %s"
+                "UPDATE data_management.spectrack_specimen SET spectrack_sample_id = %s, "
+                + "spectrack_sample_type_id = %s, spectrack_sample_type = %s, spectrack_derivative_parent = %s, spectrack_redcap_record_id = %s, "
+                + "spectrack_specimen_level = %s,"
+                + "spectrack_specimen_type_sample_type_code = %s, spectrack_specimen_kit_id = %s, spectrack_specimen_kit_type_name = %s, "
+                + "spectrack_specimen_kit_redcap_project_type = %s, spectrack_specimen_kit_collecting_org = %s, spectrack_biopsy_disease_category = %s, "
+                + "spectrack_biopsy_date = %s, spectrack_created_date = %s, spectrack_modified_date = %s WHERE spectrack_specimen_id = %s"
         )
         self.db.insert_data(query, new_values)
 
@@ -121,10 +125,10 @@ class DataManagement:
     def insert_dlu_package(self, values: tuple):
         logger.info(f"inserting DLU package with id: {values[0]}")
         query = ("INSERT INTO dlu_package_inventory (dlu_package_id, dlu_created, dlu_submitter, dlu_tis, "
-        + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, known_specimen, redcap_id, user_package_ready, "
-        + "dvc_validation_complete, package_validated, ready_to_promote_dlu, promotion_dlu_succeeded, removed_from_globus, "
-        + "promotion_status, notes) "
-        + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+                 + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, known_specimen, redcap_id, user_package_ready, "
+                 + "dvc_validation_complete, package_validated, ready_to_promote_dlu, globus_dlu_failed, removed_from_globus, "
+                 + "promotion_status, notes) "
+                 + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
         self.db.insert_data(query, values)
         return query % values
 
@@ -139,6 +143,17 @@ class DataManagement:
         query = "INSERT INTO dlu_file (dlu_fileName, dlu_package_id, dlu_file_id, dlu_filesize, dlu_md5checksum) VALUES(%s, %s, %s, %s, %s)"
         self.db.insert_data(query, values)
         return query % values
+
+    def move_globus_files_to_dlu(self, package_id: str):
+        success = self.dlu_file_handler.move_files_from_globus(package_id)
+        if success:
+            self.update_dlu_files_in_mongo(package_id)
+            self.dlu_file_handler.update_state(package_id)
+        self.update_dlu_package(package_id, {"globus_dlu_failed": not success})
+        return success
+
+    def update_dlu_files_in_mongo(self, package_id: str):
+        self.dlu_file_handler.update_mongo(package_id)
 
 
 if __name__ == "__main__":

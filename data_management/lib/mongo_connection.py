@@ -7,7 +7,7 @@ logger = logging.getLogger("lib-mongoConnection")
 logging.basicConfig(level=logging.ERROR)
 
 
-class mongoConnection:
+class MongoConnection:
     def __init__(self):
         logger.debug(
             "Start: mongoConnection().__init__(), trying to load environment variables in docker"
@@ -47,6 +47,6 @@ class mongoConnection:
 
 
 if __name__ == "__main__":
-    database = mongoConnection().get_mongo_connection()
+    database = MongoConnection().get_mongo_connection()
     logger.info("Mongo connection successful, listing available collections")
     print(database.list_collection_names())

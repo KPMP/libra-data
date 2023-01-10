@@ -32,3 +32,10 @@ def add_dlu_file():
     content_tuple = dlu_file_dict_to_tuple(content)
     data_management.insert_dlu_file(content_tuple)
     return content["dluFileId"]
+
+@app.route("/v1/dlu/package/<package_id>/move", methods=["POST"])
+def move_dlu_file(package_id):
+    data_management = DataManagement()
+    data_management.reconnect()
+    success = data_management.move_globus_files_to_dlu(package_id)
+    return {"Success": success}
