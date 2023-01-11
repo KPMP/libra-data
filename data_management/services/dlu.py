@@ -37,7 +37,7 @@ def dlu_package_dict_to_tuple(dlu_inventory: dict):
         dlu_inventory["dvcValidationComplete"],
         dlu_inventory["packageValidated"],
         dlu_inventory["readyToPromoteDlu"],
-        dlu_inventory["promotionDluSucceeded"],
+        dlu_inventory["globusDluFailed"],
         dlu_inventory["removedFromGlobus"],
         dlu_inventory["promotionStatus"],
         dlu_inventory["notes"],
