@@ -1,5 +1,5 @@
 import unittest
-from ..dlu import dlu_package_dict_to_tuple, dlu_file_dict_to_tuple
+from ..dlu_filesystem import dlu_package_dict_to_tuple, dlu_file_dict_to_tuple
 
 
 class Test_dlu(unittest.TestCase):

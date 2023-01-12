@@ -2,7 +2,9 @@ from lib.mysql_connection import MYSQLConnection
 from lib.mongo_connection import MongoConnection
 from services.spectrack import SpecTrack
 import logging
-from services.dlu import DLUFileHandler
+from services.dlu_filesystem import DLUFileHandler
+from services.dlu_mongo import DLUMongo
+from services.dlu_state import DLUState
 
 logger = logging.getLogger("services-dataManagement")
 logger.setLevel(logging.INFO)
@@ -22,7 +24,9 @@ class DataManagement:
         self.db.get_db_connection()
         self.spectrack = SpecTrack()
         self.mongo_connection = MongoConnection().get_mongo_connection()
-        self.dlu_file_handler = DLUFileHandler(self.db, self.mongo_connection)
+        self.dlu_mongo = DLUMongo(self.mongo_connection)
+        self.dlu_file_handler = DLUFileHandler()
+        self.dlu_state = DLUState()
 
     def reconnect(self):
         self.db = MYSQLConnection()
@@ -145,15 +149,12 @@ class DataManagement:
         return query % values
 
     def move_globus_files_to_dlu(self, package_id: str):
-        success = self.dlu_file_handler.move_files_from_globus(package_id)
-        if success:
-            self.update_dlu_files_in_mongo(package_id)
-            self.dlu_file_handler.update_state(package_id)
-        self.update_dlu_package(package_id, {"globus_dlu_failed": not success})
-        return success
-
-    def update_dlu_files_in_mongo(self, package_id: str):
-        self.dlu_file_handler.update_mongo(package_id)
+        move_response = self.dlu_file_handler.move_files_from_globus(package_id)
+        if move_response["success"]:
+            self.dlu_mongo.update_package_files(package_id, move_response["file_list"])
+            self.dlu_state.set_package_upload_success(package_id)
+        self.update_dlu_package(package_id, {"globus_dlu_failed": not move_response["success"]})
+        return move_response
 
 
 if __name__ == "__main__":
