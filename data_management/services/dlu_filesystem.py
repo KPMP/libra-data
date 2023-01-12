@@ -1,58 +1,16 @@
-import json
-from datetime import datetime
-from lib.mysql_connection import MYSQLConnection
-from lib.mongo_connection import MongoConnection
 import os
 import logging
 import shutil
 import filecmp
 import hashlib
-import uuid
-import requests
 
-logger = logging.getLogger("ProcessLargeFileUpload")
+
+logger = logging.getLogger("DLUFilesystem")
 logger.setLevel(logging.INFO)
 
 DLU_PACKAGE_DIR_PREFIX = '/package_'
 GLOBUS_DATA_DIRECTORY = '/globus'
 DLU_DATA_DIRECTORY = '/data'
-
-def dlu_package_dict_to_tuple(dlu_inventory: dict):
-    # Java timestamp is in milliseconds
-    dt_string = datetime.fromtimestamp(dlu_inventory["dluCreated"] / 1000.0).strftime(
-        "%Y-%m-%d %H:%M:%S"
-    )
-    return (
-        dlu_inventory["dluPackageId"],
-        dt_string,
-        dlu_inventory["dluSubmitter"],
-        dlu_inventory["dluTis"],
-        dlu_inventory["dluPackageType"],
-        dlu_inventory["dluSubjectId"],
-        dlu_inventory["dluError"],
-        dlu_inventory["dluLfu"],
-        dlu_inventory["knownSpecimen"],
-        dlu_inventory["redcapId"],
-        dlu_inventory["userPackageReady"],
-        dlu_inventory["dvcValidationComplete"],
-        dlu_inventory["packageValidated"],
-        dlu_inventory["readyToPromoteDlu"],
-        dlu_inventory["globusDluFailed"],
-        dlu_inventory["removedFromGlobus"],
-        dlu_inventory["promotionStatus"],
-        dlu_inventory["notes"],
-    )
-
-
-def dlu_file_dict_to_tuple(dlu_file: dict):
-    return (
-        dlu_file["dluFileName"],
-        dlu_file["dluPackageId"],
-        dlu_file["dluFileId"],
-        dlu_file["dluFileSize"],
-        dlu_file["dluMd5Checksum"],
-    )
-
 
 def create_dest_directory(dest_path: str):
     return_value = False
@@ -110,7 +68,7 @@ class DirectoryInfo:
     def check_if_valid_for_dlu(self):
         directory_not_empty = len(self.dir_contents) != 0
         # Nothing but a subdir
-        if self.subdir_count == 1 and self.file_count == 1:
+        if self.subdir_count == 1 and self.file_count == 0:
             self.valid_for_dlu = True
         # Items and no subdirectories
         elif self.subdir_count == 0 and directory_not_empty:
@@ -126,11 +84,7 @@ def copy_from_src_to_dest(source_path: str, dest_path: str):
 
 class DLUFileHandler:
 
-    def __init__(self, mysql_db: MYSQLConnection, mongo_connection: MongoConnection):
-        self.dmd_database = mysql_db.get_db_connection()
-        self.package_collection = mongo_connection.packages
-        self.state_url = "http://state-spring:3060/v1/state/host/upload_kpmp_org"
-        self.cache_clear_url = "http://orion-spring:3030/v1/clearCache"
+    def __init__(self):
         self.globus_data_directory = GLOBUS_DATA_DIRECTORY
         self.dlu_data_directory = DLU_DATA_DIRECTORY
 
@@ -139,6 +93,7 @@ class DLUFileHandler:
         source_package_directory = self.globus_data_directory + '/' + package_id
         dest_package_directory = self.dlu_data_directory + DLU_PACKAGE_DIR_PREFIX + package_id
         source_directory_info = DirectoryInfo(source_package_directory)
+        move_response = {"success": False, "message": "", "file_list": []}
 
         # Make sure the directory is not empty and does not have more than one subdirectory.
         if source_directory_info.valid_for_dlu:
@@ -151,8 +106,9 @@ class DLUFileHandler:
                     "Found one subdirectory (" + source_package_directory + "). Setting it as the main data directory.")
                 if not source_directory_info.valid_for_dlu \
                         or source_directory_info.subdir_count > 0:
-                    logger.error("The subdirectory is not valid or there are too many nested subdirectories.")
-                    return False
+                    move_response["message"] = "The subdirectory is not valid or there are too many nested subdirectories."
+                    logger.error(move_response["message"])
+                    move_response["success"] = False
 
             create_success = create_dest_directory(dest_package_directory)
             if create_success:
@@ -160,39 +116,18 @@ class DLUFileHandler:
                 dir_cmp_obj = filecmp.dircmp(source_package_directory, dest_package_directory)
                 # The files that are in the source but not the destination
                 if len(dir_cmp_obj.left_only) == 0:
-                    logger.info("Package " + package_id + " moved successfully.")
-                    return True
+                    move_response["message"] = "Package " + package_id + " moved successfully."
+                    logger.info(move_response["message"])
+                    move_response["success"] = True
+                    move_response["file_list"] = source_directory_info.file_details
                 else:
-                    logger.error("The following files were not copied: " + dir_cmp_obj.left_only.join(","))
-                    return False
+                    move_response["message"] = "The following files were not copied: " + dir_cmp_obj.left_only.join(",")
+                    logger.error(move_response["message"])
+                    move_response["success"] = False
             else:
-                return False
+                move_response["success"] = False
         else:
-            logger.error("Directory for package " + package_id + " failed validation.")
-            return False
-
-    def update_mongo(self, package_id: str):
-        directory_info = DirectoryInfo(self.dlu_data_directory + DLU_PACKAGE_DIR_PREFIX + package_id)
-        files = []
-        for file in directory_info.file_details:
-            file_id = str(uuid.uuid4())
-            files.append({
-                "fileName": file["name"],
-                "_id": file_id,
-                "size": file["size"],
-                "md5Checksum": file["checksum"],
-            })
-        self.package_collection.update_one({"_id": package_id}, {"$set": {"files": files, "regenerateZip": True}})
-
-    def update_state(self, package_id: str):
-        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        data = {
-            "packageId": package_id,
-            "state": "UPLOAD_SUCCEEDED",
-            "largeUploadChecked": True
-        }
-        try:
-            requests.post(self.state_url, data=json.dumps(data), headers=headers)
-        except requests.exceptions.RequestException as e:
-            logger.error("There was an error updating the state: " + e)
-        requests.get(self.cache_clear_url)
+            move_response["message"] = "Directory for package " + package_id + " failed validation."
+            logger.error(move_response["message"])
+            move_response["success"] = False
+        return move_response
