@@ -110,7 +110,7 @@ class DirectoryInfo:
     def check_if_valid_for_dlu(self):
         directory_not_empty = len(self.dir_contents) != 0
         # Nothing but a subdir
-        if self.subdir_count == 1 and self.file_count == 1:
+        if self.subdir_count == 1:
             self.valid_for_dlu = True
         # Items and no subdirectories
         elif self.subdir_count == 0 and directory_not_empty:
