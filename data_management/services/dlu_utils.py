@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime
 
 def dlu_package_dict_to_tuple(dlu_inventory: dict):
     # Java timestamp is in milliseconds
