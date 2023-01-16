@@ -35,7 +35,9 @@ The following endpoints are available when running the script as a Flask web ser
 
 ### /v1/dlu/package
 Method: POST
+
 This endpoint adds a package to the DMD "dlu_package_inventory" table. The request body (JSON) should have the following fields (with sample data):
+
 `{
    "dluPackageId": "package_id",
    "dluCreated": 1665768333,
@@ -55,31 +57,38 @@ This endpoint adds a package to the DMD "dlu_package_inventory" table. The reque
    "removedFromGlobus": False,
    "promotionStatus": "promoted",
    "notes": "notes"
-}`
-
-
+}`  
+&nbsp;  
 ### /v1/dlu/package/<package_id>
+
 Method: POST
+
 This endpoint updates a package entry in the DMD "dlu_package_inventory" table. The JSON request body should have the fields/values (see above) that need to be updated, e.g. 
+
 `{
    "promotionDluSucceeded": True
-}`
-
-
+}`  
+&nbsp;  
 ### /v1/dlu/file
+
 Method: POST
+
 This endpoint adds a file to the DMD "dlu_file" table. The request body (JSON) should have the following fields (with sample data):
+
 `{
    "dluFileName": "name",
    "dluPackageId": "package_id",
    "dluFileId": "file_id",
    "dluFileSize": 12345,
    "dluMd5Checksum": "checksum",
-}
-
+}`  
+&nbsp;  
 ### /v1/dlu/package/<package_id>/move
+
 Method: POST
+
 This endpoint moves files for the specified package from Globus into the DLU filesystem. It also updates the DLU Mongo record for that package with the new files, updates the "promotionDluSucceeded" field in the DMD "dlu_package_inventory" table, and, if successful, updates the DLU state to "UPLOAD_SUCCEEDED". 
+
 
 ## Development
 
