@@ -1,6 +1,6 @@
 # Data Manager Dashboard Importer 
 
-## Usage
+## Command Line Usage
 
 1. Set the .env variables
 
@@ -28,6 +28,67 @@ OR
 
 NOTE: The (non-Flask app) service options are:
    - [-h] -a {update,insert} -d {redcap,spectrack}
+
+## Service Endpoints
+
+The following endpoints are available when running the script as a Flask web service:
+
+### /v1/dlu/package
+Method: POST
+
+This endpoint adds a package to the DMD "dlu_package_inventory" table. The request body (JSON) should have the following fields (with sample data):
+
+`{
+   "dluPackageId": "package_id",
+   "dluCreated": 1665768333,
+   "dluSubmitter": "submitter",
+   "dluTis": "tis",
+   "dluPackageType": "package_type",
+   "dluSubjectId": "subj_id",
+   "dluError": True,
+   "dluLfu": False,
+   "knownSpecimen": "specimen",
+   "redcapId": "redcap",
+   "userPackageReady": True,
+   "dvcValidationComplete": True,
+   "packageValidated": True,
+   "readyToPromoteDlu": True,
+   "promotionDluSucceeded": False,
+   "removedFromGlobus": False,
+   "promotionStatus": "promoted",
+   "notes": "notes"
+}`  
+&nbsp;  
+### /v1/dlu/package/<package_id>
+
+Method: POST
+
+This endpoint updates a package entry in the DMD "dlu_package_inventory" table. The JSON request body should have the fields/values (see above) that need to be updated, e.g. 
+
+`{
+   "promotionDluSucceeded": True
+}`  
+&nbsp;  
+### /v1/dlu/file
+
+Method: POST
+
+This endpoint adds a file to the DMD "dlu_file" table. The request body (JSON) should have the following fields (with sample data):
+
+`{
+   "dluFileName": "name",
+   "dluPackageId": "package_id",
+   "dluFileId": "file_id",
+   "dluFileSize": 12345,
+   "dluMd5Checksum": "checksum",
+}`  
+&nbsp;  
+### /v1/dlu/package/<package_id>/move
+
+Method: POST
+
+This endpoint moves files for the specified package from Globus into the DLU filesystem. It also updates the DLU Mongo record for that package with the new files, updates the "promotionDluSucceeded" field in the DMD "dlu_package_inventory" table, and, if successful, updates the DLU state to "UPLOAD_SUCCEEDED". 
+
 
 ## Development
 
