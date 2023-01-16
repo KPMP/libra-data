@@ -55,8 +55,12 @@ class DataManagement:
             self.db.insert_data(
                 "INSERT INTO redcap_participant ( "
                 + "redcap_id, redcap_sex, redcap_age_binned, redcap_tissue_source, "
-                + "redcap_protocol, redcap_sample_type, redcap_tissue_type, redcap_clinical_data) "
-                + "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                + "redcap_protocol, redcap_sample_type, redcap_tissue_type, redcap_clinical_data,"
+                  "redcap_exp_aki_kdigo, redcap_exp_race, redcap_exp_alb_cat_most_recent,"
+                  "redcap_mh_ht_yn, redcap_mh_diabetes_yn, redcap_exp_has_med_raas, "
+                  "redcap_exp_a1c_cat_most_recent, redcap_exp_pro_cat_most_recent, "
+                  "redcap_exp_diabetes_duration, redcap_exp_ht_duration, redcap_exp_egfr_bl_cat) "
+                + "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (list(redcap_participant.values())),
             )
         else:

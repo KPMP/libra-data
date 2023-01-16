@@ -60,3 +60,6 @@ class TestApp(unittest.TestCase):
                                                             "notes": "notes"}
                              )
             assert rv.data.decode() == "packageid"
+
+if __name__ == '__main__':
+    unittest.main()
