@@ -69,7 +69,12 @@ class DirectoryInfo:
         directory_not_empty = len(self.dir_contents) != 0
         # Nothing but a subdir
         if self.subdir_count == 1 and self.file_count == 0:
-            self.valid_for_dlu = True
+            subdir_path = os.path.join(self.directory_path, self.dir_contents[0])
+            subdir_info = DirectoryInfo(subdir_path)
+            if subdir_info.subdir_count == 0 and subdir_info.valid_for_dlu:
+                self.valid_for_dlu = True
+            else:
+                self.valid_for_dlu = False
         # Items and no subdirectories
         elif self.subdir_count == 0 and directory_not_empty:
             self.valid_for_dlu = True
@@ -104,11 +109,6 @@ class DLUFileHandler:
                 source_directory_info = DirectoryInfo(source_package_directory)
                 logger.info(
                     "Found one subdirectory (" + source_package_directory + "). Setting it as the main data directory.")
-                if not source_directory_info.valid_for_dlu \
-                        or source_directory_info.subdir_count > 0:
-                    move_response["message"] = "The subdirectory is not valid or there are too many nested subdirectories."
-                    logger.error(move_response["message"])
-                    move_response["success"] = False
 
             create_success = create_dest_directory(dest_package_directory)
             if create_success:
