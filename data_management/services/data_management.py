@@ -164,7 +164,7 @@ class DataManagement:
         move_response = self.dlu_file_handler.move_files_from_globus(package_id)
         if move_response["success"]:
             self.dlu_mongo.update_package_files(package_id, move_response["file_list"])
-            self.insert_dlu_files(move_response["file_list"])
+            self.insert_dlu_files(package_id, move_response["file_list"])
             self.dlu_state.set_package_upload_success(package_id)
         self.update_dlu_package(package_id, {"globus_dlu_failed": not move_response["success"]})
         move_response["file_list"] = tuple(move_response["file_list"])
