@@ -1,5 +1,5 @@
 from lib.mongo_connection import MongoConnection
-from dlu_filesystem import DLUFile
+from services.dlu_filesystem import DLUFile
 from typing import List
 
 class DLUMongo:
