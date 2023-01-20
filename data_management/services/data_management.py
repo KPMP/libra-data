@@ -167,7 +167,8 @@ class DataManagement:
             self.insert_dlu_files(package_id, move_response["file_list"])
             self.dlu_state.set_package_upload_success(package_id)
         self.update_dlu_package(package_id, {"globus_dlu_failed": not move_response["success"]})
-        move_response["file_list"] = tuple(move_response["file_list"])
+        ## Convert the file list to dicts for JSON serialization
+        move_response["file_list"] = [i.__dict__ for i in move_response["file_list"]]
         return move_response
 
 
