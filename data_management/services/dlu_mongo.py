@@ -11,7 +11,6 @@ class DLUMongo:
     def update_package_files(self, package_id: str, files: List[DLUFile]):
         mongo_files = []
         for file in files:
-            file_id = str(uuid.uuid4())
             mongo_files.append({
                 "fileName": file.name,
                 "_id": file.file_id,
