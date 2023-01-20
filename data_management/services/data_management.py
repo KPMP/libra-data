@@ -5,6 +5,8 @@ import logging
 from services.dlu_filesystem import DLUFileHandler
 from services.dlu_mongo import DLUMongo
 from services.dlu_state import DLUState
+from services.dlu_filesystem import DLUFile
+from typing import List
 
 logger = logging.getLogger("services-dataManagement")
 logger.setLevel(logging.INFO)
@@ -152,12 +154,20 @@ class DataManagement:
         self.db.insert_data(query, values)
         return query % values
 
+    def insert_dlu_files(self, package_id: str, file_list: List[DLUFile]):
+        logger.info(f"Inserting files for package {package_id}")
+        for file in file_list:
+            query_string = self.insert_dlu_file((file.name, package_id, file.file_id, file.size, file.checksum))
+            logger.info(query_string)
+
     def move_globus_files_to_dlu(self, package_id: str):
         move_response = self.dlu_file_handler.move_files_from_globus(package_id)
         if move_response["success"]:
             self.dlu_mongo.update_package_files(package_id, move_response["file_list"])
+            self.insert_dlu_files(move_response["file_list"])
             self.dlu_state.set_package_upload_success(package_id)
         self.update_dlu_package(package_id, {"globus_dlu_failed": not move_response["success"]})
+        move_response["file_list"] = tuple(move_response["file_list"])
         return move_response
 
 
