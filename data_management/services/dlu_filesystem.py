@@ -3,6 +3,7 @@ import logging
 import shutil
 import filecmp
 import hashlib
+import uuid
 
 
 logger = logging.getLogger("DLUFilesystem")
@@ -40,6 +41,15 @@ def calculate_checksum(file_path: str):
     return file_hash.hexdigest()
 
 
+class DLUFile:
+    def __init__(self, name: str, path: str, checksum: str, size: int):
+        self.name = name
+        self.path = path
+        self.checksum = checksum
+        self.size = size
+        self.file_id = str(uuid.uuid4())
+
+
 class DirectoryInfo:
     def __init__(self, directory_path: str):
         self.dir_contents = os.listdir(directory_path)
@@ -58,12 +68,7 @@ class DirectoryInfo:
                 self.subdir_count += 1
             else:
                 self.file_count += 1
-                self.file_details.append({
-                    "name": item,
-                    "path": full_path,
-                    "checksum": calculate_checksum(full_path),
-                    "size": os.path.getsize(full_path)
-                })
+                self.file_details.append(DLUFile(item, full_path, calculate_checksum(full_path), os.path.getsize(full_path)))
 
     def check_if_valid_for_dlu(self):
         directory_not_empty = len(self.dir_contents) != 0
