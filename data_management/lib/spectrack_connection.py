@@ -4,7 +4,10 @@ from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 import json
 from datetime import datetime
+import logging
 
+logger = logging.getLogger("lib-SpectrackConnection")
+logging.basicConfig(level=logging.ERROR)
 
 class SpectrackConnection:
 
@@ -17,24 +20,29 @@ class SpectrackConnection:
 
     def __init__(self):
         self.token = os.environ["spectrack_token"]
+        if not self.token:
+            logger.error("The Spectrack token is empty")
         self.spectrack_base_url = os.environ["spectrack_base_url"]
+        if not self.spectrack_base_url:
+            logger.error("No Spectrack URL provided")
         self.headers = {"Authorization": "Token " + self.token}
         self.session = requests.Session()
         retry = Retry(connect=3, backoff_factor=0.5)
         adapter = HTTPAdapter(max_retries=retry)
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
+        self.check_connection()
 
     def get_url(self, url_suffix: str):
         return self.spectrack_base_url + url_suffix
 
     def check_connection(self):
         res = requests.post(
-            self.get_url(self.spectrack_specimen_url),
+            self.get_url(self.SPECIMEN_URL_SUFFIX),
             {"format": "json", "limit": "20"},
             headers=self.headers,
         )
-        res.raise_for_status()
+        print(res.raise_for_status())
 
     def get_specimens(self, limit: int):
         return self.get_results(
