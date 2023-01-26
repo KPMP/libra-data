@@ -13,10 +13,12 @@ class MongoConnection:
             "Start: mongoConnection().__init__(), trying to load environment variables in docker"
         )
         self.host = None
+        self.port = None
         self.database = None
 
         try:
             self.host = os.environ["mongo_host"]
+            self.port = os.environ["mongo_port"]
             self.database = os.environ["mongo_db"]
         except:
             logger.warning(
@@ -28,6 +30,7 @@ class MongoConnection:
             )
             load_dotenv(".env")
             self.host = os.environ.get("mongo_host")
+            self.port = os.environ("mongo_port")
             self.database = os.environ.get("mongo_db")
         except:
             logger.warning(f"Can't load environment variables from local .env file")
@@ -35,7 +38,7 @@ class MongoConnection:
     def get_mongo_connection(self):
         try:
             mongo_client = pymongo.MongoClient(
-                f"mongodb://{self.host}:27017/", serverSelectionTimeoutMS=5000
+                f"mongodb://{self.host}:{self.port}/", serverSelectionTimeoutMS=5000
             )
             database = mongo_client[self.database]
             return database
