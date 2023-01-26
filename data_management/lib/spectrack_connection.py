@@ -38,7 +38,7 @@ class SpectrackConnection:
 
     def check_connection(self):
         res = requests.post(
-            self.get_url(self.spectrack_specimen_url),
+            self.get_url(self.SPECIMEN_URL_SUFFIX),
             {"format": "json", "limit": "20"},
             headers=self.headers,
         )
