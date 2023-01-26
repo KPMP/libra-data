@@ -13,7 +13,7 @@
 OR
 
 3b. Run the importer service from a local machine (eg: When running on a Mac and docker isn't available):
-   - `$ python3 main.py --data_source redcap --action insert`
+   - `$ python3.8 main.py --data_source redcap --action insert`
 
 OR
 
