@@ -17,4 +17,4 @@ class DLUMongo:
                 "size": file.size,
                 "md5Checksum": file.checksum,
             })
-        self.package_collection.update_one({"_id": package_id}, {"$set": {"files": mongo_files, "regenerateZip": True}})
+        self.package_collection.update_one({"_id": package_id}, {"$set": {"files": mongo_files}})
