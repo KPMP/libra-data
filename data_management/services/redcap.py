@@ -190,6 +190,8 @@ class Redcap:
                             f'Error: Additional fields found we are not mapping: {record["record"]} with field_name: {record["field_name"]} value: {record["value"]}'
                         )
 
+                    participant["redcap_tissue_source"] = "KPMP Recruitment Site"  # hard-coded value provided by Jonas
+
                     if "redcap_project_type" in redcap_chunk:
                         participant["redcap_protocol"] = redcap_chunk["redcap_project_type"]
                     else:  # default to KPMP_MAIN as old data does not have a redcap_project_type
@@ -198,8 +200,9 @@ class Redcap:
                     if participant["redcap_protocol"] == "KPMP_HRT":
                         participant["redcap_tissue_type"] = "Healthy Reference"
                         participant["redcap_sample_type"] = self.get_sample_type_from_tis_mapping(participant)
+                        participant["redcap_tissue_source"] = "KPMP Opportunity Pool HRT Site"
 
-                    participant["redcap_tissue_source"] = "KPMP Recruitment Site"  # hard-coded value provided by Jonas
+
 
                     if not existing_record_found:
                         participant_records.append(participant)
