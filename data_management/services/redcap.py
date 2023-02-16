@@ -34,7 +34,7 @@ class Redcap:
         logger.debug("Start: verify_expected_redcap_participant_data_is_present")
         participant_object = {
             "redcap_id": "",
-            "redcap_sex": "",
+            "redcap_np_gender": "",
             "redcap_age_binned": "",
             "redcap_tissue_type": "",
             "redcap_protocol": "",
@@ -121,7 +121,7 @@ class Redcap:
                     if participant is None:
                         participant = {
                             "redcap_id": record["record_id"],
-                            "redcap_sex": "",
+                            "redcap_np_gender": "",
                             "redcap_age_binned": "",
                             "redcap_tissue_type": "",
                             "redcap_protocol": "",
@@ -144,7 +144,7 @@ class Redcap:
                         }
 
                     if record["field_name"] == "np_gender":
-                        participant["redcap_sex"] = record["field_value"]
+                        participant["redcap_np_gender"] = record["field_value"]
 
                     elif record["field_name"] == "exp_age_decade":
                         participant["redcap_age_binned"] = record["field_value"]

@@ -51,7 +51,7 @@ class TestRedcap(unittest.TestCase):
           'redcap_mh_ht_yn': 'mh_ht y',
           'redcap_protocol': 'KPMP_MAIN',
           'redcap_sample_type': 'xx',
-          'redcap_sex': 'Male',
+          'redcap_np_gender': 'Male',
           'redcap_tissue_source': 'KPMP Recruitment Site',
           'redcap_tissue_type': 'disease'}], result)
 
@@ -81,7 +81,7 @@ class TestRedcap(unittest.TestCase):
           'redcap_mh_ht_yn': '',
           'redcap_protocol': 'Side hustle',
           'redcap_sample_type': 'xx',
-          'redcap_sex': '',
+          'redcap_np_gender': '',
           'redcap_tissue_source': 'KPMP Recruitment Site',
           'redcap_tissue_type': ''}], result)
 
@@ -112,7 +112,7 @@ class TestRedcap(unittest.TestCase):
           'redcap_mh_ht_yn': '',
           'redcap_protocol': 'KPMP_HRT',
           'redcap_sample_type': 'yy',
-          'redcap_sex': '',
+          'redcap_np_gender': '',
           'redcap_tissue_source': 'KPMP Recruitment Site',
           'redcap_tissue_type': 'Healthy Reference'}], result)
 
