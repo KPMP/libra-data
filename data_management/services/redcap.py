@@ -79,7 +79,7 @@ class Redcap:
                     if record["value"] == "1":
                         return "Percutaneous Needle Biopsy"
                     elif record["value"] == "2":
-                        return "Open Biopsy"
+                        return "Intra-operative Needle Biopsy"
                     else:
                         logger.error(
                             f'Error: unknown value for record: {record["record"]} with field_name: {record["field_name"]} value: {record["value"]}'
@@ -191,6 +191,9 @@ class Redcap:
                         )
 
                     participant["redcap_tissue_source"] = "KPMP Recruitment Site"  # hard-coded value provided by Jonas
+
+                    if redcap_chunk["redcap_project_type"] != "KPMP_MAIN":
+                        print(redcap_chunk["redcap_project_type"])
 
                     if "redcap_project_type" in redcap_chunk:
                         participant["redcap_protocol"] = redcap_chunk["redcap_project_type"]
