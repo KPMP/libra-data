@@ -1,6 +1,5 @@
 from datetime import datetime
 
-
 def dlu_package_dict_to_tuple(dlu_inventory: dict):
     # Java timestamp is in milliseconds
     dt_string = datetime.fromtimestamp(dlu_inventory["dluCreated"] / 1000.0).strftime(
@@ -21,7 +20,7 @@ def dlu_package_dict_to_tuple(dlu_inventory: dict):
         dlu_inventory["dvcValidationComplete"],
         dlu_inventory["packageValidated"],
         dlu_inventory["readyToPromoteDlu"],
-        dlu_inventory["promotionDluSucceeded"],
+        dlu_inventory["globusDluFailed"],
         dlu_inventory["removedFromGlobus"],
         dlu_inventory["promotionStatus"],
         dlu_inventory["notes"],

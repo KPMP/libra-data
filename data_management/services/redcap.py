@@ -1,4 +1,4 @@
-from lib.mongo_connection import mongoConnection
+from lib.mongo_connection import MongoConnection
 from bson.objectid import ObjectId
 import os
 import datetime
@@ -11,7 +11,7 @@ logger.setLevel(logging.INFO)
 class Redcap:
     def __init__(self):
         logger.debug("Start: Redcap().__init__")
-        self.collection = mongoConnection().get_mongo_connection().redcap
+        self.collection = MongoConnection().get_mongo_connection().redcap
         self.redcap_data = []
         self.participant_data = []
         logger.debug("End: Redcap().__init__")
@@ -34,7 +34,7 @@ class Redcap:
         logger.debug("Start: verify_expected_redcap_participant_data_is_present")
         participant_object = {
             "redcap_id": "",
-            "redcap_sex": "",
+            "redcap_np_gender": "",
             "redcap_age_binned": "",
             "redcap_tissue_type": "",
             "redcap_protocol": "",
@@ -75,11 +75,11 @@ class Redcap:
         for redcap_chunk in self.redcap_data:
 
             for record in redcap_chunk["redcap_records"]:
-                if record["field_name"] == field_name and record["record"] == redcap_id:
+                if record["field_name"] == field_name and record["record_id"] == redcap_id:
                     if record["value"] == "1":
                         return "Percutaneous Needle Biopsy"
                     elif record["value"] == "2":
-                        return "Open Biopsy"
+                        return "Intra-operative Needle Biopsy"
                     else:
                         logger.error(
                             f'Error: unknown value for record: {record["record"]} with field_name: {record["field_name"]} value: {record["value"]}'
@@ -87,6 +87,20 @@ class Redcap:
                         os.sys.exit()
         logger.debug("End: parse_redcap_records_by_participant")
         return ""
+
+    # HRT is a special case, we can't get sample_type from redcap directly, but we can get the value based off of the TIS location
+    # this could lead to issues in the future if the TIS starts to do multiple types of biopsies, but for now it is fine
+    # we can get the TIS location from the first 3 characters of the redcap_id
+    def get_sample_type_from_tis_mapping(self, participant):
+        if participant['redcap_id'][0:3] == '163': # Indiana
+            return 'Intra-operative Biopsy'
+
+        if participant['redcap_id'][0:3] == '164': # UCSF
+            return 'Transplant Pre-perfusion Biopsy'
+
+        if participant['redcap_id'][0:3] == '165': # Cincinnati
+            return 'Transplant Pre-perfusion Biopsy'
+
 
     def parse_participant_records(self):
         participant_records = []
@@ -107,7 +121,7 @@ class Redcap:
                     if participant is None:
                         participant = {
                             "redcap_id": record["record_id"],
-                            "redcap_sex": "",
+                            "redcap_np_gender": "",
                             "redcap_age_binned": "",
                             "redcap_tissue_type": "",
                             "redcap_protocol": "",
@@ -116,33 +130,83 @@ class Redcap:
                             ),
                             "redcap_tissue_source": "",
                             "redcap_clinical_data": "",
+                            "redcap_exp_aki_kdigo": "",
+                            "redcap_exp_race": "",
+                            "redcap_exp_alb_cat_most_recent": "",
+                            "redcap_mh_ht_yn": "",
+                            "redcap_mh_diabetes_yn": "",
+                            "redcap_exp_has_med_raas": "",
+                            "redcap_exp_a1c_cat_most_recent": "",
+                            "redcap_exp_pro_cat_most_recent": "",
+                            "redcap_exp_diabetes_duration": "",
+                            "redcap_exp_ht_duration": "",
+                            "redcap_exp_egfr_bl_cat": ""
                         }
 
                     if record["field_name"] == "np_gender":
-                        participant["redcap_sex"] = record["field_value"]
+                        participant["redcap_np_gender"] = record["field_value"]
 
-                    if record["field_name"] == "exp_age_decade":
+                    elif record["field_name"] == "exp_age_decade":
                         participant["redcap_age_binned"] = record["field_value"]
 
+                    elif record["field_name"] == "exp_aki_kdigo":
+                        participant["redcap_exp_aki_kdigo"] = record["field_value"]
+
+                    elif record["field_name"] == "exp_race":
+                        participant["redcap_exp_race"] = record["field_value"]
+
+                    elif record["field_name"] == "exp_alb_cat_most_recent":
+                        participant["redcap_exp_alb_cat_most_recent"] = record["field_value"]
+
+                    elif record["field_name"] == "mh_ht_yn":
+                        participant["redcap_mh_ht_yn"] = record["field_value"]
+
+                    elif record["field_name"] == "mh_diabetes_yn":
+                        participant["redcap_mh_diabetes_yn"] = record["field_value"]
+
+                    elif record["field_name"] == "exp_has_med_raas":
+                        participant["redcap_exp_has_med_raas"] = record["field_value"]
+
+                    elif record["field_name"] == "exp_a1c_cat_most_recent":
+                        participant["redcap_exp_a1c_cat_most_recent"] = record["field_value"]
+
+                    elif record["field_name"] == "exp_pro_cat_most_recent":
+                        participant["redcap_exp_pro_cat_most_recent"] = record["field_value"]
+
+                    elif record["field_name"] == "exp_diabetes_duration":
+                        participant["redcap_exp_diabetes_duration"] = record["field_value"]
+
+                    elif record["field_name"] == "exp_ht_duration":
+                        participant["redcap_exp_ht_duration"] = record["field_value"]
+
+                    elif record["field_name"] == "exp_egfr_bl_cat":
+                        participant["redcap_exp_egfr_bl_cat"] = record["field_value"]
+
+                    elif record["field_name"] == "exp_disease_type":
+                        participant["redcap_tissue_type"] = record["field_value"]
+
+                    else:
+                        logger.error(
+                            f'Error: Additional fields found we are not mapping: {record["record"]} with field_name: {record["field_name"]} value: {record["value"]}'
+                        )
+
+                    participant["redcap_tissue_source"] = "KPMP Recruitment Site"  # hard-coded value provided by Jonas
+
+                    if redcap_chunk["redcap_project_type"] != "KPMP_MAIN":
+                        print(redcap_chunk["redcap_project_type"])
+
                     if "redcap_project_type" in redcap_chunk:
-                        participant["redcap_protocol"] = redcap_chunk[
-                            "redcap_project_type"
-                        ]
+                        participant["redcap_protocol"] = redcap_chunk["redcap_project_type"]
                     else:  # default to KPMP_MAIN as old data does not have a redcap_project_type
                         participant["redcap_protocol"] = "KPMP_MAIN"
 
-                    if record["field_name"] == "exp_disease_type":
-                        participant["redcap_tissue_type"] = record["field_value"]
-
                     if participant["redcap_protocol"] == "KPMP_HRT":
                         participant["redcap_tissue_type"] = "Healthy Reference"
+                        participant["redcap_sample_type"] = self.get_sample_type_from_tis_mapping(participant)
+                        participant["redcap_tissue_source"] = "KPMP Opportunity Pool HRT Site"
 
-                    participant[
-                        "redcap_tissue_source"
-                    ] = "KPMP Recruitment Site"  # hard-coded value provided by Jonas
-                    participant[
-                        "redcap_clinical_data"
-                    ] = ""  # leave blank, we might populate this field later on
+
+
                     if not existing_record_found:
                         participant_records.append(participant)
 
