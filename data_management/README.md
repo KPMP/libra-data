@@ -10,6 +10,9 @@
 3a. Run the importer service with the arguments in double quotes:
    - `$ sh run.sh "-d spectrack -a update"`
 
+*NOTE*: If you are running this on an empty/new database, you will need to run it in insert mode first:
+   - `$ sh run.sh "=d spectrack -a insert"`
+
 OR
 
 3b. Run the importer service from a local machine (eg: When running on a Mac and docker isn't available):
