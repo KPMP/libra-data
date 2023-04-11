@@ -11,7 +11,7 @@
    - `$ sh run.sh "-d spectrack -a update"`
 
 *NOTE*: If you are running this on an empty/new database, you will need to run it in insert mode first:
-   - `$ sh run.sh "=d spectrack -a insert"`
+   - `$ sh run.sh "-d spectrack -a insert"`
 
 OR
 
