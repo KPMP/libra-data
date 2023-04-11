@@ -62,10 +62,6 @@ class MYSQLConnection:
             return self.database
         except:
             print("Can't connect to MySQL")
-            print(
-                "Make sure you have tunnel open to the KE database on the host machine, e.g."
-            )
-            print("ssh qa-atlas-ke -i ~/.ssh/um-kpmp.pem -L 3306:localhost:3306")
             os.sys.exit()
 
     def insert_data(self, sql, data):
