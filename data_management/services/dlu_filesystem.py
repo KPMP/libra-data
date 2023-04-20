@@ -64,7 +64,7 @@ class DirectoryInfo:
     def get_directory_information(self):
         for item in self.dir_contents:
             full_path = os.path.join(self.directory_path, item)
-            if os.path.isdir(full_path):
+            if os.path.isdir(full_path) and ".zarr" not in full_path:
                 self.subdir_count += 1
             else:
                 self.file_count += 1
