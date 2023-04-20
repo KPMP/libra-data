@@ -5,7 +5,7 @@ import filecmp
 import hashlib
 import uuid
 from zarr_checksum import compute_zarr_checksum
-from zarr_checksum.generators import yield_files_local, yield_files_s3
+from zarr_checksum.generators import yield_files_local
 
 
 logger = logging.getLogger("DLUFilesystem")
