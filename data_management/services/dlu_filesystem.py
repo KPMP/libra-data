@@ -43,7 +43,7 @@ def calculate_checksum(file_path: str):
                 file_hash.update(chunk)
         return file_hash.hexdigest()
     else:
-        return compute_zarr_checksum(yield_files_local(file_path))
+        return compute_zarr_checksum(yield_files_local(file_path)).md5
 
 
 class DLUFile:
