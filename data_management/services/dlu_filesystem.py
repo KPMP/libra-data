@@ -4,6 +4,8 @@ import shutil
 import filecmp
 import hashlib
 import uuid
+from zarr_checksum import compute_zarr_checksum
+from zarr_checksum.generators import yield_files_local
 
 
 logger = logging.getLogger("DLUFilesystem")
@@ -34,11 +36,14 @@ def create_dest_directory(dest_path: str):
 
 
 def calculate_checksum(file_path: str):
-    with open(file_path, "rb") as f:
-        file_hash = hashlib.md5()
-        while chunk := f.read(8192):
-            file_hash.update(chunk)
-    return file_hash.hexdigest()
+    if ".zarr" not in file_path:
+        with open(file_path, "rb") as f:
+            file_hash = hashlib.md5()
+            while chunk := f.read(8192):
+                file_hash.update(chunk)
+        return file_hash.hexdigest()
+    else:
+        return compute_zarr_checksum(yield_files_local(file_path)).md5
 
 
 class DLUFile:
@@ -64,7 +69,7 @@ class DirectoryInfo:
     def get_directory_information(self):
         for item in self.dir_contents:
             full_path = os.path.join(self.directory_path, item)
-            if os.path.isdir(full_path):
+            if os.path.isdir(full_path) and ".zarr" not in full_path:
                 self.subdir_count += 1
             else:
                 self.file_count += 1
