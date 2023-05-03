@@ -55,8 +55,8 @@ This endpoint adds a package to the DMD "dlu_package_inventory" table. The reque
    "userPackageReady": True,
    "dvcValidationComplete": True,
    "packageValidated": True,
-   "readyToPromoteDlu": True,
-   "promotionDluSucceeded": False,
+   "readyToMoveFromGlobus": True,
+   "globusDluStatus": False,
    "removedFromGlobus": False,
    "promotionStatus": "promoted",
    "notes": "notes"
