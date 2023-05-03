@@ -162,11 +162,15 @@ class DataManagement:
 
     def move_globus_files_to_dlu(self, package_id: str):
         move_response = self.dlu_file_handler.move_files_from_globus(package_id)
+        globus_dlu_status = "failed"
+
         if move_response["success"]:
             self.dlu_mongo.update_package_files(package_id, move_response["file_list"])
             self.insert_dlu_files(package_id, move_response["file_list"])
             self.dlu_state.set_package_upload_success(package_id)
-        self.update_dlu_package(package_id, {"globus_dlu_failed": not move_response["success"]})
+            globus_dlu_status = "success"
+
+        self.update_dlu_package(package_id, {"globus_dlu_status": globus_dlu_status})
         ## Convert the file list to dicts for JSON serialization
         move_response["file_list"] = [i.__dict__ for i in move_response["file_list"]]
         return move_response
