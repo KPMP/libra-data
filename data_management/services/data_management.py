@@ -136,7 +136,7 @@ class DataManagement:
         logger.info(f"inserting DLU package with id: {values[0]}")
         query = ("INSERT INTO dlu_package_inventory (dlu_package_id, dlu_created, dlu_submitter, dlu_tis, "
                  + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, known_specimen, redcap_id, user_package_ready, "
-                 + "dvc_validation_complete, package_validated, ready_to_promote_dlu, globus_dlu_failed, removed_from_globus, "
+                 + "dvc_validation_complete, package_validated, ready_to_move_from_globus, globus_dlu_status, removed_from_globus, "
                  + "promotion_status, notes) "
                  + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
         self.db.insert_data(query, values)
@@ -162,11 +162,15 @@ class DataManagement:
 
     def move_globus_files_to_dlu(self, package_id: str):
         move_response = self.dlu_file_handler.move_files_from_globus(package_id)
+        globus_dlu_status = "failed"
+
         if move_response["success"]:
             self.dlu_mongo.update_package_files(package_id, move_response["file_list"])
             self.insert_dlu_files(package_id, move_response["file_list"])
             self.dlu_state.set_package_upload_success(package_id)
-        self.update_dlu_package(package_id, {"globus_dlu_failed": not move_response["success"]})
+            globus_dlu_status = "success"
+
+        self.update_dlu_package(package_id, {"globus_dlu_status": globus_dlu_status})
         ## Convert the file list to dicts for JSON serialization
         move_response["file_list"] = [i.__dict__ for i in move_response["file_list"]]
         return move_response
