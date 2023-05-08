@@ -70,6 +70,23 @@ class DataManagement:
                 f"redcap participant with id: {redcap_participant['redcap_id']} already exists, skipping insert"
             )
 
+    def insert_slide_scan_status_with_participant(self, spectrack_info: tuple):
+        result = self.db.get_data(
+            "SELECT count(redcap_id) FROM data_management.slide_scan_status_participant WHERE redcap_id = %s",
+            (spectrack_info[5],),
+        )[0][0]
+        if result == 0:
+            values = ( spectrack_info[5], spectrack_info[8], spectrack_info[12])
+            self.db.insert_data(
+                "INSERT INTO data_management.slide_scan_status_participant ( "
+                + "redcap_id, spectrack_specimen_kit_id, spectrack_biopsy_disease_category) VALUES ( %s, %s, %s ) ",
+                values
+            )
+
+    def insert_dmd_records_from_spectrack(self, values: tuple):
+        self.insert_spectrack_specimen(values)
+        self.insert_slide_scan_status_with_participant(values)
+
     def insert_spectrack_specimen(self, values: tuple):
         self.db.insert_data(
             "INSERT INTO data_management.spectrack_specimen ( "
@@ -83,10 +100,11 @@ class DataManagement:
             values,
         )
 
+
     def insert_all_spectrack_specimens(self):
         results = self.spectrack.get_specimens(20)
         record_count = self.spectrack.get_next_with_callback(
-            results, self.insert_spectrack_specimen
+            results, self.insert_dmd_records_from_spectrack
         )
         return record_count
 
@@ -124,11 +142,15 @@ class DataManagement:
         else:
             self.update_spectrack_specimen(values)
 
+    def upsert_dmd_records_from_spectrack(self, values: tuple):
+        self.upsert_spectrack_record(values)
+        self.insert_slide_scan_status_with_participant(values)
+
     def upsert_new_spectrack_specimens(self):
         max_date = self.get_max_spectrack_date()
         results = self.spectrack.get_specimens_modified_greater_than(max_date)
         record_count = self.spectrack.get_next_with_callback(
-            results, self.upsert_spectrack_record
+            results, self.upsert_dmd_records_from_spectrack
         )
         return record_count
 
