@@ -88,17 +88,22 @@ class DataManagement:
         self.insert_slide_scan_status_with_participant(values)
 
     def insert_spectrack_specimen(self, values: tuple):
-        self.db.insert_data(
-            "INSERT INTO data_management.spectrack_specimen ( "
-            + "spectrack_specimen_id, spectrack_sample_id, "
-            + "spectrack_sample_type_id, spectrack_sample_type, spectrack_derivative_parent, spectrack_redcap_record_id, "
-            + "spectrack_specimen_level,"
-            + "spectrack_specimen_type_sample_type_code, spectrack_specimen_kit_id, spectrack_specimen_kit_type_name, "
-            + "spectrack_specimen_kit_redcap_project_type, spectrack_specimen_kit_collecting_org, spectrack_biopsy_disease_category, "
-            + "spectrack_biopsy_date, spectrack_created_date, spectrack_modified_date) "
-            + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            values,
-        )
+        result = self.db.get_data(
+            "SELECT count(spectrack_specimen_id) FROM data_management.spectrack_specimen WHERE spectrack_specimen_id = %s",
+            (values[0],),
+        )[0][0]
+        if result == 0:
+            self.db.insert_data(
+                "INSERT INTO data_management.spectrack_specimen ( "
+                + "spectrack_specimen_id, spectrack_sample_id, "
+                + "spectrack_sample_type_id, spectrack_sample_type, spectrack_derivative_parent, spectrack_redcap_record_id, "
+                + "spectrack_specimen_level,"
+                + "spectrack_specimen_type_sample_type_code, spectrack_specimen_kit_id, spectrack_specimen_kit_type_name, "
+                + "spectrack_specimen_kit_redcap_project_type, spectrack_specimen_kit_collecting_org, spectrack_biopsy_disease_category, "
+                + "spectrack_biopsy_date, spectrack_created_date, spectrack_modified_date) "
+                + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                values,
+            )
 
 
     def insert_all_spectrack_specimens(self):
