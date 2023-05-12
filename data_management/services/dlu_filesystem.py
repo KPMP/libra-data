@@ -4,7 +4,6 @@ import shutil
 import filecmp
 import hashlib
 import uuid
-import threading
 from zarr_checksum import compute_zarr_checksum
 from zarr_checksum.generators import yield_files_local
 

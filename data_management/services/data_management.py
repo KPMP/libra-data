@@ -1,5 +1,4 @@
 import threading
-
 from lib.mysql_connection import MYSQLConnection
 from lib.mongo_connection import MongoConnection
 from services.spectrack import SpecTrack
