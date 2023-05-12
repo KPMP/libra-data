@@ -1,3 +1,5 @@
+import threading
+
 from lib.mysql_connection import MYSQLConnection
 from lib.mongo_connection import MongoConnection
 from services.spectrack import SpecTrack
@@ -183,18 +185,25 @@ class DataManagement:
             logger.info(query_string)
 
     def move_globus_files_to_dlu(self, package_id: str):
-        move_response = self.dlu_file_handler.move_files_from_globus(package_id)
-        globus_dlu_status = "failed"
+        okay_for_move = self.dlu_file_handler.check_directories_okay_for_move(package_id)
+        if okay_for_move:
+            move_thread = threading.Thread(target=self.perform_file_move(package_id))
+            move_thread.start()
+        else:
+            self.update_dlu_package(package_id, {"globus_dlu_status": "failed"})
+            move_response = {"success": False, "message": "Directory for package " + package_id + " failed validation.", "file_list": []}
+            return move_response
 
+    def perform_file_move(self, package_id: str):
+        move_response = self.dlu_file_handler.move_files_from_globus(package_id)
         if move_response["success"]:
             self.dlu_mongo.update_package_files(package_id, move_response["file_list"])
             self.insert_dlu_files(package_id, move_response["file_list"])
             self.dlu_state.set_package_upload_success(package_id)
-            globus_dlu_status = "success"
+            self.update_dlu_package(package_id, {"globus_dlu_status": "success"})
+            ## Convert the file list to dicts for JSON serialization
+            move_response["file_list"] = [i.__dict__ for i in move_response["file_list"]]
 
-        self.update_dlu_package(package_id, {"globus_dlu_status": globus_dlu_status})
-        ## Convert the file list to dicts for JSON serialization
-        move_response["file_list"] = [i.__dict__ for i in move_response["file_list"]]
         return move_response
 
 
