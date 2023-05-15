@@ -25,13 +25,15 @@ def create_dest_directory(dest_path: str):
         dest_dir_info = DirectoryInfo(dest_path)
         if dest_dir_info.file_count > 1:
             logger.error("Potential data files in destination directory.")
-        else:
+        elif dest_dir_info.file_count == 1:
             if os.path.exists(os.path.join(dest_path, "metadata.json")):
                 logger.info("Deleting metadata.json.")
                 os.remove(os.path.join(dest_path, "metadata.json"))
                 return_value = True
             else:
                 logger.error("Unknown file in target directory.")
+        else:
+            return_value = True
     return return_value
 
 
