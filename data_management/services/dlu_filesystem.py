@@ -31,7 +31,7 @@ def create_dest_directory(dest_path: str):
                 os.remove(os.path.join(dest_path, "metadata.json"))
                 return_value = True
             else:
-                logger.error("Unknown file in target directory.")
+                logger.error("Unknown file in target directory: " + dest_path)
     return return_value
 
 
