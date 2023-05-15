@@ -188,6 +188,7 @@ class DataManagement:
         if okay_for_move:
             move_thread = threading.Thread(target=self.perform_file_move(package_id))
             move_thread.start()
+            logger.info("started thread...returning")
             return {"success": True, "message": "Directory for package " + package_id + " is moving.", "file_list": []}
         else:
             self.update_dlu_package(package_id, {"globus_dlu_status": "failed"})
