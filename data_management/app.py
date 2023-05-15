@@ -3,6 +3,7 @@ from flask_cors import CORS
 from services.data_management import DataManagement
 from services.dlu_utils import dlu_package_dict_to_tuple, dlu_file_dict_to_tuple
 from flask import Response
+import logging
 
 app = Flask(__name__)
 CORS(app)
@@ -43,6 +44,9 @@ def move_dlu_file(package_id):
     data_management.reconnect()
     response = data_management.move_globus_files_to_dlu(package_id)
     if response:
+        logging.info("Successfully asked for file move")
+        # move_response = {"success": False, "message": "", "file_list": []}
         return Response("Request submitted", status=202, mimetype='application/json')
     else:
+        logging.info("there was a problem moving files")
         return response
