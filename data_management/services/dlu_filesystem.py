@@ -6,6 +6,7 @@ import hashlib
 import uuid
 from zarr_checksum import compute_zarr_checksum
 from zarr_checksum.generators import yield_files_local
+from threading import Thread
 
 
 logger = logging.getLogger("DLUFilesystem")
@@ -98,48 +99,52 @@ def copy_from_src_to_dest(source_path: str, dest_path: str):
     logger.info("Copying files from " + source_path + " to " + dest_path)
     shutil.copytree(source_path, dest_path, dirs_exist_ok=True)
 
+def move_files(package_id: str):
+    logger.info("Moving files for package " + package_id)
+    source_package_directory = self.globus_data_directory + '/' + package_id
+    dest_package_directory = self.dlu_data_directory + DLU_PACKAGE_DIR_PREFIX + package_id
+    source_directory_info = DirectoryInfo(source_package_directory)
+    move_response = {"success": False, "message": "", "file_list": []}
+
+    # Make sure the directory is not empty and does not have more than one subdirectory.
+    if source_directory_info.valid_for_dlu:
+        # Set the source path to the subdirectory if it has only one and is valid.
+        if source_directory_info.subdir_count == 1 and source_directory_info.file_count == 0:
+            source_package_directory = os.path.join(source_package_directory,
+                                                    source_directory_info.dir_contents[0])
+            source_directory_info = DirectoryInfo(source_package_directory)
+            logger.info(
+                "Found one subdirectory (" + source_package_directory + "). Setting it as the main data directory.")
+
+        create_success = create_dest_directory(dest_package_directory)
+        if create_success:
+            copy_from_src_to_dest(source_package_directory, dest_package_directory)
+            dir_cmp_obj = filecmp.dircmp(source_package_directory, dest_package_directory)
+            # The files that are in the source but not the destination
+            if len(dir_cmp_obj.left_only) == 0:
+                move_response["message"] = "Package " + package_id + " moved successfully."
+                logger.info(move_response["message"])
+                move_response["success"] = True
+                move_response["file_list"] = source_directory_info.file_details
+            else:
+                move_response["message"] = "The following files were not copied: " + dir_cmp_obj.left_only.join(",")
+                logger.error(move_response["message"])
+                move_response["success"] = False
+        else:
+            move_response["success"] = False
+    else:
+        move_response["message"] = "Directory for package " + package_id + " failed validation."
+        logger.error(move_response["message"])
+        move_response["success"] = False
+    return move_response
 
 class DLUFileHandler:
+
 
     def __init__(self):
         self.globus_data_directory = GLOBUS_DATA_DIRECTORY
         self.dlu_data_directory = DLU_DATA_DIRECTORY
 
     def move_files_from_globus(self, package_id: str):
-        logger.info("Moving files for package " + package_id)
-        source_package_directory = self.globus_data_directory + '/' + package_id
-        dest_package_directory = self.dlu_data_directory + DLU_PACKAGE_DIR_PREFIX + package_id
-        source_directory_info = DirectoryInfo(source_package_directory)
-        move_response = {"success": False, "message": "", "file_list": []}
-
-        # Make sure the directory is not empty and does not have more than one subdirectory.
-        if source_directory_info.valid_for_dlu:
-            # Set the source path to the subdirectory if it has only one and is valid.
-            if source_directory_info.subdir_count == 1 and source_directory_info.file_count == 0:
-                source_package_directory = os.path.join(source_package_directory,
-                                                        source_directory_info.dir_contents[0])
-                source_directory_info = DirectoryInfo(source_package_directory)
-                logger.info(
-                    "Found one subdirectory (" + source_package_directory + "). Setting it as the main data directory.")
-
-            create_success = create_dest_directory(dest_package_directory)
-            if create_success:
-                copy_from_src_to_dest(source_package_directory, dest_package_directory)
-                dir_cmp_obj = filecmp.dircmp(source_package_directory, dest_package_directory)
-                # The files that are in the source but not the destination
-                if len(dir_cmp_obj.left_only) == 0:
-                    move_response["message"] = "Package " + package_id + " moved successfully."
-                    logger.info(move_response["message"])
-                    move_response["success"] = True
-                    move_response["file_list"] = source_directory_info.file_details
-                else:
-                    move_response["message"] = "The following files were not copied: " + dir_cmp_obj.left_only.join(",")
-                    logger.error(move_response["message"])
-                    move_response["success"] = False
-            else:
-                move_response["success"] = False
-        else:
-            move_response["message"] = "Directory for package " + package_id + " failed validation."
-            logger.error(move_response["message"])
-            move_response["success"] = False
-        return move_response
+        move_thread = Thread(target=move_files, args=(package_id,))
+        move_thread.start()
