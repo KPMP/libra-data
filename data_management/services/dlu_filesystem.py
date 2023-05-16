@@ -105,26 +105,6 @@ class DLUFileHandler:
         self.globus_data_directory = GLOBUS_DATA_DIRECTORY
         self.dlu_data_directory = DLU_DATA_DIRECTORY
 
-    def check_directories_okay_for_move(self, package_id: str):
-        logger.info("Checking we are ready to move files for package: " + package_id)
-        source_package_directory = self.globus_data_directory + '/' + package_id
-        dest_package_directory = self.dlu_data_directory + DLU_PACKAGE_DIR_PREFIX + package_id
-        source_directory_info = DirectoryInfo(source_package_directory)
-        create_success = False;
-        if source_directory_info.valid_for_dlu:
-            # Set the source path to the subdirectory if it has only one and is valid.
-            if source_directory_info.subdir_count == 1 and source_directory_info.file_count == 0:
-                source_package_directory = os.path.join(source_package_directory,
-                                                        source_directory_info.dir_contents[0])
-                source_directory_info = DirectoryInfo(source_package_directory)
-                logger.info(
-                    "Found one subdirectory (" + source_package_directory + "). Setting it as the main data directory.")
-
-            create_success = create_dest_directory(dest_package_directory)
-        else:
-            logger.error("Directory for package " + package_id + " failed validation.")
-        return create_success
-
     def move_files_from_globus(self, package_id: str):
         logger.info("Moving files for package " + package_id)
         source_package_directory = self.globus_data_directory + '/' + package_id
