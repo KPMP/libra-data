@@ -42,4 +42,4 @@ def move_dlu_file(package_id):
     data_management = DataManagement()
     data_management.reconnect()
     # response = data_management.move_globus_files_to_dlu(package_id)
-    return Response("Request submitted", status=202, mimetype='application/json')
+    return Response("Request submitted", status=201, mimetype='application/json')
