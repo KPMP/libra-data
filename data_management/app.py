@@ -46,4 +46,4 @@ def move_dlu_file(package_id):
     # return Response("Request submitted", status=201, mimetype='application/json')
     thread = DLUFileMoveThreaded()
     thread.start()
-    return { 'status': 'ok'}, 200
+    return {"success": True, "message": "Request submitted", "file_list": []}
