@@ -3,6 +3,7 @@ from flask_cors import CORS
 from services.data_management import DataManagement
 from services.dlu_utils import dlu_package_dict_to_tuple, dlu_file_dict_to_tuple
 from flask import Response
+from services.dlu_file_move_threading import DLUFileMoveThreaded
 
 app = Flask(__name__)
 CORS(app)
@@ -41,5 +42,8 @@ def add_dlu_file():
 def move_dlu_file(package_id):
     data_management = DataManagement()
     data_management.reconnect()
-    # response = data_management.move_globus_files_to_dlu(package_id)
-    return Response("Request submitted", status=201, mimetype='application/json')
+    # # response = data_management.move_globus_files_to_dlu(package_id)
+    # return Response("Request submitted", status=201, mimetype='application/json')
+    thread = DLUFileMoveThreaded()
+    thread.start()
+    return { 'status': 'ok'}, 200
