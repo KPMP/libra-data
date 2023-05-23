@@ -70,23 +70,46 @@ class DataManagement:
                 f"redcap participant with id: {redcap_participant['redcap_id']} already exists, skipping insert"
             )
 
+    def insert_slide_scan_status_with_participant(self, spectrack_info: tuple):
+        result = self.db.get_data(
+            "SELECT count(redcap_id) FROM data_management.slide_scan_status_participant WHERE redcap_id = %s",
+            (spectrack_info[5],),
+        )[0][0]
+        if result == 0:
+            values = ( spectrack_info[5], spectrack_info[8], spectrack_info[12])
+            self.db.insert_data(
+                "INSERT INTO data_management.slide_scan_status_participant ( "
+                + "redcap_id, spectrack_specimen_kit_id, spectrack_biopsy_disease_category) VALUES ( %s, %s, %s ) ",
+                values
+            )
+
+    def insert_dmd_records_from_spectrack(self, values: tuple):
+        self.insert_spectrack_specimen(values)
+        self.insert_slide_scan_status_with_participant(values)
+
     def insert_spectrack_specimen(self, values: tuple):
-        self.db.insert_data(
-            "INSERT INTO data_management.spectrack_specimen ( "
-            + "spectrack_specimen_id, spectrack_sample_id, "
-            + "spectrack_sample_type_id, spectrack_sample_type, spectrack_derivative_parent, spectrack_redcap_record_id, "
-            + "spectrack_specimen_level,"
-            + "spectrack_specimen_type_sample_type_code, spectrack_specimen_kit_id, spectrack_specimen_kit_type_name, "
-            + "spectrack_specimen_kit_redcap_project_type, spectrack_specimen_kit_collecting_org, spectrack_biopsy_disease_category, "
-            + "spectrack_biopsy_date, spectrack_created_date, spectrack_modified_date) "
-            + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-            values,
-        )
+        result = self.db.get_data(
+            "SELECT count(spectrack_specimen_id) FROM data_management.spectrack_specimen WHERE spectrack_specimen_id = %s",
+            (values[0],),
+        )[0][0]
+        if result == 0:
+            self.db.insert_data(
+                "INSERT INTO data_management.spectrack_specimen ( "
+                + "spectrack_specimen_id, spectrack_sample_id, "
+                + "spectrack_sample_type_id, spectrack_sample_type, spectrack_derivative_parent, spectrack_redcap_record_id, "
+                + "spectrack_specimen_level,"
+                + "spectrack_specimen_type_sample_type_code, spectrack_specimen_kit_id, spectrack_specimen_kit_type_name, "
+                + "spectrack_specimen_kit_redcap_project_type, spectrack_specimen_kit_collecting_org, spectrack_biopsy_disease_category, "
+                + "spectrack_biopsy_date, spectrack_created_date, spectrack_modified_date) "
+                + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                values,
+            )
+
 
     def insert_all_spectrack_specimens(self):
         results = self.spectrack.get_specimens(20)
         record_count = self.spectrack.get_next_with_callback(
-            results, self.insert_spectrack_specimen
+            results, self.insert_dmd_records_from_spectrack
         )
         return record_count
 
@@ -124,11 +147,15 @@ class DataManagement:
         else:
             self.update_spectrack_specimen(values)
 
+    def upsert_dmd_records_from_spectrack(self, values: tuple):
+        self.upsert_spectrack_record(values)
+        self.insert_slide_scan_status_with_participant(values)
+
     def upsert_new_spectrack_specimens(self):
         max_date = self.get_max_spectrack_date()
         results = self.spectrack.get_specimens_modified_greater_than(max_date)
         record_count = self.spectrack.get_next_with_callback(
-            results, self.upsert_spectrack_record
+            results, self.upsert_dmd_records_from_spectrack
         )
         return record_count
 
@@ -136,7 +163,7 @@ class DataManagement:
         logger.info(f"inserting DLU package with id: {values[0]}")
         query = ("INSERT INTO dlu_package_inventory (dlu_package_id, dlu_created, dlu_submitter, dlu_tis, "
                  + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, known_specimen, redcap_id, user_package_ready, "
-                 + "dvc_validation_complete, package_validated, ready_to_promote_dlu, globus_dlu_failed, removed_from_globus, "
+                 + "dvc_validation_complete, package_validated, ready_to_move_from_globus, globus_dlu_status, removed_from_globus, "
                  + "promotion_status, notes) "
                  + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
         self.db.insert_data(query, values)
@@ -162,11 +189,15 @@ class DataManagement:
 
     def move_globus_files_to_dlu(self, package_id: str):
         move_response = self.dlu_file_handler.move_files_from_globus(package_id)
+        globus_dlu_status = "failed"
+
         if move_response["success"]:
             self.dlu_mongo.update_package_files(package_id, move_response["file_list"])
             self.insert_dlu_files(package_id, move_response["file_list"])
             self.dlu_state.set_package_upload_success(package_id)
-        self.update_dlu_package(package_id, {"globus_dlu_failed": not move_response["success"]})
+            globus_dlu_status = "success"
+
+        self.update_dlu_package(package_id, {"globus_dlu_status": globus_dlu_status})
         ## Convert the file list to dicts for JSON serialization
         move_response["file_list"] = [i.__dict__ for i in move_response["file_list"]]
         return move_response
