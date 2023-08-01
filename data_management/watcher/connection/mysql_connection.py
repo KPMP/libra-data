@@ -79,11 +79,14 @@ class MYSQLConnection:
 
     def get_data(self, sql, query_data=None):
         try:
+            print("getting db_cursor")
             self.get_db_cursor()
             data = []
+            print("executing query")
             self.cursor.execute(sql, query_data)
             for row in self.cursor:
                 data.append(row)
+            print("appending data")
             return data
         except:
             print("Can't get data_management data.")
