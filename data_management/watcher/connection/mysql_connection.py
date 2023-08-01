@@ -43,7 +43,7 @@ class MYSQLConnection:
 
     def get_db_cursor(self):
         try:
-            self.cursor = self.database.cursor(buffered=False)
+            self.cursor = self.database.cursor(buffered=False, dictionary=True)
             return self.cursor
         except:
             print("Can't get mysql cursor")
@@ -51,7 +51,6 @@ class MYSQLConnection:
 
     def get_db_connection(self):
         try:
-            print('getting database connection')
             self.database = mysql.connector.connect(
                 host=self.host,
                 user=self.user,
@@ -87,16 +86,14 @@ class MYSQLConnection:
             
             print(sql)
             print(query_data)
-            cursor.execute(sql, query_data)
+            self.cursor.execute(sql, query_data)
             print("excuted query")
             for row in self.cursor:
-                print("got data")
                 data.append(row)
-            print("done")
+            print("got data")
             return data
         except:
             print("Can't get data_management data.")
-            print(os.environ.get("mysql_host"))
         finally:
             self.cursor.close()
 
