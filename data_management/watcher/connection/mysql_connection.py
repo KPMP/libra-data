@@ -92,6 +92,7 @@ class MYSQLConnection:
 
 
 if __name__ == "__main__":
+    load_dotenv()
     print(os.environ.get("mysql_host"))
     try:
         cursor = self.connection.cursor(buffered=False)
