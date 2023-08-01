@@ -68,9 +68,15 @@ class MYSQLConnection:
         try:
             self.get_db_cursor()
             self.cursor.execute(sql, data)
+            data = []
             warning = self.cursor.fetchwarnings()
             if warning is not None:
                 print(warning)
+            else:
+                for row in self.cursor:
+                    data.append(row)
+                    
+                return data
         except:
             print(f"Cannot insert with query: {sql}; and the data: {data}")
         finally:
