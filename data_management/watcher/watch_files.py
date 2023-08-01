@@ -19,3 +19,5 @@ class WatchFiles:
             )
         else:
             print(files)
+            
+    watch_for_files()
