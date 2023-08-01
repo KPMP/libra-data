@@ -5,8 +5,7 @@ logger = logging.getLogger("services-dlu_package_watcher")
 logger.setLevel(logging.INFO)
      
 def watch_for_files():
-    db = DLUPackageInventory
-    files = db.get_dlu_file("yes")
+    files = DLUPackageInventory.get_dlu_file("yes")
     if len(files) == 0:
         logger.info(
             "No records were found with status 'yes' "
