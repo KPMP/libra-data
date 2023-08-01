@@ -83,6 +83,8 @@ class MYSQLConnection:
             self.get_db_cursor()
             data = []
             print("executing query")
+            
+            print(sql)
             self.cursor.execute(sql, query_data)
             print("excuted query")
             for row in self.cursor:
