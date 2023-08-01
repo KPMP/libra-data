@@ -21,4 +21,5 @@ class DLUWatcher:
             print(files)        
 
 if __name__ == "__main__":
-    DLUWatcher.watch_for_files()
+    dlu_watcher = DLUWatcher()
+    dlu_watcher.watch_for_files()
