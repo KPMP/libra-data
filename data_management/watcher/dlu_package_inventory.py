@@ -16,7 +16,7 @@ class DLUPackageInventory:
         
     def reconnect(self):
         self.db = MYSQLConnection()
-        self.db.get_db_connection()
+        self.database = self.db.get_db_connection()
         
     def get_dlu_file(self, status):
         return self.db.get_data(
