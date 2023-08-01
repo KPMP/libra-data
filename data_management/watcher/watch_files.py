@@ -23,7 +23,7 @@ class DLUWatcher:
     def update_files_for_globus(self, files):
         for file_result in files:
             logger.info("Setting file status to 'waiting' on package " + str(file_result['dlu_package_id']))
-            self.db.set_dlu_file_waiting("waiting", file_result['dlu_package_id'])
+            self.db.set_dlu_file_waiting("yes", file_result['dlu_package_id'])
 
 if __name__ == "__main__":
     dlu_watcher = DLUWatcher()
