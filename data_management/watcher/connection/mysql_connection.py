@@ -3,7 +3,7 @@ import mysql.connector
 from dotenv import load_dotenv
 import logging
 
-logger = logging.getLogger("lib-MYSQLConnection")
+logger = logging.getLogger("connection-MYSQLConnection")
 logging.basicConfig(level=logging.ERROR)
 
 
@@ -92,6 +92,7 @@ class MYSQLConnection:
 
 
 if __name__ == "__main__":
+    print(os.environ.get("mysql_host"))
     try:
         cursor = self.connection.cursor(buffered=False)
         print("mysql connection successful, listing available tables")
