@@ -84,9 +84,11 @@ class MYSQLConnection:
             data = []
             print("executing query")
             self.cursor.execute(sql, query_data)
+            print("excuted query")
             for row in self.cursor:
+                print("got data")
                 data.append(row)
-            print("appending data")
+            print("done")
             return data
         except:
             print("Can't get data_management data.")
