@@ -21,7 +21,7 @@ class DLUPackageInventory:
     def get_dlu_file(self, status):
         return self.db.get_data(
             "SELECT * FROM data_management.dlu_package_inventory WHERE ready_to_move_from_globus = %s AND globus_dlu_status IS NULL",
-            (status,),
+            (status,)
         )
     
     def set_dlu_file_waiting(self, status, package_id):
