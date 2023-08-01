@@ -1,5 +1,6 @@
 from dlu_package_inventory import DLUPackageInventory
 import logging
+import time
 
 logger = logging.getLogger("services-dlu_package_watcher")
 logger.setLevel(logging.INFO)
@@ -24,7 +25,10 @@ class DLUWatcher:
         for file_result in files:
             logger.info("Setting file status to 'waiting' on package " + str(file_result['dlu_package_id']))
             self.db.set_dlu_file_waiting("yes", file_result['dlu_package_id'])
+    
 
 if __name__ == "__main__":
-    dlu_watcher = DLUWatcher()
-    dlu_watcher.watch_for_files()
+    while True:
+        dlu_watcher = DLUWatcher()
+        dlu_watcher.watch_for_files()
+        time.sleep(10*60)
