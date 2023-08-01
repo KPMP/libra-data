@@ -7,7 +7,6 @@ load_dotenv()
 logger = logging.getLogger("dlu_globus_mover")
 logger.setLevel(logging.INFO)
 
-db = MYSQLConnection()
 
 class DLUPackageInventory:
     def __init__(self):

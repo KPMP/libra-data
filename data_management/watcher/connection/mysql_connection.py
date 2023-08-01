@@ -51,6 +51,7 @@ class MYSQLConnection:
 
     def get_db_connection(self):
         try:
+            print('getting database connection')
             self.database = mysql.connector.connect(
                 host=self.host,
                 user=self.user,
