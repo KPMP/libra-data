@@ -12,7 +12,6 @@ class DLUPackageInventory:
     def __init__(self):
         self.db = MYSQLConnection()
         self.db.get_db_connection()
-        print("received db connection")
         
     def reconnect(self):
         self.db = MYSQLConnection()
