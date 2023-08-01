@@ -13,12 +13,13 @@ class DLUWatcher:
     
     def watch_for_files(self):
         files = self.db.get_dlu_file("yes")
-        if len(files) == 0:
-            logger.info(
-                "No records were found with status 'yes' "
-            )
-        else:
-            print(files)        
+        print(files)
+        # if len(files) == 0:
+        #     logger.info(
+        #         "No records were found with status 'yes' "
+        #     )
+        # else:
+        #     print(files)        
 
 if __name__ == "__main__":
     dlu_watcher = DLUWatcher()
