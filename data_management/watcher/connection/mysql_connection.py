@@ -79,13 +79,8 @@ class MYSQLConnection:
 
     def get_data(self, sql, query_data=None):
         try:
-            self.get_db_connection()
-            self.cursor = self.database.cursor(buffered=False, dictionary=True)
-            print("getting db_cursor")
             data = []
-            print("executing query")
-            print(sql)
-            print(query_data)
+            self.get_db_cursor()
             self.cursor.execute(sql, query_data)
             print("excuted query")
             for row in self.cursor:
