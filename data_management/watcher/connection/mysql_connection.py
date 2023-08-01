@@ -80,13 +80,10 @@ class MYSQLConnection:
     def get_data(self, sql, query_data=None):
         try:
             print("getting db_cursor")
-            cursor = self.get_db_cursor()
             data = []
             print("executing query")
             print(sql)
             print(query_data)
-            
-            cursor.execute(sql, query_data)
             print("excuted query")
             for row in self.cursor:
                 data.append(row)
