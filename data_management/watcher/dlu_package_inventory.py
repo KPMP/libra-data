@@ -26,6 +26,6 @@ class DLUPackageInventory:
     
     def set_dlu_file_waiting(self, status, package_id):
         return self.db.insert_data(
-            "UPDATE data_management.dlu_package_inventory WHERE ready_to_move_from_globus = %s AND dlu_package_id = %s AND globus_dlu_status = waiting",
+            "UPDATE data_management.dlu_package_inventory SET globus_dlu_status = waiting WEHRE ready_to_move_from_globus = %s AND dlu_package_id = %s",
             (status, package_id,)
         )
