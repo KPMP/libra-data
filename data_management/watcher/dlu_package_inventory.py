@@ -19,7 +19,7 @@ class DLUPackageInventory:
         self.db.get_db_connection()
         
     def get_dlu_file(self, status):
-        return self.db.get_data(
+        return self.db.insert_data(
             "SELECT * FROM data_management.dlu_package_inventory WHERE ready_to_move_from_globus = %s AND globus_dlu_status IS NULL",
             (status),
         )
