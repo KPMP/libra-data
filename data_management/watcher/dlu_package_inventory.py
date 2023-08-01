@@ -1,5 +1,5 @@
 import os
-from lib.mysql_connection import MySQLConnection
+from data_management.lib.mysql_connection import MYSQLConnection
 import logging
 from dotenv import load_dotenv
 load_dotenv()
@@ -7,15 +7,15 @@ load_dotenv()
 logger = logging.getLogger("dlu_globus_mover")
 logger.setLevel(logging.INFO)
 
-db = MySQLConnection()
+db = MYSQLConnection()
 
 class DLUPackageInventory:
     def __init__(self):
-        self.db = MySQLConnection()
+        self.db = MYSQLConnection()
         self.db.get_db_connection()
         
     def reconnect(self):
-        self.db = MySQLConnection()
+        self.db = MYSQLConnection()
         self.db.get_db_connection()
         
     def get_dlu_file(self, status):
