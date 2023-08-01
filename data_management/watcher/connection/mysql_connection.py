@@ -87,13 +87,12 @@ class MYSQLConnection:
             return data
         except:
             print("Can't get data_management data.")
+            print(os.environ.get("mysql_host"))
         finally:
             self.cursor.close()
 
 
 if __name__ == "__main__":
-    load_dotenv()
-    print(os.environ.get("mysql_host"))
     try:
         cursor = self.connection.cursor(buffered=False)
         print("mysql connection successful, listing available tables")
