@@ -1,5 +1,5 @@
 import os
-from connection.mysql_connection import MYSQLConnection
+from lib.mysql_connection import MYSQLConnection
 import logging
 from dotenv import load_dotenv
 load_dotenv()

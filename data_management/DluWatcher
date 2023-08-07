@@ -5,8 +5,8 @@ WORKDIR /usr/src/app
 COPY requirements.txt ./
 
 RUN pip3 install --no-cache-dir -r requirements.txt
-COPY connection/ ./connection
-COPY dlu_package_inventory.py ./
-COPY watch_files.py ./
+COPY ./lib/ ./lib
+COPY ./services/dlu_package_inventory.py ./
+COPY ./services/watch_files.py ./
 
 ENTRYPOINT ["python3", "watch_files.py"]
