@@ -43,7 +43,7 @@ class MYSQLConnection:
 
     def get_db_cursor(self):
         try:
-            self.cursor = self.database.cursor(buffered=False)
+            self.cursor = self.database.cursor(buffered=False, dictionary=True)
             return self.cursor
         except:
             print("Can't get mysql cursor")
@@ -93,7 +93,7 @@ class MYSQLConnection:
 
 if __name__ == "__main__":
     try:
-        cursor = self.connection.cursor(buffered=False)
+        cursor = self.connection.cursor(buffered=False, dictionary=True)
         print("mysql connection successful, listing available tables")
         cursor.execute("SHOW TABLES;")
         for row in cursor:
