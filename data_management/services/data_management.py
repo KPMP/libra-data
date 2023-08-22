@@ -187,20 +187,28 @@ class DataManagement:
             query_string = self.insert_dlu_file((file.name, package_id, file.file_id, file.size, file.checksum))
             logger.info(query_string)
 
+
+    def get_ready_to_move(self, package_id: str):
+        return self.db.get_data(
+            "SELECT ready_to_move_from_globus FROM dlu_package_inventory WHERE dlu_package_id = %s",
+            (package_id,)
+        )[0]['ready_to_move_from_globus']
+
     def move_globus_files_to_dlu(self, package_id: str):
-        move_response = self.dlu_file_handler.move_files_from_globus(package_id)
-        globus_dlu_status = "failed"
-
-        if move_response["success"]:
-            self.dlu_mongo.update_package_files(package_id, move_response["file_list"])
-            self.insert_dlu_files(package_id, move_response["file_list"])
-            self.dlu_state.set_package_upload_success(package_id)
-            globus_dlu_status = "success"
-
-        self.update_dlu_package(package_id, {"globus_dlu_status": globus_dlu_status})
-        ## Convert the file list to dicts for JSON serialization
-        move_response["file_list"] = [i.__dict__ for i in move_response["file_list"]]
-        return move_response
+        ready_status = self.get_ready_to_move(package_id)
+        response_msg = "Error"
+        if ready_status == None:
+            validated = self.dlu_file_handler.validate_package_directories(package_id)
+            if validated == False:
+                response_msg = "Error: directory for package " + package_id + " failed validation."
+            else:
+                self.update_dlu_package(package_id, {"ready_to_move_from_globus": "yes"})
+                response_msg = "Package " + package_id + " successfully marked as ready to move."
+        elif ready_status == 'yes':
+            response_msg = "Error: package " + package_id + " was already marked as ready to move."
+        elif ready_status == 'done':
+            response_msg = "Error: package " + package_id + " was already moved."
+        return response_msg
 
 
 if __name__ == "__main__":

@@ -58,13 +58,14 @@ class DLUFile:
 
 
 class DirectoryInfo:
-    def __init__(self, directory_path: str):
+    def __init__(self, directory_path: str, calculate_checksums: bool = True):
         self.dir_contents = os.listdir(directory_path)
         self.subdir_count = 0
         self.file_count = 0
         self.file_details = []
         self.valid_for_dlu = False
         self.directory_path = directory_path
+        self.calculate_checksums = calculate_checksums
         self.get_directory_information()
         self.check_if_valid_for_dlu()
 
@@ -75,14 +76,15 @@ class DirectoryInfo:
                 self.subdir_count += 1
             else:
                 self.file_count += 1
-                self.file_details.append(DLUFile(item, full_path, calculate_checksum(full_path), os.path.getsize(full_path)))
+                checksum = "0" if self.calculate_checksums else calculate_checksum(full_path)
+                self.file_details.append(DLUFile(item, full_path, checksum, os.path.getsize(full_path)))
 
     def check_if_valid_for_dlu(self):
         directory_not_empty = len(self.dir_contents) != 0
         # Nothing but a subdir
         if self.subdir_count == 1 and self.file_count == 0:
             subdir_path = os.path.join(self.directory_path, self.dir_contents[0])
-            subdir_info = DirectoryInfo(subdir_path)
+            subdir_info = DirectoryInfo(subdir_path, self.calculate_checksums)
             if subdir_info.subdir_count == 0 and subdir_info.valid_for_dlu:
                 self.valid_for_dlu = True
             else:
@@ -105,12 +107,11 @@ class DLUFileHandler:
         self.globus_data_directory = GLOBUS_DATA_DIRECTORY
         self.dlu_data_directory = DLU_DATA_DIRECTORY
 
-    def move_files_from_globus(self, package_id: str):
+    def validate_package_directories(self, package_id: str):
         logger.info("Moving files for package " + package_id)
         source_package_directory = self.globus_data_directory + '/' + package_id
-        dest_package_directory = self.dlu_data_directory + DLU_PACKAGE_DIR_PREFIX + package_id
-        source_directory_info = DirectoryInfo(source_package_directory)
-        move_response = {"success": False, "message": "", "file_list": []}
+        source_directory_info = DirectoryInfo(source_package_directory, False)
+        success = False
 
         # Make sure the directory is not empty and does not have more than one subdirectory.
         if source_directory_info.valid_for_dlu:
@@ -118,28 +119,11 @@ class DLUFileHandler:
             if source_directory_info.subdir_count == 1 and source_directory_info.file_count == 0:
                 source_package_directory = os.path.join(source_package_directory,
                                                         source_directory_info.dir_contents[0])
-                source_directory_info = DirectoryInfo(source_package_directory)
+                source_directory_info = DirectoryInfo(source_package_directory, False)
                 logger.info(
                     "Found one subdirectory (" + source_package_directory + "). Setting it as the main data directory.")
-
-            create_success = create_dest_directory(dest_package_directory)
-            if create_success:
-                copy_from_src_to_dest(source_package_directory, dest_package_directory)
-                dir_cmp_obj = filecmp.dircmp(source_package_directory, dest_package_directory)
-                # The files that are in the source but not the destination
-                if len(dir_cmp_obj.left_only) == 0:
-                    move_response["message"] = "Package " + package_id + " moved successfully."
-                    logger.info(move_response["message"])
-                    move_response["success"] = True
-                    move_response["file_list"] = source_directory_info.file_details
-                else:
-                    move_response["message"] = "The following files were not copied: " + dir_cmp_obj.left_only.join(",")
-                    logger.error(move_response["message"])
-                    move_response["success"] = False
-            else:
-                move_response["success"] = False
+            success = True
         else:
-            move_response["message"] = "Directory for package " + package_id + " failed validation."
-            logger.error(move_response["message"])
-            move_response["success"] = False
-        return move_response
+            success = False
+            logger.error("Directory for package " + package_id + " failed validation.")
+        return success
