@@ -196,7 +196,7 @@ class DataManagement:
 
     def move_globus_files_to_dlu(self, package_id: str):
         ready_status = self.get_ready_to_move(package_id)
-        response_msg = "Error"
+        response_msg = "There was an error in marking this package ready to move."
         if ready_status == None:
             validated = self.dlu_file_handler.validate_package_directories(package_id)
             if validated == False:
