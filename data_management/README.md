@@ -90,8 +90,13 @@ This endpoint adds a file to the DMD "dlu_file" table. The request body (JSON) s
 
 Method: POST
 
-This endpoint moves files for the specified package from Globus into the DLU filesystem. It also updates the DLU Mongo record for that package with the new files, updates the "promotionDluSucceeded" field in the DMD "dlu_package_inventory" table, and, if successful, updates the DLU state to "UPLOAD_SUCCEEDED". 
+This endpoint does not move the package files, but rather marks the specified package as ready to be moved from Globus into the DLU filesystem. It updates the "ready_to_move_from_globus" field in the DMD dlu_package_inventory table to "yes," or it returns an error message and doesn't update any fields in the table.
+&nbsp;
+### /v1/dlu/package/ready
 
+Method: GET
+
+This endpoint retrieves the packages that are ready to be moved from Globus. The endpoint returns a list containing each result's dlu_package_id and globus_dlu_status.
 
 ## Development
 
