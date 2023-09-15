@@ -210,7 +210,6 @@ class DataManagement:
             response_msg = "Error: package " + package_id + " was already moved."
         return response_msg
 
-
 if __name__ == "__main__":
     data_management = DataManagement()
     data_management.get_data_management_tables()
