@@ -25,8 +25,10 @@ class ProcessBulkUploads:
             logger.error("There was a problem loading the Data Management library.")
         try:
             self.submitter = os.environ["mongo_submitter_id"]
+            self.submitter_name = os.environ["submitter_name"]
         except:
             self.submitter = os.environ.get("mongo_submitter_id")
+            self.submitter_name = os.environ.get("submitter_name")
 
         self.data_directory = data_directory
 
@@ -60,10 +62,10 @@ class ProcessBulkUploads:
                         logger.info(f"Adding package for {redcap_id}")
                         package = DLUPackage()
                         package.dlu_package_type = package_type
-                        # package.dlu_tis = experiment["redcap_data_access_group"]
-                        package.dlu_tis = "Michigan/Broad/Princeton"
+                        package.dlu_tis = experiment["recruitment_site"]
                         package.dlu_created = datetime.datetime.today()
                         package.dlu_submitter = DBRef(collection='users', id=ObjectId(self.submitter))
+                        package.submitter_name = self.submitter_name
                         package.dlu_data_generators = manifest_data["data_generators"]
                         package.dlu_protocol = ""
                         package.dlu_description = manifest_data["dataset_description"]
@@ -75,8 +77,10 @@ class ProcessBulkUploads:
                         package.dlu_version = 4
                         package.dlu_dataset_information_version = 1
                         package_id = self.data_management.dlu_mongo.add_package(package.get_mongo_dict())
+                        self.data_management.insert_dlu_package(package.get_mysql_tuple())
                         dlu_file_list = self.process_files(experiment["files"])
                         records_modified = self.data_management.dlu_mongo.update_package_files(package_id, dlu_file_list)
+                        self.data_management.insert_dlu_files(package.package_id, dlu_file_list)
                         if records_modified == 1:
                             logger.info(f"{len(dlu_file_list)} files added to package {package_id}")
                         else:

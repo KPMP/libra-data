@@ -19,6 +19,7 @@ class DLUPackage:
         self.dlu_protocol = None
         self.dlu_data_generators = None
         self.dlu_files = []
+        self.submitter_name = None
         self.known_specimen = None
         self.redcap_id = None
         self.user_package_ready = None
@@ -47,3 +48,27 @@ class DLUPackage:
             "submitter": self.dlu_submitter,
             "createdAt": self.dlu_created
         }
+
+    def get_mysql_tuple(self):
+        return (
+            self.package_id,
+            self.dlu_created.strftime(
+                "%Y-%m-%d"),
+            self.submitter_name,
+            self.dlu_tis,
+            self.dlu_package_type,
+            self.redcap_id,
+            self.dlu_error,
+            self.dlu_lfu,
+            self.known_specimen,
+            self.redcap_id,
+            # Setting these to None for now until I talk to Rachel
+            None,  # dlu_inventory["userPackageReady"],
+            None,  # dlu_inventory["dvcValidationComplete"],
+            None,  # dlu_inventory["packageValidated"],
+            None,  # dlu_inventory["readyToMoveFromGlobus"],
+            None,  # dlu_inventory["globusDluStatus"],
+            None,  # dlu_inventory["removedFromGlobus"],
+            None,  # dlu_inventory["promotionStatus"],
+            None  # dlu_inventory["notes"],
+        )
