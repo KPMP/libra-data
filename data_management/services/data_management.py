@@ -7,6 +7,7 @@ from services.dlu_mongo import DLUMongo
 from services.dlu_state import DLUState
 from services.dlu_filesystem import DLUFile
 from typing import List
+import json
 
 logger = logging.getLogger("services-dataManagement")
 logger.setLevel(logging.INFO)
@@ -177,14 +178,14 @@ class DataManagement:
         self.db.insert_data(query, values)
 
     def insert_dlu_file(self, values):
-        query = "INSERT INTO dlu_file (dlu_fileName, dlu_package_id, dlu_file_id, dlu_filesize, dlu_md5checksum) VALUES(%s, %s, %s, %s, %s)"
+        query = "INSERT INTO dlu_file (dlu_fileName, dlu_package_id, dlu_file_id, dlu_filesize, dlu_md5checksum, dlu_metadata) VALUES(%s, %s, %s, %s, %s, %s)"
         self.db.insert_data(query, values)
         return query % values
 
     def insert_dlu_files(self, package_id: str, file_list: List[DLUFile]):
         logger.info(f"Inserting files for package {package_id}")
         for file in file_list:
-            query_string = self.insert_dlu_file((file.name, package_id, file.file_id, file.size, file.checksum))
+            query_string = self.insert_dlu_file((file.name, package_id, file.file_id, file.size, file.checksum, json.dumps(file.metadata)))
             logger.info(query_string)
 
 

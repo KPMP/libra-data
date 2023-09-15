@@ -39,7 +39,9 @@ class ProcessBulkUploads:
             size = os.path.getsize(os.path.join(self.data_directory, file_full_path))
             file_path = file_full_path.split("/")[0]
             file_name = file_full_path.split("/")[1]
-            dlu_file = DLUFile(file_name, file_path, file["file_metadata"]["md5_hash"], size)
+            checksum = file["file_metadata"]["md5_hash"]
+            del file["file_metadata"]["md5_hash"]
+            dlu_file = DLUFile(file_name, file_path, checksum, size, file["file_metadata"])
             dlu_files.append(dlu_file)
         return dlu_files
 

@@ -49,13 +49,13 @@ def calculate_checksum(file_path: str):
 
 
 class DLUFile:
-    def __init__(self, name: str, path: str, checksum: str, size: int):
+    def __init__(self, name: str, path: str, checksum: str, size: int, metadata: dict = {}):
         self.name = name
         self.path = path
         self.checksum = checksum
         self.size = size
         self.file_id = str(uuid.uuid4())
-
+        self.metadata = metadata
 
 class DirectoryInfo:
     def __init__(self, directory_path: str, calculate_checksums: bool = True):
