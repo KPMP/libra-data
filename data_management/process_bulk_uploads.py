@@ -101,7 +101,7 @@ if __name__ == "__main__":
         "-d",
         "--data_directory",
         required=True,
-        help="Location of the manifest file.",
+        help="Location of the manifest file and data.",
     )
     args = parser.parse_args()
     process_bulk_uploads = ProcessBulkUploads(args.data_directory)
