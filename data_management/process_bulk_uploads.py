@@ -1,6 +1,7 @@
 import sys
 from services.data_management import DataManagement
 from services.dlu_filesystem import DLUFile
+from services.dlu_state import PackageState, DLUState
 from services.dlu_mongo import PackageType
 from model.dlu_package import DLUPackage
 import argparse
@@ -31,6 +32,8 @@ class ProcessBulkUploads:
             self.submitter_name = os.environ.get("submitter_name")
 
         self.data_directory = data_directory
+
+        self.dlu_state = DLUState()
 
     def process_files(self, manifest_files_arr: list) -> list:
         dlu_files = []
@@ -83,6 +86,7 @@ class ProcessBulkUploads:
                         dlu_file_list = self.process_files(experiment["files"])
                         records_modified = self.data_management.dlu_mongo.update_package_files(package_id, dlu_file_list)
                         self.data_management.insert_dlu_files(package.package_id, dlu_file_list)
+                        self.dlu_state.set_package_state(package_id, PackageState.METADATA_RECEIVED)
                         if records_modified == 1:
                             logger.info(f"{len(dlu_file_list)} files added to package {package_id}")
                         else:
