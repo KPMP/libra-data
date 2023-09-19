@@ -102,6 +102,8 @@ class ProcessBulkUploads:
                         logger.info(f"A package for {redcap_id} already exists as package {package_id}, skipping.")
                     if self.move:
                         files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False)
+                        if files_copied == len(dlu_file_list):
+                            self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
                     logger.info(f"{files_copied} files copied to DLU.")
 
             stream.close()
