@@ -15,27 +15,6 @@ DLU_PACKAGE_DIR_PREFIX = '/package_'
 GLOBUS_DATA_DIRECTORY = '/globus'
 DLU_DATA_DIRECTORY = '/data'
 
-def create_dest_directory(dest_path: str):
-    return_value = False
-    if not os.path.exists(dest_path):
-        logger.info("Destination directory " + dest_path + " does not exist. Creating.")
-        os.mkdir(dest_path)
-        return_value = True
-    else:
-        dest_dir_info = DirectoryInfo(dest_path)
-        if dest_dir_info.file_count > 1:
-            logger.error("Potential data files in destination directory.")
-        elif dest_dir_info.file_count == 1:
-            if os.path.exists(os.path.join(dest_path, "metadata.json")):
-                logger.info("Deleting metadata.json.")
-                os.remove(os.path.join(dest_path, "metadata.json"))
-                return_value = True
-            else:
-                logger.error("Unknown file in target directory: " + dest_path)
-        else:
-            return_value = True
-    return return_value
-
 
 def calculate_checksum(file_path: str):
     if ".zarr" not in file_path:
@@ -98,7 +77,7 @@ class DirectoryInfo:
 
 def copy_from_src_to_dest(source_path: str, dest_path: str):
     logger.info("Copying files from " + source_path + " to " + dest_path)
-    shutil.copytree(source_path, dest_path, dirs_exist_ok=True)
+    shutil.copy(source_path, dest_path)
 
 
 class DLUFileHandler:
@@ -106,6 +85,27 @@ class DLUFileHandler:
     def __init__(self):
         self.globus_data_directory = GLOBUS_DATA_DIRECTORY
         self.dlu_data_directory = DLU_DATA_DIRECTORY
+
+    def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False):
+        files_copied = 0
+        for file in file_list:
+            source_package_directory = self.globus_data_directory + '/' + file.path
+            if preserve_path:
+                dest_package_directory = os.path.join(self.dlu_data_directory, DLU_PACKAGE_DIR_PREFIX + package_id, file.path)
+            else:
+                dest_package_directory = os.path.join(self.dlu_data_directory, DLU_PACKAGE_DIR_PREFIX + package_id)
+            if not os.path.exists(dest_package_directory):
+                logger.info("Creating directory " + dest_package_directory)
+                os.makedirs(dest_package_directory, exist_ok=True)
+            source_file = os.path.join(source_package_directory, file.name)
+            dest_file = os.path.join(dest_package_directory, file.name)
+            logger.info("Copying file to " + dest_file)
+            if not os.path.exists(dest_file):
+                shutil.copy(source_file, dest_file)
+                files_copied = files_copied + 1
+            else:
+                logger.warning(dest_file + " already exists. Skipping.")
+        return files_copied
 
     def validate_package_directories(self, package_id: str):
         logger.info("Moving files for package " + package_id)

@@ -1,6 +1,6 @@
 import sys
 from services.data_management import DataManagement
-from services.dlu_filesystem import DLUFile
+from services.dlu_filesystem import DLUFile, DLUFileHandler
 from services.dlu_state import PackageState, DLUState
 from services.dlu_mongo import PackageType
 from model.dlu_package import DLUPackage
@@ -19,7 +19,7 @@ MANIFEST_FILE_NAME = "bulk-manifest-test.yaml"
 
 
 class ProcessBulkUploads:
-    def __init__(self, data_directory: str):
+    def __init__(self, data_directory: str, move: bool):
         try:
             self.data_management = DataManagement()
         except:
@@ -27,13 +27,18 @@ class ProcessBulkUploads:
         try:
             self.submitter = os.environ["mongo_submitter_id"]
             self.submitter_name = os.environ["submitter_name"]
+            self.dlu_data_directory = os.environ["dlu_data_directory"]
         except:
             self.submitter = os.environ.get("mongo_submitter_id")
             self.submitter_name = os.environ.get("submitter_name")
+            self.dlu_data_directory = os.environ.get("dlu_data_directory")
 
         self.data_directory = data_directory
-
+        self.dlu_file_handler = DLUFileHandler()
+        self.dlu_file_handler.globus_data_directory = data_directory
+        self.dlu_file_handler.dlu_data_directory = self.dlu_data_directory
         self.dlu_state = DLUState()
+        self.move = move
 
     def process_files(self, manifest_files_arr: list) -> list:
         dlu_files = []
@@ -62,6 +67,7 @@ class ProcessBulkUploads:
                     redcap_id = experiment["files"][0]["redcap_id"]
                     sample_id = experiment["files"][0]["spectrack_sample_id"]
                     logger.info(f"Trying to add package for {redcap_id}")
+                    dlu_file_list = self.process_files(experiment["files"])
                     result = self.data_management.dlu_mongo.find_by_package_type_and_redcap_id(package_type, sample_id)
                     if result is None:
                         logger.info(f"Adding package for {redcap_id}")
@@ -83,7 +89,6 @@ class ProcessBulkUploads:
                         package.dlu_dataset_information_version = 1
                         package_id = self.data_management.dlu_mongo.add_package(package.get_mongo_dict())
                         self.data_management.insert_dlu_package(package.get_mysql_tuple())
-                        dlu_file_list = self.process_files(experiment["files"])
                         records_modified = self.data_management.dlu_mongo.update_package_files(package_id, dlu_file_list)
                         self.data_management.insert_dlu_files(package.package_id, dlu_file_list)
                         self.dlu_state.set_package_state(package_id, PackageState.METADATA_RECEIVED)
@@ -92,7 +97,12 @@ class ProcessBulkUploads:
                         else:
                             logger.error(f"There was a problem adding files to package {package_id}")
                     else:
-                        logger.info(f"A package for {redcap_id} already exists, skipping.")
+                        package_id = result["_id"]
+                        logger.info(f"A package for {redcap_id} already exists as package {package_id}, skipping.")
+                    if self.move:
+                        files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False)
+                    logger.info(files_copied + " files copied to DLU.")
+
             stream.close()
         else:
             logger.error("Manifest file doesn't exist.")
@@ -107,6 +117,11 @@ if __name__ == "__main__":
         required=True,
         help="Location of the manifest file and data.",
     )
+    parser.add_argument(
+        '-m',
+        '--move',
+        action='store_true',
+            )
     args = parser.parse_args()
-    process_bulk_uploads = ProcessBulkUploads(args.data_directory)
+    process_bulk_uploads = ProcessBulkUploads(args.data_directory, args.move)
     process_bulk_uploads.process_bulk_uploads()
