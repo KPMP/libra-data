@@ -11,7 +11,7 @@ from zarr_checksum.generators import yield_files_local
 logger = logging.getLogger("DLUFilesystem")
 logger.setLevel(logging.INFO)
 
-DLU_PACKAGE_DIR_PREFIX = '/package_'
+DLU_PACKAGE_DIR_PREFIX = 'package_'
 GLOBUS_DATA_DIRECTORY = '/globus'
 DLU_DATA_DIRECTORY = '/data'
 

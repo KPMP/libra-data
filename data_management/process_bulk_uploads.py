@@ -63,6 +63,7 @@ class ProcessBulkUploads:
                 else:
                     package_type = PackageType.OTHER.value
                 for experiment in manifest_data["experiments"]:
+                    files_copied = 0
                     experiment = experiment["experiment"]
                     redcap_id = experiment["files"][0]["redcap_id"]
                     sample_id = experiment["files"][0]["spectrack_sample_id"]
@@ -101,7 +102,7 @@ class ProcessBulkUploads:
                         logger.info(f"A package for {redcap_id} already exists as package {package_id}, skipping.")
                     if self.move:
                         files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False)
-                    logger.info(files_copied + " files copied to DLU.")
+                    logger.info(f"{files_copied} files copied to DLU.")
 
             stream.close()
         else:
@@ -121,6 +122,7 @@ if __name__ == "__main__":
         '-m',
         '--move',
         action='store_true',
+        help='Move files to DLU.'
             )
     args = parser.parse_args()
     process_bulk_uploads = ProcessBulkUploads(args.data_directory, args.move)
