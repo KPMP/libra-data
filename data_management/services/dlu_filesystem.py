@@ -75,11 +75,6 @@ class DirectoryInfo:
             self.valid_for_dlu = False
 
 
-def copy_from_src_to_dest(source_path: str, dest_path: str):
-    logger.info("Copying files from " + source_path + " to " + dest_path)
-    shutil.copy(source_path, dest_path)
-
-
 class DLUFileHandler:
 
     def __init__(self):
