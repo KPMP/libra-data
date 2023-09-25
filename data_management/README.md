@@ -28,9 +28,16 @@ OR
 3d. Run the service as a Flask app on the host machine
    - `$ sh run-service-host.sh`
 
+OR
 
-NOTE: The (non-Flask app) service options are:
+3e. Run the bulk upload with the arguments in double quotes:
+- `$ sh run.sh "-d spectrack -m"`
+
+NOTE: The (non-Flask app) service options for the Data Importer are:
    - [-h] -a {update,insert} -d {redcap,spectrack}
+
+NOTE: The service options for the Bulk Uploader are:
+- [-h] -a {update,insert} -m 
 
 ## Service Endpoints
 

@@ -7,13 +7,24 @@ import uuid
 from zarr_checksum import compute_zarr_checksum
 from zarr_checksum.generators import yield_files_local
 
-
 logger = logging.getLogger("DLUFilesystem")
 logger.setLevel(logging.INFO)
 
 DLU_PACKAGE_DIR_PREFIX = 'package_'
 GLOBUS_DATA_DIRECTORY = '/globus'
 DLU_DATA_DIRECTORY = '/data'
+
+
+def split_path(path: str):
+    if len(path.split("/")) > 0:
+        file_name = path.split("/")[-1]
+        file_path_arr = path.split("/")[:-1]
+        file_path = "/".join(file_path_arr)
+    else:
+        file_name = path
+        file_path = ""
+
+    return {"file_name": file_name, "file_path": file_path}
 
 
 def calculate_checksum(file_path: str):
@@ -35,6 +46,7 @@ class DLUFile:
         self.size = size
         self.file_id = str(uuid.uuid4())
         self.metadata = metadata
+
 
 class DirectoryInfo:
     def __init__(self, directory_path: str, calculate_checksums: bool = True):
@@ -86,7 +98,8 @@ class DLUFileHandler:
         for file in file_list:
             source_package_directory = self.globus_data_directory + '/' + file.path
             if preserve_path:
-                dest_package_directory = os.path.join(self.dlu_data_directory, DLU_PACKAGE_DIR_PREFIX + package_id, file.path)
+                dest_package_directory = os.path.join(self.dlu_data_directory, DLU_PACKAGE_DIR_PREFIX + package_id,
+                                                      file.path)
             else:
                 dest_package_directory = os.path.join(self.dlu_data_directory, DLU_PACKAGE_DIR_PREFIX + package_id)
             if not os.path.exists(dest_package_directory):

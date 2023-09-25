@@ -120,6 +120,11 @@ class DataManagement:
             + str(specimen_id)
         )
 
+    def get_redcap_id_by_spectrack_sample_id(self, sample_id: str):
+        return self.db.get_data(
+            "SELECT spectrack_redcap_record_id FROM data_management.spectrack_specimen WHERE spectrack_sample_id = %s",(sample_id,),
+        )[0]["spectrack_redcap_record_id"]
+
     def get_max_spectrack_date(self):
         result = self.db.get_data(
             "SELECT MAX(spectrack_created_date) FROM data_management.spectrack_specimen"

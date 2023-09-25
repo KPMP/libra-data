@@ -24,6 +24,7 @@ COPY lib.egg-info/ ./lib.egg-info
 COPY dist/ ./dist
 COPY main.py ./
 COPY app.py ./
+COPY process_bulk_uploads.py ./
 COPY services/ ./services
 
 ENTRYPOINT []
