@@ -15,7 +15,7 @@ from bson import ObjectId
 logger = logging.getLogger("ProcessBulkUploads")
 logger.setLevel(logging.INFO)
 
-MANIFEST_FILE_NAME = "bulk-manifest-segmentation-test.yaml"
+MANIFEST_FILE_NAME = "bulk_manifest.yml"
 SEGMENTATION_README = "README.md"
 
 
@@ -85,7 +85,11 @@ class ProcessBulkUploads:
                     sample_id = experiment["files"][0]["spectrack_sample_id"]
                     if redcap_id and redcap_id.startswith("S-"):
                         sample_id = redcap_id
-                        redcap_id = self.data_management.get_redcap_id_by_spectrack_sample_id(sample_id)
+                        redcap_results = self.data_management.get_redcap_id_by_spectrack_sample_id(sample_id)
+                        if len(redcap_results) == 1:
+                            redcap_id = redcap_results[0]["spectrack_redcap_record_id"]
+                        else:
+                            redcap_id = ""
 
                     if not sample_id:
                         sample_id = redcap_id
