@@ -90,7 +90,7 @@ class ProcessBulkUploads:
                     if not sample_id:
                         sample_id = redcap_id
 
-                    if sample_id:
+                    if sample_id and len(self.data_management.get_participant_by_redcap_id(redcap_id)) > 0:
                         files_copied = 0
                         if "recruitment_site" in experiment:
                             tis = experiment["recruitment_site"]
@@ -138,7 +138,7 @@ class ProcessBulkUploads:
                                 self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
                         logger.info(f"{files_copied} files copied to DLU.")
                     else:
-                        logger.info(f"No sample ID. Could this be a README? Skipping.")
+                        logger.info(f"No sample ID or Redcap ID {redcap_id} doesn't exist. Could this be a README? Skipping.")
 
             stream.close()
         else:
