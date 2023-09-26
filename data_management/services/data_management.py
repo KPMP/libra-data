@@ -125,6 +125,11 @@ class DataManagement:
             "SELECT spectrack_redcap_record_id FROM data_management.spectrack_specimen WHERE spectrack_sample_id = %s",(sample_id,),
         )[0]["spectrack_redcap_record_id"]
 
+    def get_participant_by_redcap_id(self, redcap_id: str):
+        return self.db.get_data(
+            "SELECT * FROM data_management.redcap_participant WHERE redcap_id = %s",(redcap_id,),
+        )
+
     def get_max_spectrack_date(self):
         result = self.db.get_data(
             "SELECT MAX(spectrack_created_date) FROM data_management.spectrack_specimen"
