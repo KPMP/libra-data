@@ -101,13 +101,14 @@ class ProcessBulkUploads:
                         else:
                             tis = ""
                         logger.info(f"Trying to add package for {redcap_id}")
-                        dlu_file_list = self.process_files(experiment["files"])
-                        if package_type == PackageType.SEGMENTATION:
-                            dlu_file_list.append(self.get_single_file(SEGMENTATION_README))
-                            tis = "UFL"
+
                         result = self.data_management.dlu_mongo.find_by_package_type_and_redcap_id(package_type.value, sample_id)
                         if result is None:
                             logger.info(f"Adding package for {redcap_id}")
+                            dlu_file_list = self.process_files(experiment["files"])
+                            if package_type == PackageType.SEGMENTATION:
+                                dlu_file_list.append(self.get_single_file(SEGMENTATION_README))
+                                tis = "UFL"                            
                             package = DLUPackage()
                             package.dlu_package_type = package_type.value
                             package.dlu_tis = tis
