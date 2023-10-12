@@ -24,7 +24,7 @@ class DLUState:
             self.cache_clear_url = "http://localhost:3030/v1/clearCache"
 
     def set_package_state(self, package_id: str, state: PackageState):
-        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        headers = {"Content-type": "application/json", "Accept": "text/plain"}
         data = {
             "packageId": package_id,
             "state": state.value,

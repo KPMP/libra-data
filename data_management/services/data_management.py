@@ -200,10 +200,14 @@ class DataManagement:
 
 
     def get_ready_to_move(self, package_id: str):
-        return self.db.get_data(
+        package_record = self.db.get_data(
             "SELECT ready_to_move_from_globus FROM dlu_package_inventory WHERE dlu_package_id = %s",
             (package_id,)
-        )[0]['ready_to_move_from_globus']
+        )
+        if not len(package_record) == 0:
+            return package_record[0]['ready_to_move_from_globus']
+        else:
+            return "Error: package " + package_id + " not found."
 
     def move_globus_files_to_dlu(self, package_id: str):
         ready_status = self.get_ready_to_move(package_id)
@@ -219,6 +223,8 @@ class DataManagement:
             response_msg = "Error: package " + package_id + " was already marked as ready to move."
         elif ready_status == 'done':
             response_msg = "Error: package " + package_id + " was already moved."
+        else:
+            response_msg = ready_status
         return response_msg
 
 if __name__ == "__main__":
