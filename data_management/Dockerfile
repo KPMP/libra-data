@@ -11,7 +11,8 @@ RUN curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64
     && conda install -y python=3 \
     && conda update conda \
     && conda clean --all --yes \
-    && conda install -c conda-forge leidenalg
+    && conda install -c conda-forge leidenalg \
+    && conda install zarr
 
 COPY requirements.txt ./
 
