@@ -49,3 +49,10 @@ def move_dlu_file(package_id):
     data_management.reconnect()
     response = data_management.move_globus_files_to_dlu(package_id)
     return response
+
+@app.route("/v1/dlu/package/<package_id>/status", methods=["GET"])
+def get_package_status(package_id):
+    dlu_package_inventory = DLUPackageInventory()
+    dlu_package_inventory.reconnect()
+    status = dlu_package_inventory.get_package_status(package_id)
+    return status[0]["globus_dlu_status"] if len(status) > 0 and status[0]["globus_dlu_status"] is not None else ""

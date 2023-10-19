@@ -33,3 +33,9 @@ class DLUPackageInventory:
         return self.db.get_data(
             'SELECT dlu_package_id, globus_dlu_status FROM data_management.dlu_package_inventory WHERE ready_to_move_from_globus = "yes"'
         )
+
+    def get_package_status(self, package_id):
+        return self.db.get_data(
+            'SELECT globus_dlu_status FROM data_management.dlu_package_inventory WHERE dlu_package_id = %s',
+            (package_id,)
+        )
