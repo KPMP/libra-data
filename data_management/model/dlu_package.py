@@ -23,12 +23,12 @@ class DLUPackage:
         self.known_specimen = None
         self.redcap_id = None
         self.user_package_ready = None
-        self.dvc_validation_complete = None
         self.package_validated = None
         self.ready_to_move_from_globus = None
         self.globus_dlu_status = None
         self.removed_from_globus = None
-        self.promotion_status = None
+        self.ar_promotion_status = None
+        self.sv_promotion_status = None
         self.notes = None
 
     def get_mongo_dict(self):
