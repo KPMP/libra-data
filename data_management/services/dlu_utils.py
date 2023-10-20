@@ -17,12 +17,12 @@ def dlu_package_dict_to_tuple(dlu_inventory: dict):
         dlu_inventory["knownSpecimen"],
         dlu_inventory["redcapId"],
         dlu_inventory["userPackageReady"],
-        dlu_inventory["dvcValidationComplete"],
         dlu_inventory["packageValidated"],
         dlu_inventory["readyToMoveFromGlobus"],
         dlu_inventory["globusDluStatus"],
         dlu_inventory["removedFromGlobus"],
-        dlu_inventory["promotionStatus"],
+        dlu_inventory["arPromotionStatus"],
+        dlu_inventory["svPromotionStatus"],
         dlu_inventory["notes"],
     )
 
