@@ -124,6 +124,7 @@ class ProcessBulkUploads:
                             package.known_specimen = sample_id
                             package.dlu_version = 4
                             package.dlu_dataset_information_version = 1
+                            package.globus_dlu_status = 'success'
                             package_id = self.data_management.dlu_mongo.add_package(package.get_mongo_dict())
                             self.data_management.insert_dlu_package(package.get_mysql_tuple())
                             records_modified = self.data_management.dlu_mongo.update_package_files(package_id, dlu_file_list)
