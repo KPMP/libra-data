@@ -163,8 +163,8 @@ class DataManagement:
         logger.info(f"inserting DLU package with id: {values[0]}")
         query = ("INSERT INTO dlu_package_inventory (dlu_package_id, dlu_created, dlu_submitter, dlu_tis, "
                  + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, known_specimen, redcap_id, user_package_ready, "
-                 + "dvc_validation_complete, package_validated, ready_to_move_from_globus, globus_dlu_status, removed_from_globus, "
-                 + "promotion_status, notes) "
+                 + "package_validated, ready_to_move_from_globus, globus_dlu_status, removed_from_globus, "
+                 + "ar_promotion_status, sv_promotion_status, notes) "
                  + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
         self.db.insert_data(query, values)
         return query % values
