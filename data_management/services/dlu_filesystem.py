@@ -11,8 +11,6 @@ logger = logging.getLogger("DLUFilesystem")
 logger.setLevel(logging.INFO)
 
 DLU_PACKAGE_DIR_PREFIX = 'package_'
-GLOBUS_DATA_DIRECTORY = '/globus'
-DLU_DATA_DIRECTORY = '/data'
 
 
 def split_path(path: str):
@@ -90,13 +88,13 @@ class DirectoryInfo:
 class DLUFileHandler:
 
     def __init__(self):
-        self.globus_data_directory = GLOBUS_DATA_DIRECTORY
-        self.dlu_data_directory = DLU_DATA_DIRECTORY
+        self.globus_data_directory = os.environ.get('globus_data_directory')
+        self.dlu_data_directory = os.environ.get('dlu_data_directory')
 
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False):
         files_copied = 0
         for file in file_list:
-            source_package_directory = self.globus_data_directory + '/' + file.path
+            source_package_directory = self.globus_data_directory + '/' + package_id
             if preserve_path:
                 dest_package_directory = os.path.join(self.dlu_data_directory, DLU_PACKAGE_DIR_PREFIX + package_id,
                                                       file.path)

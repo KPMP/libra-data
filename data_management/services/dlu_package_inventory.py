@@ -39,3 +39,8 @@ class DLUPackageInventory:
             'SELECT globus_dlu_status FROM data_management.dlu_package_inventory WHERE dlu_package_id = %s',
             (package_id,)
         )
+
+    def get_processing_packages(self):
+        return self.db.get_data(
+            'SELECT dlu_package_id FROM data_management.dlu_package_inventory WHERE globus_dlu_status = "processing"'
+        )
