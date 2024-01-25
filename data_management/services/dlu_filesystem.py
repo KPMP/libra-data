@@ -88,8 +88,8 @@ class DirectoryInfo:
 class DLUFileHandler:
 
     def __init__(self):
-        self.globus_data_directory = os.environ.get('globus_data_directory')
-        self.dlu_data_directory = os.environ.get('dlu_data_directory')
+        self.globus_data_directory = '/globus'
+        self.dlu_data_directory = '/data'
 
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False):
         files_copied = 0
