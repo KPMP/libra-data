@@ -9,7 +9,7 @@ from services.data_management import DataManagement
 from model.dlu_package import DLUPackage
 from services.dlu_mongo import DLUMongo
 
-
+from dotenv import load_dotenv
 import logging
 import time
 import datetime
@@ -17,6 +17,7 @@ import os
 
 logger = logging.getLogger("services-dlu_package_watcher")
 logger.setLevel(logging.INFO)
+load_dotenv()
   
 class DLUWatcher:   
     def __init__ (self, db: DLUPackageInventory = None):
@@ -61,9 +62,9 @@ class DLUWatcher:
                 logger.info("Moving package " + package_id)
 
                 self.data_management.update_dlu_package(package_id, { "globus_dlu_status": "processing" })
-                globus_data_directory = os.environ['globus_data_directory'] + '/' + package_id
+                globus_data_directory = '/globus/' + package_id
                 if not os.path.isdir(globus_data_directory):
-                    error_msg = "Error: package " + package_id + " not found in directory " + os.environ['globus_data_directory'] + "."
+                    error_msg = "Error: package " + package_id + " not found in directory " + os.environ.get('globus_data_directory') + "."
                     logger.info(error_msg + " Skipping.")
                     self.data_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
                     continue
