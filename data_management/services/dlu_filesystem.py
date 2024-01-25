@@ -105,12 +105,13 @@ class DLUFileHandler:
                 os.makedirs(dest_package_directory, exist_ok=True)
             source_file = os.path.join(source_package_directory, file.name)
             dest_file = os.path.join(dest_package_directory, file.name)
-            logger.info("Copying file to " + dest_file)
+            dest_file_name = os.environ.get('dlu_data_directory') + '/' + DLU_PACKAGE_DIR_PREFIX + package_id + '/' + file.name
+            logger.info("Copying file to " + dest_file_name)
             if not os.path.exists(dest_file):
                 shutil.copy(source_file, dest_file)
                 files_copied = files_copied + 1
             else:
-                logger.warning(dest_file + " already exists. Skipping.")
+                logger.warning(dest_file_name + " already exists. Skipping.")
         return files_copied
 
     def validate_package_directories(self, package_id: str):
