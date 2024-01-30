@@ -181,7 +181,7 @@ class DataManagement:
         return query % values
 
     def update_dlu_package(self, package_id: str, fields_values: dict):
-        logger.info(f"updating DLU package with id: {package_id}")
+        logger.info(f"updating DLU package {package_id} with " + str(fields_values))
         query_info = get_update_query_info(fields_values)
         values = query_info["values"][0:] + (package_id,)
         query = "UPDATE dlu_package_inventory SET " + query_info["set_clause"] + " WHERE dlu_package_id = %s"
