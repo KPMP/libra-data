@@ -64,7 +64,7 @@ class DLUWatcher:
                 self.data_management.update_dlu_package(package_id, { "globus_dlu_status": "processing" })
                 globus_data_directory = '/globus/' + package_id
                 if not os.path.isdir(globus_data_directory):
-                    error_msg = "Error: package " + package_id + " not found in directory " + os.environ.get('globus_data_directory') + "."
+                    error_msg = "Error: package " + package_id + " not found in directory " + globus_data_directory + "."
                     logger.info(error_msg + " Skipping.")
                     self.data_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
                     continue

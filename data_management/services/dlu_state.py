@@ -33,7 +33,10 @@ class DLUState:
         try:
             requests.post(self.state_url, data=json.dumps(data), headers=headers)
         except requests.exceptions.RequestException as e:
-            logger.error("There was an error updating the state: " + e.strerror)
+            if e and e.strerror:
+                logger.error("There was an error updating the state: " + e.strerror)
+            else:
+                logger.error("There was an error updating the state.")
 
     def clear_cache(self):
         requests.get(self.cache_clear_url)
