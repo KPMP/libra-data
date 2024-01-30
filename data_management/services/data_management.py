@@ -181,11 +181,12 @@ class DataManagement:
         return query % values
 
     def update_dlu_package(self, package_id: str, fields_values: dict):
-        logger.info(f"updating DLU package {package_id} with " + str(fields_values))
-        query_info = get_update_query_info(fields_values)
-        values = query_info["values"][0:] + (package_id,)
-        query = "UPDATE dlu_package_inventory SET " + query_info["set_clause"] + " WHERE dlu_package_id = %s"
-        self.db.insert_data(query, values)
+        if fields_values:
+            logger.info(f"updating DLU package {package_id} with " + str(fields_values))
+            query_info = get_update_query_info(fields_values)
+            values = query_info["values"][0:] + (package_id,)
+            query = "UPDATE dlu_package_inventory SET " + query_info["set_clause"] + " WHERE dlu_package_id = %s"
+            self.db.insert_data(query, values)
 
     def insert_dlu_file(self, values):
         query = "INSERT INTO dlu_file (dlu_fileName, dlu_package_id, dlu_file_id, dlu_filesize, dlu_md5checksum, dlu_metadata) VALUES(%s, %s, %s, %s, %s, %s)"
