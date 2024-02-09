@@ -37,7 +37,7 @@ class DataManagement:
 
     def get_data_management_tables(self):
         data = self.db.get_data("SHOW TABLES;")
-        print("data:", data)
+        logger.info("data:", data)
 
     def get_redcap_participant_count(self, redcap_id):
         return self.db.get_data(
@@ -72,11 +72,13 @@ class DataManagement:
             )
 
     def insert_slide_scan_status_with_participant(self, spectrack_info: tuple):
+        
         result = self.db.get_data(
             "SELECT count(redcap_id) as p_count FROM data_management.slide_scan_status_participant WHERE redcap_id = %s",
             (spectrack_info[5],),
         )[0]["p_count"]
         if result == 0:
+            logger.info("Inserting slide scan status for participant " + spectrack_info[5])
             values = ( spectrack_info[5], spectrack_info[8], spectrack_info[12])
             self.db.insert_data(
                 "INSERT INTO data_management.slide_scan_status_participant ( "
@@ -94,6 +96,7 @@ class DataManagement:
             (values[0],),
         )[0]["specimen_count"]
         if result == 0:
+            logger.info("Inserting into spectrack_specimen for specimen id: " + values[0])
             self.db.insert_data(
                 "INSERT INTO data_management.spectrack_specimen ( "
                 + "spectrack_specimen_id, spectrack_sample_id, "

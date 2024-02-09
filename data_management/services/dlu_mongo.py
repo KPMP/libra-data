@@ -2,6 +2,10 @@ from lib.mongo_connection import MongoConnection
 from services.dlu_filesystem import DLUFile
 from typing import List
 from enum import Enum
+import logging
+
+logger = logging.getLogger("services-DLUMongo")
+logging.basicConfig(level=logging.INFO)
 
 EM_IMAGE_TYPE = "EM Images"
 
@@ -26,6 +30,7 @@ class DLUMongo:
                 "size": file.size,
                 "md5Checksum": file.checksum,
             }
+            logger.info("Updating " + file.name + " for package " + package_id)
             if len(file.metadata) != 0:
                 file_dict["metadata"] = file.metadata
             mongo_files.append(file_dict)

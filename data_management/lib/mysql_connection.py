@@ -46,7 +46,7 @@ class MYSQLConnection:
             self.cursor = self.database.cursor(buffered=False, dictionary=True)
             return self.cursor
         except:
-            print("Can't get mysql cursor")
+            logger.error("Can't get mysql cursor")
             os.sys.exit()
 
     def get_db_connection(self):
@@ -61,7 +61,7 @@ class MYSQLConnection:
             self.database.get_warnings = True
             return self.database
         except:
-            print("Can't connect to MySQL")
+            logger.error("Can't connect to MySQL")
             os.sys.exit()
 
     def insert_data(self, sql, data):
@@ -72,7 +72,7 @@ class MYSQLConnection:
             if warning is not None:
                 print(warning)
         except:
-            print(f"Cannot insert with query: {sql}; and the data: {data}")
+            logger.error(f"Cannot insert with query: {sql}; and the data: {data}")
         finally:
             self.database.commit()
             self.cursor.close()
@@ -86,7 +86,7 @@ class MYSQLConnection:
                 data.append(row)
             return data
         except:
-            print("Can't get data_management data.")
+            logger.error("Can't get data_management data.")
         finally:
             self.cursor.close()
 
@@ -94,11 +94,11 @@ class MYSQLConnection:
 if __name__ == "__main__":
     try:
         cursor = self.connection.cursor(buffered=False, dictionary=True)
-        print("mysql connection successful, listing available tables")
+        logger.info("mysql connection successful, listing available tables")
         cursor.execute("SHOW TABLES;")
         for row in cursor:
             print(row)
     except:
-        print("Can't get data_management data")
+        logger.error("Can't get data_management data")
     finally:
         cursor.close()
