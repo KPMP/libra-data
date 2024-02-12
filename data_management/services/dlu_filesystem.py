@@ -105,7 +105,6 @@ class DLUFileHandler:
         return files_copied
 
     def validate_package_directories(self, package_id: str):
-        logger.info("Moving files for package " + package_id)
         source_package_directory = self.globus_data_directory + '/' + package_id
         source_directory_info = DirectoryInfo(source_package_directory, False)
         success = True
@@ -115,3 +114,47 @@ class DLUFileHandler:
             success = False
             logger.error("Directory for package " + package_id + " failed validation.")
         return success
+
+    def process_globus_directory(self, directoryListing, globusDirectories: list[DirectoryInfo], packageId, initialDir):
+        for dir in globusDirectories:
+            prefix = ""
+            if not initialDir == "":
+                prefix = initialDir + "/"
+            currentDir = prefix + os.path.basename(dir.directory_path)
+
+            globusFiles = []
+            globusDirectories = []
+            for item in dir.file_details:
+                if os.path.isdir(item.path):
+                    globusDirectories.append(DirectoryInfo(item.path))
+                else:
+                    globusFiles.append(item)
+            directoryListing[currentDir] = globusFiles
+            if len(globusDirectories) > 0: 
+                self.process_globus_directory(directoryListing, globusDirectories, packageId, currentDir)
+        return directoryListing
+    
+    def match_files(self, packageId) -> list[DLUFile]:
+        topLevelDir = DirectoryInfo(self.globus_data_directory + '/' + packageId)
+        globusFiles = []
+        globusDirectories = []
+        for obj in topLevelDir.file_details:
+            if os.path.isdir(obj.path):
+                directory = DirectoryInfo(obj.path)
+                globusDirectories.append(directory)
+            else:
+                globusFiles.append(obj)
+        filesInGlobusDirectories = {}
+        filesInGlobusDirectories[""] = globusFiles
+        currentDir = ""
+        filesInGlobusDirectories = self.process_globus_directory(filesInGlobusDirectories, globusDirectories, packageId, currentDir)
+        return self.get_globus_file_paths(filesInGlobusDirectories)
+    
+    def get_globus_file_paths(self, filesInGlobusDirectories: dict[str, list[DLUFile]]) -> list[DLUFile]:
+        fileList = []
+        for dir, files in filesInGlobusDirectories.items():
+            for file in files:
+                prefix = dir + "/" if dir else ""
+                file.name = prefix + file.name
+                fileList.append(file)
+        return fileList
