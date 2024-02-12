@@ -63,9 +63,10 @@ class DirectoryInfo:
             full_path = os.path.join(self.directory_path, item)
             if os.path.isdir(full_path) and ".zarr" not in full_path:
                 self.subdir_count += 1
+                checksum = "0"
             else:
                 self.file_count += 1
-            checksum = "0" if self.calculate_checksums else calculate_checksum(full_path)
+                checksum = "0" if self.calculate_checksums else calculate_checksum(full_path)
             self.file_details.append(DLUFile(item, full_path, checksum, os.path.getsize(full_path)))
 
     def check_if_valid_for_dlu(self):
