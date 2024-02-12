@@ -70,7 +70,7 @@ class DirectoryInfo:
             self.file_details.append(DLUFile(item, full_path, checksum, os.path.getsize(full_path)))
 
     def check_if_valid_for_dlu(self):
-        return len(self.dir_contents) != 0
+        self.valid_for_dlu = (len(self.dir_contents) != 0)
 
 
 class DLUFileHandler:
