@@ -15,7 +15,7 @@ from bson import ObjectId
 logger = logging.getLogger("ProcessBulkUploads")
 logger.setLevel(logging.INFO)
 
-MANIFEST_FILE_NAME = "bulk_manifest.yml"
+MANIFEST_FILE_NAME = "bulk_manifest.yaml"
 SEGMENTATION_README = "README.md"
 
 
