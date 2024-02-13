@@ -77,16 +77,18 @@ class DLUFileHandler:
     def __init__(self):
         self.globus_data_directory = '/globus'
         self.dlu_data_directory = '/data'
+        self.dlu_package_dir_prefix = 'package_'
 
-    def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False):
+
+def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, to_globus: bool = False):
         files_copied = 0
         for file in file_list:
             source_package_directory = self.globus_data_directory + '/' + package_id
             if preserve_path:
-                dest_package_directory = os.path.join(self.dlu_data_directory, DLU_PACKAGE_DIR_PREFIX + package_id,
+                dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix  + package_id,
                                                       file.path)
             else:
-                dest_package_directory = os.path.join(self.dlu_data_directory, DLU_PACKAGE_DIR_PREFIX + package_id)
+                dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix  + package_id)
             if not os.path.exists(dest_package_directory):
                 logger.info("Creating directory " + dest_package_directory)
                 os.makedirs(dest_package_directory, exist_ok=True)
@@ -103,6 +105,7 @@ class DLUFileHandler:
             else:
                 logger.warning(dest_file + " already exists. Skipping.")
         return files_copied
+
 
     def validate_package_directories(self, package_id: str):
         logger.info("Moving files for package " + package_id)

@@ -20,7 +20,7 @@ SEGMENTATION_README = "README.md"
 
 
 class ProcessBulkUploads:
-    def __init__(self, data_directory: str, move: bool):
+    def __init__(self, data_directory: str, globus_only: bool = False, globus_root: str = None):
         try:
             self.data_management = DataManagement()
         except:
@@ -35,11 +35,16 @@ class ProcessBulkUploads:
             self.dlu_data_directory = os.environ.get("dlu_data_directory")
 
         self.data_directory = data_directory
+        self.globus_only = globus_only
         self.dlu_file_handler = DLUFileHandler()
         self.dlu_file_handler.globus_data_directory = data_directory
         self.dlu_file_handler.dlu_data_directory = self.dlu_data_directory
+        # If the destination is Globus, set the destination data directory to the Globus root and don't use package prefix.
+        if globus_only:
+            self.dlu_file_handler.dlu_data_directory = globus_root
+            self.dlu_file_handler.dlu_package_dir_prefix = ''
+
         self.dlu_state = DLUState()
-        self.move = move
 
     def get_single_file(self, file_path: str) -> DLUFile:
         full_path = os.path.join(self.data_directory, file_path)
@@ -124,24 +129,35 @@ class ProcessBulkUploads:
                             package.known_specimen = sample_id
                             package.dlu_version = 4
                             package.dlu_dataset_information_version = 1
-                            package.globus_dlu_status = 'success'
-                            package_id = self.data_management.dlu_mongo.add_package(package.get_mongo_dict())
-                            self.data_management.insert_dlu_package(package.get_mysql_tuple())
-                            records_modified = self.data_management.dlu_mongo.update_package_files(package_id, dlu_file_list)
-                            self.data_management.insert_dlu_files(package.package_id, dlu_file_list)
-                            self.dlu_state.set_package_state(package_id, PackageState.METADATA_RECEIVED)
-                            if records_modified == 1:
-                                logger.info(f"{len(dlu_file_list)} files added to package {package_id}")
+                            if self.globus_only:
+                                package.globus_dlu_status = 'waiting'
                             else:
-                                logger.error(f"There was a problem adding files to package {package_id}")
+                                package.globus_dlu_status = 'success'
+                            package_id = self.data_management.dlu_mongo.add_package(package.get_mongo_dict())
+                            self.dlu_state.set_package_state(package_id, PackageState.METADATA_RECEIVED)
+                            self.data_management.insert_dlu_package(package.get_mysql_tuple())
+                            if not self.globus_only:
+                                logger.info("Copying files to DLU.")
+                                records_modified = self.data_management.dlu_mongo.update_package_files(package_id, dlu_file_list)
+                                self.data_management.insert_dlu_files(package.package_id, dlu_file_list)
+                                if records_modified == 1:
+                                    logger.info(f"{len(dlu_file_list)} files added to package {package_id}")
+                                    files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False)
+                                    if files_copied == len(dlu_file_list):
+                                        self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
+                                        logger.info(f"{files_copied} files copied to DLU.")
+                                else:
+                                        logger.error(f"There was a problem adding files to package {package_id}")
+                            else:
+                                logger.info("Copying files to Globus.")
+                                files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False)
+                                if files_copied == len(dlu_file_list):
+                                    logger.info(f"{files_copied} files copied to Globus.")
+
                         else:
                             package_id = result["_id"]
                             logger.info(f"A package for {redcap_id} already exists as package {package_id}, skipping.")
-                        if self.move:
-                            files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False)
-                            if files_copied == len(dlu_file_list):
-                                self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
-                        logger.info(f"{files_copied} files copied to DLU.")
+
                     else:
                         logger.info(f"No sample ID or Redcap ID {redcap_id} doesn't exist. Could this be a README? Skipping.")
 
@@ -160,11 +176,20 @@ if __name__ == "__main__":
         help="Location of the manifest file and data.",
     )
     parser.add_argument(
-        '-m',
-        '--move',
-        action='store_true',
-        help='Move files to DLU.'
-            )
+        '-g',
+        '--globus_only',
+        action='store_false',
+        help='Only move files to Globus and do no process and put in DLU. Requires --globus_root argument if set.'
+    )
+    parser.add_argument(
+        '-r',
+        '--globus_root',
+        required=False,
+        default=None,
+        help='The top-level Globus folder if globus_only is set.'
+    )
     args = parser.parse_args()
-    process_bulk_uploads = ProcessBulkUploads(args.data_directory, args.move)
+    if args.globus_only and args.globus_root is None:
+        parser.error("--globus_only requires --globus_root to be set.")
+    process_bulk_uploads = ProcessBulkUploads(args.data_directory, args.globus_only, args.globus_root)
     process_bulk_uploads.process_bulk_uploads()
