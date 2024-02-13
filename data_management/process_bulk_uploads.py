@@ -178,7 +178,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '-g',
         '--globus_only',
-        action='store_false',
+        action='store_true',
+        default=False,
         help='Only move files to Globus and do no process and put in DLU. Requires --globus_root argument if set.'
     )
     parser.add_argument(
@@ -190,6 +191,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     if args.globus_only and args.globus_root is None:
-        sys.exit("--globus_only requires --globus_root to be set.")
+        parser.error("--globus_only requires --globus_root to be set.")
     process_bulk_uploads = ProcessBulkUploads(args.data_directory, args.globus_only, args.globus_root)
     process_bulk_uploads.process_bulk_uploads()
