@@ -79,8 +79,7 @@ class DLUFileHandler:
         self.dlu_data_directory = '/data'
         self.dlu_package_dir_prefix = 'package_'
 
-
-def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, to_globus: bool = False):
+    def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False):
         files_copied = 0
         for file in file_list:
             source_package_directory = self.globus_data_directory + '/' + package_id
