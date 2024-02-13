@@ -190,6 +190,6 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     if args.globus_only and args.globus_root is None:
-        parser.error("--globus_only requires --globus_root to be set.")
+        sys.exit("--globus_only requires --globus_root to be set.")
     process_bulk_uploads = ProcessBulkUploads(args.data_directory, args.globus_only, args.globus_root)
     process_bulk_uploads.process_bulk_uploads()
