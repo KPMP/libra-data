@@ -82,6 +82,8 @@ class DLUFileHandler:
             source_package_directory = self.globus_data_directory + '/'
             if not no_src_package:
                 source_package_directory = source_package_directory + package_id
+            if file.path:
+                os.path.join(source_package_directory, file.path)
             if preserve_path:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id,
                                                       file.path)
