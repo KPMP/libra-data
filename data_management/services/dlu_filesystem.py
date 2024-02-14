@@ -94,6 +94,7 @@ class DLUFileHandler:
                 os.makedirs(dest_package_directory, exist_ok=True)
             source_file = os.path.join(source_package_directory, file.name)
             dest_file = os.path.join(dest_package_directory, file.name)
+            print(source_file + " to " + dest_file)
             if not os.path.exists(dest_file):
                 if os.path.isdir(source_file):
                     logger.info("Copying directory to " + dest_file)
