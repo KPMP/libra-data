@@ -149,7 +149,7 @@ class ProcessBulkUploads:
                             self.data_management.insert_dlu_files(package.package_id, dlu_file_list)
                             if records_modified == 1:
                                 logger.info(f"{len(dlu_file_list)} files added to package {package_id}")
-                                files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False)
+                                files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False, True)
                                 if files_copied == len(dlu_file_list):
                                     self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
                                     logger.info(f"{files_copied} files copied to DLU.")
@@ -157,7 +157,7 @@ class ProcessBulkUploads:
                                     logger.error(f"There was a problem adding files to package {package_id}")
                         else:
                             logger.info("Copying files to Globus.")
-                            files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False)
+                            files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False, True)
                             if files_copied == len(dlu_file_list):
                                 logger.info(f"{files_copied} files copied to Globus.")
 
