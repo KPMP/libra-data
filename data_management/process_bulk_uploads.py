@@ -137,7 +137,7 @@ class ProcessBulkUploads:
                         package.dlu_version = 4
                         package.dlu_dataset_information_version = 1
                         if self.globus_only:
-                            package.globus_dlu_status = 'waiting'
+                            package.globus_dlu_status = None
                         else:
                             package.globus_dlu_status = 'success'
                         package_id = self.data_management.dlu_mongo.add_package(package.get_mongo_dict())
