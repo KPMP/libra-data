@@ -10,9 +10,6 @@ from zarr_checksum.generators import yield_files_local
 logger = logging.getLogger("DLUFilesystem")
 logger.setLevel(logging.INFO)
 
-DLU_PACKAGE_DIR_PREFIX = 'package_'
-
-
 def split_path(path: str):
     if len(path.split("/")) > 0:
         file_name = path.split("/")[-1]
@@ -78,16 +75,21 @@ class DLUFileHandler:
     def __init__(self):
         self.globus_data_directory = '/globus'
         self.dlu_data_directory = '/data'
+        self.dlu_package_dir_prefix = 'package_'
 
-    def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False):
+    def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
         for file in file_list:
-            source_package_directory = self.globus_data_directory + '/' + package_id
+            source_package_directory = self.globus_data_directory + '/'
+            if not no_src_package:
+                source_package_directory = source_package_directory + package_id
+            if file.path:
+                source_package_directory = os.path.join(source_package_directory, file.path)
             if preserve_path:
-                dest_package_directory = os.path.join(self.dlu_data_directory, DLU_PACKAGE_DIR_PREFIX + package_id,
+                dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id,
                                                       file.path)
             else:
-                dest_package_directory = os.path.join(self.dlu_data_directory, DLU_PACKAGE_DIR_PREFIX + package_id)
+                dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
             if not os.path.exists(dest_package_directory):
                 logger.info("Creating directory " + dest_package_directory)
                 os.makedirs(dest_package_directory, exist_ok=True)
