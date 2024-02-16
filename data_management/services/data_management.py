@@ -55,7 +55,7 @@ class DataManagement:
             "select spectrack_redcap_record_id from spectrack_specimen where spectrack_sample_id = %s", (subject_id,)
         )
         if len(result) > 0:
-            return [0]["spectrack_redcap_record_id"]
+            return result[0]["spectrack_redcap_record_id"]
         else:
             return None
 
