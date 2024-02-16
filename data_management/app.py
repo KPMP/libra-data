@@ -13,6 +13,8 @@ def add_dlu_package():
     data_management = DataManagement()
     data_management.reconnect()
     content = request.json
+    if content["redcapId"] is None:
+        content["redcapId"] = data_management.get_redcapid_by_subjectid(content["dluSubjectId"])
     content_tuple = dlu_package_dict_to_tuple(content)
     data_management.insert_dlu_package(content_tuple)
     return content_tuple[0]
