@@ -51,9 +51,13 @@ class DataManagement:
         )[0]
 
     def get_redcapid_by_subjectid(self, subject_id: str):
-        return self.db.get_data(
+        result = self.db.get_data(
             "select spectrack_redcap_record_id from spectrack_specimen where spectrack_sample_id = %s", (subject_id,)
-        )[0]["spectrack_redcap_record_id"]
+        )
+        if len(result) > 0:
+            return [0]["spectrack_redcap_record_id"]
+        else:
+            return None
 
     def insert_redcap_participant(self, redcap_participant):
         if self.get_redcap_participant_count(redcap_participant["redcap_id"]) == 0:
