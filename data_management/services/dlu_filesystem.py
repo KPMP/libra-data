@@ -23,6 +23,8 @@ def split_path(path: str):
 
 
 def calculate_checksum(file_path: str):
+    if os.path.isdir(file_path):
+        return "0"
     if ".zarr" not in file_path:
         with open(file_path, "rb") as f:
             file_hash = hashlib.md5()
@@ -63,7 +65,7 @@ class DirectoryInfo:
                 checksum = "0"
             else:
                 self.file_count += 1
-                checksum = "0" if self.calculate_checksums else calculate_checksum(full_path)
+                checksum = "0" if not self.calculate_checksums else calculate_checksum(full_path)
             self.file_details.append(DLUFile(item, full_path, checksum, os.path.getsize(full_path)))
 
     def check_if_valid_for_dlu(self):
