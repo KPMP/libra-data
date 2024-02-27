@@ -96,7 +96,7 @@ class DLUFileHandler:
                 for o in os.listdir(source_package_directory)
                 if os.path.isdir(os.path.join(source_package_directory, o))]
             dir = "".join(subdirs)
-            if len(os.listdir(source_package_directory)) == 1 and os.path.isdir(source_package_directory):
+            if len(os.listdir(source_package_directory)) == 1 and os.path.isdir(source_package_directory) and os.path.isdir(dir):
                 
                 os.chdir(dir)
                 allfiles = os.listdir(dir)
