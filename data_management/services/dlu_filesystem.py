@@ -1,7 +1,6 @@
 import os
 import logging
 import shutil
-import filecmp
 import hashlib
 import uuid
 from zarr_checksum import compute_zarr_checksum
@@ -81,6 +80,7 @@ class DLUFileHandler:
 
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
+        source_wd = os.getcwd()
         for file in file_list:
             source_package_directory = self.globus_data_directory + '/'
             if not no_src_package:
@@ -92,12 +92,38 @@ class DLUFileHandler:
                                                       file.path)
             else:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
+            subdirs = [os.path.join(source_package_directory, o)
+                for o in os.listdir(source_package_directory)
+                if os.path.isdir(os.path.join(source_package_directory, o))]
+            dir = "".join(subdirs)
+            if len(os.listdir(source_package_directory)) == 1 and os.path.isdir(source_package_directory):
+                
+                os.chdir(dir)
+                allfiles = os.listdir(dir)
+
+                for f in allfiles:
+                    src_path = os.path.join(dir, f)
+                    dst_path = os.path.join(dest_package_directory, f)
+                    if not os.path.isdir(dest_package_directory):
+                        os.mkdir(dest_package_directory)
+
+                    if os.path.isfile(f):
+                        logger.info("Copying file " + f + " to " + dst_path)
+                        shutil.copy(src_path, dst_path)
+                        files_copied += 1
+                    else:
+                        logger.info("Copying directory " + src_path)
+                        files_copied += 1
+                        shutil.copytree(src_path, dst_path)
+                os.chdir(source_wd)
+            
             if not os.path.exists(dest_package_directory):
                 logger.info("Creating directory " + dest_package_directory)
                 os.makedirs(dest_package_directory, exist_ok=True)
             source_file = os.path.join(source_package_directory, file.name)
             dest_file = os.path.join(dest_package_directory, file.name)
-            if not os.path.exists(dest_file):
+            
+            if not os.path.exists(dest_file) and not dest_file.find(dir) == -1:
                 if os.path.isdir(source_file):
                     logger.info("Copying directory to " + dest_file)
                     shutil.copytree(source_file, dest_file)
@@ -135,10 +161,10 @@ class DLUFileHandler:
                 else:
                     globusFiles.append(item)
             directoryListing[currentDir] = globusFiles
-            if len(globusDirectories) > 0: 
+            if len(globusDirectories) > 0:
                 self.process_globus_directory(directoryListing, globusDirectories, packageId, currentDir)
         return directoryListing
-    
+
     def match_files(self, packageId) -> list[DLUFile]:
         topLevelDir = DirectoryInfo(self.globus_data_directory + '/' + packageId)
         globusFiles = []
@@ -154,7 +180,7 @@ class DLUFileHandler:
         currentDir = ""
         filesInGlobusDirectories = self.process_globus_directory(filesInGlobusDirectories, globusDirectories, packageId, currentDir)
         return self.get_globus_file_paths(filesInGlobusDirectories)
-    
+
     def get_globus_file_paths(self, filesInGlobusDirectories: dict[str, list[DLUFile]]) -> list[DLUFile]:
         fileList = []
         for dir, files in filesInGlobusDirectories.items():

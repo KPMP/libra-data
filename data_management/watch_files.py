@@ -69,12 +69,12 @@ class DLUWatcher:
 
             directory_info = DirectoryInfo(globus_data_directory)
 
-            if directory_info.file_count == 0:
-                error_msg = "Error: package " + package_id + " has no files."
+            if directory_info.file_count == 0 and directory_info.subdir_count == 0:
+                error_msg = "Error: package " + package_id + " has no files or top level subdirectory"
                 logger.info(error_msg + " Skipping.")
                 self.data_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
                 continue
-
+            
             self.dlu_file_handler.copy_files(package_id, self.process_file_paths(directory_info.file_details))
             file_list = self.dlu_file_handler.match_files(package_id)
             self.data_management.insert_dlu_files(package_id, file_list)
