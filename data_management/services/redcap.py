@@ -185,6 +185,9 @@ class Redcap:
                     elif record["field_name"] == "exp_disease_type":
                         participant["redcap_tissue_type"] = record["field_value"]
 
+                    elif record["field_name"] == "adj_primary_categoryC":
+                        participant["adj_primary_category"] = record["field_value"]
+
                     else:
                         logger.error(
                             f'Error: Additional fields found we are not mapping: {record["record"]} with field_name: {record["field_name"]} value: {record["value"]}'
