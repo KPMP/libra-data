@@ -15,6 +15,9 @@ def add_dlu_package():
     content = request.json
     if content["redcapId"] is None:
         content["redcapId"] = data_management.get_redcapid_by_subjectid(content["dluSubjectId"])
+        if content["redcapId"] is None and data_management.get_redcap_participant_count(content["dluSubjectId"]) > 0:
+            content["redcapId"] = content["dluSubjectId"]
+
     content_tuple = dlu_package_dict_to_tuple(content)
     data_management.insert_dlu_package(content_tuple)
     return content_tuple[0]
