@@ -93,8 +93,8 @@ class DLUFileHandler:
             else:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
             subdirs = [os.path.join(source_package_directory, o)
-                for o in os.listdir(source_package_directory)
-                if os.path.isdir(os.path.join(source_package_directory, o))]
+            for o in os.listdir(source_package_directory)
+              if os.path.isdir(os.path.join(source_package_directory, o))]
             dir = "".join(subdirs)
             if len(os.listdir(source_package_directory)) == 1 and os.path.isdir(source_package_directory) and os.path.isdir(dir):
                 
@@ -170,6 +170,12 @@ class DLUFileHandler:
         globusFiles = []
         globusDirectories = []
         for obj in topLevelDir.file_details:
+            logger.info("File details: " + topLevelDir.file_details)
+            logger.info("object path " + obj.path)
+            if len(obj.path) == 1 and os.path.isdir(obj.path):
+              subfolder = os.path.join(obj.path, topLevelDir)
+              directory = DirectoryInfo(subfolder)
+              globusFiles.append(directory)
             if os.path.isdir(obj.path):
                 directory = DirectoryInfo(obj.path)
                 globusDirectories.append(directory)
