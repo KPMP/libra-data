@@ -88,4 +88,4 @@ if __name__ == "__main__":
     while True:
         dlu_watcher = DLUWatcher()
         dlu_watcher.watch_for_files()
-        time.sleep(10*60)
+        time.sleep(30)
