@@ -1,8 +1,9 @@
 from datetime import datetime
+from dateutil import tz
 
 def dlu_package_dict_to_tuple(dlu_inventory: dict):
     # Java timestamp is in milliseconds
-    dt_string = datetime.fromtimestamp(dlu_inventory["dluCreated"] / 1000.0).strftime(
+    dt_string = datetime.fromtimestamp(dlu_inventory["dluCreated"] / 1000.0, tz.gettz('America/New_York')).strftime(
         "%Y-%m-%d %H:%M:%S"
     )
     return (

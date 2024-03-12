@@ -9,6 +9,7 @@ import logging
 import yaml
 import os
 import datetime
+from dateutil import tz
 from bson.dbref import DBRef
 from bson import ObjectId
 
@@ -123,7 +124,7 @@ class ProcessBulkUploads:
                         package = DLUPackage()
                         package.dlu_package_type = package_type.value
                         package.dlu_tis = tis
-                        package.dlu_created = datetime.datetime.today()
+                        package.dlu_created = datetime.datetime.now(tz.gettz('America/New_York'))
                         package.dlu_submitter = DBRef(collection='users', id=ObjectId(self.submitter))
                         package.submitter_name = self.submitter_name
                         package.dlu_data_generators = manifest_data["data_generators"]
