@@ -170,12 +170,6 @@ class DLUFileHandler:
         globusFiles = []
         globusDirectories = []
         for obj in topLevelDir.file_details:
-            logger.info("File details: " + topLevelDir.file_details)
-            logger.info("object path " + obj.path)
-            if len(obj.path) == 1 and os.path.isdir(obj.path):
-              subfolder = os.path.join(obj.path, topLevelDir)
-              directory = DirectoryInfo(subfolder)
-              globusFiles.append(directory)
             if os.path.isdir(obj.path):
                 directory = DirectoryInfo(obj.path)
                 globusDirectories.append(directory)
