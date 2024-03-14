@@ -53,7 +53,7 @@ class DLUPackage:
         return (
             self.package_id,
             self.dlu_created.strftime(
-                "%Y-%m-%d"),
+                "%Y-%m-%d %H:%M:%S"),
             self.submitter_name,
             self.dlu_tis,
             self.dlu_package_type,
