@@ -21,8 +21,8 @@ def dlu_package_dict_to_tuple(dlu_inventory: dict):
         dlu_inventory["readyToMoveFromGlobus"],
         dlu_inventory["globusDluStatus"],
         dlu_inventory["removedFromGlobus"],
-        dlu_inventory["arPromotionStatus"],
-        dlu_inventory["svPromotionStatus"],
+        None,
+        None,
         dlu_inventory["notes"],
     )
 
