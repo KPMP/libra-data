@@ -55,6 +55,7 @@ class DLUWatcher:
         return dlu_files
 
     def move_packages_to_DLU(self, packages):
+        file_list = None
         for _, package in enumerate(packages):
             package_id = package['dlu_package_id']
             logger.info("Moving package " + package_id)
@@ -75,8 +76,14 @@ class DLUWatcher:
                 self.data_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
                 continue
             
+            if directory_info.file_count == 0 and directory_info.subdir_count == 1:
+                contents = "".join(directory_info.dir_contents)
+                top_level_subdir = package_id + "/" + contents
+                file_list = self.dlu_file_handler.match_files(top_level_subdir)
+            else:
+              file_list = self.dlu_file_handler.match_files(package_id)
+              
             self.dlu_file_handler.copy_files(package_id, self.process_file_paths(directory_info.file_details))
-            file_list = self.dlu_file_handler.match_files(package_id)
             self.data_management.insert_dlu_files(package_id, file_list)
             self.data_management.update_dlu_package(package_id, { "globus_dlu_status": "success", "ready_to_move_from_globus": "done" })
             self.dlu_mongo.update_package_files(package_id, file_list)
