@@ -22,6 +22,12 @@ def add_dlu_package():
     data_management.insert_dlu_package(content_tuple)
     return content_tuple[0]
 
+@app.route("/v1/dlu/package/timestamp", methods=["POST"])
+def update_package_timestamps():
+    data_management = DataManagement()
+    data_management.reconnect()
+    return data_management.update_timestamps()
+
 @app.route("/v1/dlu/package/ready", methods=["GET"])
 def get_ready_packages():
     dlu_package_inventory = DLUPackageInventory()

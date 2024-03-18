@@ -39,6 +39,13 @@ class DataManagement:
         data = self.db.get_data("SHOW TABLES;")
         logger.info("data:", data)
 
+    def update_timestamps(self):
+        count = 0
+        for package in self.dlu_mongo.package_collection.find():
+            self.update_dlu_package(package['_id'], { "dlu_created": str(package["createdAt"]) })
+            count = count + 1
+        return [count]
+
     def get_redcap_participant_count(self, redcap_id):
         return self.db.get_data(
             "SELECT count(redcap_id) as p_count FROM redcap_participant WHERE redcap_id = %s",
