@@ -8,6 +8,8 @@ from services.dlu_state import DLUState
 from services.dlu_filesystem import DLUFile
 from typing import List
 import json
+from datetime import datetime
+from dateutil import tz
 
 logger = logging.getLogger("services-dataManagement")
 logger.setLevel(logging.INFO)
@@ -42,7 +44,10 @@ class DataManagement:
     def update_timestamps(self):
         count = 0
         for package in self.dlu_mongo.package_collection.find():
-            self.update_dlu_package(package['_id'], { "dlu_created": str(package["createdAt"]) })
+            result = datetime.astimezone(package['createdAt'], tz=tz.gettz('America/New_York')).strftime(
+                "%Y-%m-%d %H:%M:%S"
+            )
+            self.update_dlu_package(package['_id'], { "dlu_created": result })
             count = count + 1
         return [count]
 
