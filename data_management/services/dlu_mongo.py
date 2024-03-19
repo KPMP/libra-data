@@ -3,6 +3,7 @@ from services.dlu_filesystem import DLUFile
 from typing import List
 from enum import Enum
 import logging
+from bson.codec_options import CodecOptions
 
 logger = logging.getLogger("services-DLUMongo")
 logging.basicConfig(level=logging.INFO)
@@ -18,7 +19,7 @@ class PackageType(Enum):
 class DLUMongo:
 
     def __init__(self, mongo_connection: MongoConnection):
-        self.package_collection = mongo_connection.packages
+        self.package_collection = mongo_connection.packages.with_options(codec_options=CodecOptions(tz_aware=True))
 
     # Entries in the file list should be a dict with the following fields: name, size, checksum, and an optional metadata obj
     def update_package_files(self, package_id: str, files: List[DLUFile]) -> int:
