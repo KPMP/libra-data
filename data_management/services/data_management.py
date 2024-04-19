@@ -231,6 +231,7 @@ class DataManagement:
                 response_msg = "Error: directory for package " + package_id + " failed validation."
             else:
                 self.update_dlu_package(package_id, {"ready_to_move_from_globus": "yes"})
+                self.dlu_state.clear_cache()
                 response_msg = "Package " + package_id + " successfully marked as ready to move."
         elif ready_status == 'yes':
             response_msg = "Error: package " + package_id + " was already marked as ready to move."
