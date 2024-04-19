@@ -38,10 +38,11 @@ def create_dest_directory(dest_path: str):
 
 
 def calculate_checksum(file_path: str):
+    logger.info("calculating checksums for " + file_path)
     if ".zarr" not in file_path:
         with open(file_path, "rb") as f:
             file_hash = hashlib.md5()
-            while chunk := f.read(8192):
+            while chunk := f.read(4096):
                 file_hash.update(chunk)
         return file_hash.hexdigest()
     else:
@@ -78,6 +79,7 @@ class DirectoryInfo:
                 self.file_details.append(DLUFile(item, full_path, calculate_checksum(full_path), os.path.getsize(full_path)))
 
     def check_if_valid_for_dlu(self):
+        logger.info("checking validity")
         directory_not_empty = len(self.dir_contents) != 0
         # Nothing but a subdir
         if self.subdir_count == 1 and self.file_count == 0:
@@ -114,6 +116,7 @@ class DLUFileHandler:
 
         # Make sure the directory is not empty and does not have more than one subdirectory.
         if source_directory_info.valid_for_dlu:
+            logger.info("source_directory is valid")
             # Set the source path to the subdirectory if it has only one and is valid.
             if source_directory_info.subdir_count == 1 and source_directory_info.file_count == 0:
                 source_package_directory = os.path.join(source_package_directory,

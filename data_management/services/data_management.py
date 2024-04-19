@@ -192,7 +192,12 @@ class DataManagement:
         globus_dlu_status = "failed"
 
         if move_response["success"]:
-            self.dlu_mongo.update_package_files(package_id, move_response["file_list"])
+            # This next bit was likely NOT needed to attain the fix to the file mover, but was put in place
+            # during the testing, so I am capturing it here. This was added to ensure we had a fresh
+            # connection to mongo before trying to do any updates
+            mongo_connection_temp = MongoConnection().get_mongo_connection()
+            dlu_mongo_temp = DLUMongo(mongo_connection_temp)
+            dlu_mongo_temp.update_package_files(package_id, move_response["file_list"])
             self.insert_dlu_files(package_id, move_response["file_list"])
             self.dlu_state.set_package_upload_success(package_id)
             globus_dlu_status = "success"
