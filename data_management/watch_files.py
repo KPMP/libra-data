@@ -88,6 +88,7 @@ class DLUWatcher:
             self.data_management.update_dlu_package(package_id, { "globus_dlu_status": "success", "ready_to_move_from_globus": "done" })
             self.dlu_mongo.update_package_files(package_id, file_list)
             self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
+            self.dlu_state.clear_cache()
 
 
 
