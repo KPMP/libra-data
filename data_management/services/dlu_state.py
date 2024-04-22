@@ -21,7 +21,7 @@ class DLUState:
             self.cache_clear_url = "http://orion-spring:3030/v1/clearCache"
         else:
             self.state_url = "http://localhost:3060/v1/state/host/upload_kpmp_org"
-            self.cache_clear_url = "http://localhost:3030/v1/clearCache"
+            self.cache_clear_url = "http://localhost:3030/api/v1/clearCache"
 
     def set_package_state(self, package_id: str, state: PackageState):
         headers = {"Content-type": "application/json", "Accept": "text/plain"}
