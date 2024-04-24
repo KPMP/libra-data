@@ -2,10 +2,11 @@ import os
 import logging
 import shutil
 import filecmp
-import hashlib
+from hashlib import md5
 import uuid
 from zarr_checksum import compute_zarr_checksum
 from zarr_checksum.generators import yield_files_local
+from mmap import mmap, ACCESS_READ
 
 
 logger = logging.getLogger("DLUFilesystem")
@@ -40,11 +41,8 @@ def create_dest_directory(dest_path: str):
 def calculate_checksum(file_path: str):
     logger.info("calculating checksums for " + file_path)
     if ".zarr" not in file_path:
-        with open(file_path, "rb") as f:
-            file_hash = hashlib.md5()
-            while chunk := f.read(4096):
-                file_hash.update(chunk)
-        return file_hash.hexdigest()
+        with open(file_path) as f, mmap(f.fileno(), 0, access=ACCESS_READ) as f:
+            return md5(f).hexdigest();
     else:
         return compute_zarr_checksum(yield_files_local(file_path)).md5
 

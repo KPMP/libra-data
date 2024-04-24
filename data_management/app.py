@@ -2,7 +2,10 @@ from flask import Flask, request
 from flask_cors import CORS
 from services.data_management import DataManagement
 from services.dlu_utils import dlu_package_dict_to_tuple, dlu_file_dict_to_tuple
+import logging
 
+logger = logging.getLogger("app")
+logger.setLevel(logging.INFO)
 app = Flask(__name__)
 CORS(app)
 
