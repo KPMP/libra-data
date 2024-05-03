@@ -182,22 +182,27 @@ class DataManagement:
         )
         return record_count
 
-    def insert_dlu_package(self, values: tuple):
-        logger.info(f"inserting DLU package with id: {values[0]}")
-        query = ("INSERT INTO dlu_package_inventory (dlu_package_id, dlu_created, dlu_submitter, dlu_tis, "
-                 + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, known_specimen, redcap_id, user_package_ready, "
-                 + "package_validated, ready_to_move_from_globus, globus_dlu_status, removed_from_globus, "
-                 + "ar_promotion_status, sv_promotion_status, notes) "
-                 + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-        self.db.insert_data(query, values)
-        return query % values
+    def insert_dlu_package(self, dpi_values: tuple, dmd_values: tuple):
+        logger.info(f"inserting DLU package with id: {dpi_values[0]}")
+        query1 = ("INSERT INTO dlu_package_inventory (dlu_package_id, dlu_created, dlu_submitter, dlu_tis, "
+                 + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, globus_dlu_status) "
+                 + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)")
+        self.db.insert_data(query1, dpi_values)
+        dmd_values = ((dmd_values[0],) + dmd_values)
+        query2 = ("INSERT INTO dmd_data_manager (id, dlu_package_id, redcap_id, known_specimen, "
+                 + "user_package_ready, package_validated, ready_to_move_from_globus, "
+                 + "removed_from_globus, ar_promotion_status, sv_promotion_status, notes) "
+                 + "VALUES((SELECT id FROM dlu_package_inventory dpi WHERE dpi.dlu_package_id = %s), " 
+                 + "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+        self.db.insert_data(query2, (dmd_values))
+        return (query1 % dpi_values) + "\n" + (query2 % dmd_values)
 
     def update_dlu_package(self, package_id: str, fields_values: dict):
         if fields_values:
             logger.info(f"updating DLU package {package_id} with " + str(fields_values))
             query_info = get_update_query_info(fields_values)
             values = query_info["values"][0:] + (package_id,)
-            query = "UPDATE dlu_package_inventory SET " + query_info["set_clause"] + " WHERE dlu_package_id = %s"
+            query = "UPDATE data_manager_data_v SET " + query_info["set_clause"] + " WHERE dlu_package_id = %s"
             self.db.insert_data(query, values)
 
     def insert_dlu_file(self, values):
@@ -214,7 +219,7 @@ class DataManagement:
 
     def get_ready_to_move(self, package_id: str):
         package_record = self.db.get_data(
-            "SELECT ready_to_move_from_globus FROM dlu_package_inventory WHERE dlu_package_id = %s",
+            "SELECT ready_to_move_from_globus FROM data_manager_data_v WHERE dlu_package_id = %s",
             (package_id,)
         )
         if not len(package_record) == 0:

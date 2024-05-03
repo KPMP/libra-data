@@ -19,7 +19,7 @@ class DLUPackageInventory:
         
     def get_dlu_file(self, status):
         return self.db.get_data(
-            "SELECT * FROM data_management.dlu_package_inventory WHERE ready_to_move_from_globus = %s AND globus_dlu_status IS NULL",
+            "SELECT * FROM data_management.data_manager_data_v WHERE ready_to_move_from_globus = %s AND globus_dlu_status IS NULL",
             (status,)
         )
     
@@ -31,16 +31,16 @@ class DLUPackageInventory:
     
     def get_ready_packages(self):
         return self.db.get_data(
-            'SELECT dlu_package_id, globus_dlu_status FROM data_management.dlu_package_inventory WHERE ready_to_move_from_globus = "yes"'
+            'SELECT dlu_package_id, globus_dlu_status FROM data_management.data_manager_data_v WHERE ready_to_move_from_globus = "yes"'
         )
 
     def get_package_status(self, package_id):
         return self.db.get_data(
-            'SELECT globus_dlu_status FROM data_management.dlu_package_inventory WHERE dlu_package_id = %s',
+            'SELECT globus_dlu_status FROM data_management.data_manager_data_v WHERE dlu_package_id = %s',
             (package_id,)
         )
 
     def get_processing_packages(self):
         return self.db.get_data(
-            'SELECT dlu_package_id FROM data_management.dlu_package_inventory WHERE globus_dlu_status = "processing"'
+            'SELECT dlu_package_id FROM data_management.data_manager_data_v WHERE globus_dlu_status = "processing"'
         )
