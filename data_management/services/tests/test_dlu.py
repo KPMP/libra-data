@@ -1,5 +1,5 @@
 import unittest
-from ..dlu_filesystem import dlu_package_dict_to_tuple, dlu_file_dict_to_tuple
+from ..dlu_filesystem import dlu_package_dict_to_dpi_tuple, dlu_package_dict_to_dmd_tuple, dlu_file_dict_to_tuple
 
 
 class Test_dlu(unittest.TestCase):
@@ -15,7 +15,7 @@ class Test_dlu(unittest.TestCase):
         print(output)
         assert output == ("name", "package_id", "file_id", 12345, "checksum")
 
-    def test_dlu_package_dict_to_tuple(self):
+    def test_dlu_package_dict_to_dpi_tuple(self):
         test_data = {
             "dluPackageId": "package_id",
             "dluCreated": 1665768333,
@@ -25,17 +25,25 @@ class Test_dlu(unittest.TestCase):
             "dluSubjectId": "subj_id",
             "dluError": True,
             "dluLfu": False,
+            "globusDluStatus": "status"
+        }
+        output = dlu_package_dict_to_dpi_tuple(test_data)
+        print(output)
+        assert output == ('package_id', '1970-01-20 01:42:48', 'submitter', 'tis', 'package_type', 'subj_id', True, False, 'status')
+
+    def test_dlu_package_dict_to_dmd_tuple(self):
+        test_data = {
+            "dluPackageId": "package_id",
             "knownSpecimen": "specimen",
             "redcapId": "redcap",
             "userPackageReady": True,
-            "dvcValidationComplete": True,
             "packageValidated": True,
-            "readyToPromoteDlu": True,
-            "promotionDluSucceeded": False,
+            "readyToMoveFromGlobus": True,
             "removedFromGlobus": False,
-            "promotionStatus": "promoted",
+            "arPromotionStatus": "promoted-ar",
+            "svPromotionStatus": "promoted-sv",
             "notes": "notes"
         }
-        output = dlu_package_dict_to_tuple(test_data)
+        output = dlu_package_dict_to_dmd_tuple(test_data)
         print(output)
-        assert output == ('package_id', '1970-01-20 01:42:48', 'submitter', 'tis', 'package_type', 'subj_id', True, False, 'specimen', 'redcap', True, True, True, True, False, False, 'promoted', 'notes')
+        assert output == ('package_id', 'redcap', 'specimen', True, True, True, False, 'promoted-ar', 'promoted-sv', 'notes')

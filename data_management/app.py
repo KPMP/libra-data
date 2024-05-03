@@ -2,7 +2,7 @@ from flask import Flask, request
 from flask_cors import CORS
 from services.data_management import DataManagement
 from services.dlu_package_inventory import DLUPackageInventory
-from services.dlu_utils import dlu_package_dict_to_tuple, dlu_file_dict_to_tuple
+from services.dlu_utils import dlu_package_dict_to_dpi_tuple, dlu_package_dict_to_dmd_tuple, dlu_file_dict_to_tuple
 
 app = Flask(__name__)
 CORS(app)
@@ -18,9 +18,10 @@ def add_dlu_package():
         if content["redcapId"] is None and data_management.get_redcap_participant_count(content["dluSubjectId"]) > 0:
             content["redcapId"] = content["dluSubjectId"]
 
-    content_tuple = dlu_package_dict_to_tuple(content)
-    data_management.insert_dlu_package(content_tuple)
-    return content_tuple[0]
+    dpi_content_tuple = dlu_package_dict_to_dpi_tuple(content)
+    dmd_content_tuple = dlu_package_dict_to_dmd_tuple(content)
+    data_management.insert_dlu_package(dpi_content_tuple, dmd_content_tuple)
+    return dpi_content_tuple[0]
 
 @app.route("/v1/dlu/package/ready", methods=["GET"])
 def get_ready_packages():
