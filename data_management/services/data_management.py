@@ -195,7 +195,7 @@ class DataManagement:
                  + "VALUES((SELECT id FROM dlu_package_inventory dpi WHERE dpi.dlu_package_id = %s), " 
                  + "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
         self.db.insert_data(query2, (dmd_values))
-        return (query1 % dpi_values) + "\n" + (query2 % dmd_values)
+        return (query1 % dpi_values) + ";\n" + (query2 % dmd_values)
 
     def update_dlu_package(self, package_id: str, fields_values: dict):
         if fields_values:
