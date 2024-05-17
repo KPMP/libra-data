@@ -70,22 +70,8 @@ class DataManagement:
                 f"redcap participant with id: {redcap_participant['redcap_id']} already exists, skipping insert"
             )
 
-    def insert_slide_scan_status_with_participant(self, spectrack_info: tuple):
-        result = self.db.get_data(
-            "SELECT count(redcap_id) FROM data_management.slide_scan_status_participant WHERE redcap_id = %s",
-            (spectrack_info[5],),
-        )[0][0]
-        if result == 0:
-            values = ( spectrack_info[5], spectrack_info[8], spectrack_info[12])
-            self.db.insert_data(
-                "INSERT INTO data_management.slide_scan_status_participant ( "
-                + "redcap_id, spectrack_specimen_kit_id, spectrack_biopsy_disease_category) VALUES ( %s, %s, %s ) ",
-                values
-            )
-
     def insert_dmd_records_from_spectrack(self, values: tuple):
         self.insert_spectrack_specimen(values)
-        self.insert_slide_scan_status_with_participant(values)
 
     def insert_spectrack_specimen(self, values: tuple):
         result = self.db.get_data(
@@ -149,7 +135,6 @@ class DataManagement:
 
     def upsert_dmd_records_from_spectrack(self, values: tuple):
         self.upsert_spectrack_record(values)
-        self.insert_slide_scan_status_with_participant(values)
 
     def upsert_new_spectrack_specimens(self):
         max_date = self.get_max_spectrack_date()
