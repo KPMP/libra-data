@@ -17,6 +17,7 @@ RUN curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64
 
 COPY requirements.txt ./
 
+RUN pip3 config --user set global.progress_bar off
 RUN pip3 install --no-cache-dir -r requirements.txt
 RUN pip3 install -U flask-cors
 
