@@ -60,8 +60,8 @@ class MYSQLConnection:
             )
             self.database.get_warnings = True
             return self.database
-        except:
-            logger.error("Can't connect to MySQL")
+        except Exception as error:
+            logger.error("Can't connect to MySQL: ", exec_info=error)
             os.sys.exit()
 
     def insert_data(self, sql, data):

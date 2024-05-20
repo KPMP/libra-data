@@ -1,6 +1,7 @@
 import os
 import logging
 import shutil
+import filecmp
 from hashlib import md5
 import uuid
 from zarr_checksum import compute_zarr_checksum
@@ -23,6 +24,7 @@ def split_path(path: str):
 
 
 def calculate_checksum(file_path: str):
+
     if os.path.isdir(file_path):
         return "0"
     if ".zarr" not in file_path:

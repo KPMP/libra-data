@@ -80,24 +80,8 @@ class DataManagement:
                 f"redcap participant with id: {redcap_participant['redcap_id']} already exists, skipping insert"
             )
 
-    def insert_slide_scan_status_with_participant(self, spectrack_info: tuple):
-        
-        result = self.db.get_data(
-            "SELECT count(redcap_id) as p_count FROM data_management.slide_scan_status_participant WHERE redcap_id = %s",
-            (spectrack_info[5],),
-        )[0]["p_count"]
-        if result == 0:
-            logger.info("Inserting slide scan status for participant " + spectrack_info[5])
-            values = ( spectrack_info[5], spectrack_info[8], spectrack_info[12])
-            self.db.insert_data(
-                "INSERT INTO data_management.slide_scan_status_participant ( "
-                + "redcap_id, spectrack_specimen_kit_id, spectrack_biopsy_disease_category) VALUES ( %s, %s, %s ) ",
-                values
-            )
-
     def insert_dmd_records_from_spectrack(self, values: tuple):
         self.insert_spectrack_specimen(values)
-        self.insert_slide_scan_status_with_participant(values)
 
     def insert_spectrack_specimen(self, values: tuple):
         result = self.db.get_data(
@@ -172,7 +156,6 @@ class DataManagement:
 
     def upsert_dmd_records_from_spectrack(self, values: tuple):
         self.upsert_spectrack_record(values)
-        self.insert_slide_scan_status_with_participant(values)
 
     def upsert_new_spectrack_specimens(self):
         max_date = self.get_max_spectrack_date()
@@ -181,6 +164,7 @@ class DataManagement:
             results, self.upsert_dmd_records_from_spectrack
         )
         return record_count
+
 
     def insert_dlu_package(self, dpi_values: tuple, dmd_values: tuple):
         logger.info(f"inserting DLU package with id: {dpi_values[0]}")
@@ -215,7 +199,6 @@ class DataManagement:
         for file in file_list:
             query_string = self.insert_dlu_file((file.name, package_id, file.file_id, file.size, file.checksum, json.dumps(file.metadata)))
             logger.info(query_string)
-
 
     def get_ready_to_move(self, package_id: str):
         package_record = self.db.get_data(
