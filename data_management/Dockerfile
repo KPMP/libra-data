@@ -1,9 +1,12 @@
-FROM python:3.10
+FROM python:3.10-slim
 
 WORKDIR /usr/src/app
 
 ENV FLASK_APP app.py
 ENV FLASK_RUN_HOST 0.0.0.0
+
+RUN apt-get update \
+    && apt-get install -y curl
 
 RUN curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \
     && bash /tmp/miniconda.sh -bfp /usr/local/ \
