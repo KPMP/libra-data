@@ -13,9 +13,17 @@ class TestDataManagement(unittest.TestCase):
         mock_db.get_db_connection.return_value = ""
         mock_connect.return_value = ""
         dm = DataManagement()
-        data = ('package_id', '1970-01-20 01:42:48', 'submitter', 'tis', 'package_type', 'subj_id', True, False, 'specimen', 'redcap', True, True, True, True, False, False, 'promoted', 'notes')
-        output = dm.insert_dlu_package(data)
-        assert output == "INSERT INTO dlu_package_inventory (dlu_package_id, dlu_created, dlu_submitter, dlu_tis, dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, known_specimen, redcap_id, user_package_ready, dvc_validation_complete, package_validated, ready_to_promote_dlu, promotion_dlu_succeeded, removed_from_globus, promotion_status, notes) VALUES(package_id, 1970-01-20 01:42:48, submitter, tis, package_type, subj_id, True, False, specimen, redcap, True, True, True, True, False, False, promoted, notes)"
+        dpi_data = ('package_id', '1970-01-20 01:42:48', 'submitter', 'tis', 'package_type', 'subj_id', True, False, 'promoted')
+        ddm_data = ('specimen', 'redcap', True, True, True, True, False, False, 'notes')
+        output = dm.insert_dlu_package(dpi_data, ddm_data)
+        compare = ("INSERT INTO dlu_package_inventory (dlu_package_id, dlu_created, dlu_submitter, dlu_tis, "
+                 + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, globus_dlu_status) "
+                 + "VALUES(package_id, 1970-01-20 01:42:48, submitter, tis, package_type, subj_id, True, False, promoted);\n"
+                 + "INSERT INTO dmd_data_manager (id, dlu_package_id, redcap_id, known_specimen, user_package_ready, package_validated, "
+                 + "ready_to_move_from_globus, removed_from_globus, ar_promotion_status, sv_promotion_status, notes) "
+                 + "VALUES((SELECT id FROM dlu_package_inventory dpi WHERE dpi.dlu_package_id = package_id), " 
+                 + "package_id, specimen, redcap, True, True, True, True, False, False, notes)")
+        assert output == compare
 
     def test_insert_dlu_file(self, mock_mysqlconnection_constructor, mock_connect):
         mock_db = mock_mysqlconnection_constructor.return_value

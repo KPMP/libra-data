@@ -11,7 +11,9 @@ RUN curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64
     && conda install -y python=3 \
     && conda update conda \
     && conda clean --all --yes \
-    && conda install -c conda-forge leidenalg
+    && conda install -c conda-forge leidenalg -y \
+    && conda config --set solver classic \
+    && conda install conda-libmamba-solver -y 
 
 COPY requirements.txt ./
 
@@ -25,6 +27,7 @@ COPY lib.egg-info/ ./lib.egg-info
 COPY dist/ ./dist
 COPY main.py ./
 COPY app.py ./
+COPY process_bulk_uploads.py ./
 COPY services/ ./services
 
 ENTRYPOINT []

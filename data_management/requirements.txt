@@ -7,3 +7,4 @@ requests
 python_dotenv
 python-dateutil
 zarr-checksum
+pyyaml

@@ -28,9 +28,16 @@ OR
 3d. Run the service as a Flask app on the host machine
    - `$ sh run-service-host.sh`
 
+OR
 
-NOTE: The (non-Flask app) service options are:
+3e. Run the bulk upload with the arguments in double quotes:
+- `$ sh run.sh "-d spectrack -m"`
+
+NOTE: The (non-Flask app) service options for the Data Importer are:
    - [-h] -a {update,insert} -d {redcap,spectrack}
+
+NOTE: The service options for the Bulk Uploader are:
+- [-h] -a {update,insert} -m 
 
 ## Service Endpoints
 
@@ -90,8 +97,13 @@ This endpoint adds a file to the DMD "dlu_file" table. The request body (JSON) s
 
 Method: POST
 
-This endpoint moves files for the specified package from Globus into the DLU filesystem. It also updates the DLU Mongo record for that package with the new files, updates the "promotionDluSucceeded" field in the DMD "dlu_package_inventory" table, and, if successful, updates the DLU state to "UPLOAD_SUCCEEDED". 
+This endpoint does not move the package files, but rather marks the specified package as ready to be moved from Globus into the DLU filesystem. It updates the "ready_to_move_from_globus" field in the DMD dlu_package_inventory table to "yes," or it returns an error message and doesn't update any fields in the table.
+&nbsp;
+### /v1/dlu/package/ready
 
+Method: GET
+
+This endpoint retrieves the packages that are ready to be moved from Globus. The endpoint returns a list containing each result's dlu_package_id and globus_dlu_status.
 
 ## Development
 

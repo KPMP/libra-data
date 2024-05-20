@@ -8,38 +8,25 @@ from zarr_checksum import compute_zarr_checksum
 from zarr_checksum.generators import yield_files_local
 from mmap import mmap, ACCESS_READ
 
-
 logger = logging.getLogger("DLUFilesystem")
 logger.setLevel(logging.INFO)
 
-DLU_PACKAGE_DIR_PREFIX = '/package_'
-GLOBUS_DATA_DIRECTORY = '/globus'
-DLU_DATA_DIRECTORY = '/data'
-
-def create_dest_directory(dest_path: str):
-    return_value = False
-    if not os.path.exists(dest_path):
-        logger.info("Destination directory " + dest_path + " does not exist. Creating.")
-        os.mkdir(dest_path)
-        return_value = True
+def split_path(path: str):
+    if len(path.split("/")) > 0:
+        file_name = path.split("/")[-1]
+        file_path_arr = path.split("/")[:-1]
+        file_path = "/".join(file_path_arr)
     else:
-        dest_dir_info = DirectoryInfo(dest_path)
-        if dest_dir_info.file_count > 1:
-            logger.error("Potential data files in destination directory.")
-        elif dest_dir_info.file_count == 1:
-            if os.path.exists(os.path.join(dest_path, "metadata.json")):
-                logger.info("Deleting metadata.json.")
-                os.remove(os.path.join(dest_path, "metadata.json"))
-                return_value = True
-            else:
-                logger.error("Unknown file in target directory: " + dest_path)
-        else:
-            return_value = True
-    return return_value
+        file_name = path
+        file_path = ""
+
+    return {"file_name": file_name, "file_path": file_path}
 
 
 def calculate_checksum(file_path: str):
-    logger.info("calculating checksums for " + file_path)
+
+    if os.path.isdir(file_path):
+        return "0"
     if ".zarr" not in file_path:
         with open(file_path) as f, mmap(f.fileno(), 0, access=ACCESS_READ) as f:
             return md5(f).hexdigest();
@@ -48,22 +35,24 @@ def calculate_checksum(file_path: str):
 
 
 class DLUFile:
-    def __init__(self, name: str, path: str, checksum: str, size: int):
+    def __init__(self, name: str, path: str, checksum: str, size: int, metadata: dict = {}):
         self.name = name
         self.path = path
         self.checksum = checksum
         self.size = size
         self.file_id = str(uuid.uuid4())
+        self.metadata = metadata
 
 
 class DirectoryInfo:
-    def __init__(self, directory_path: str):
+    def __init__(self, directory_path: str, calculate_checksums: bool = True):
         self.dir_contents = os.listdir(directory_path)
         self.subdir_count = 0
         self.file_count = 0
         self.file_details = []
         self.valid_for_dlu = False
         self.directory_path = directory_path
+        self.calculate_checksums = calculate_checksums
         self.get_directory_information()
         self.check_if_valid_for_dlu()
 
@@ -72,75 +61,131 @@ class DirectoryInfo:
             full_path = os.path.join(self.directory_path, item)
             if os.path.isdir(full_path) and ".zarr" not in full_path:
                 self.subdir_count += 1
+                checksum = "0"
             else:
                 self.file_count += 1
-                self.file_details.append(DLUFile(item, full_path, calculate_checksum(full_path), os.path.getsize(full_path)))
+                checksum = "0" if not self.calculate_checksums else calculate_checksum(full_path)
+            self.file_details.append(DLUFile(item, full_path, checksum, os.path.getsize(full_path)))
 
     def check_if_valid_for_dlu(self):
-        logger.info("checking validity")
-        directory_not_empty = len(self.dir_contents) != 0
-        # Nothing but a subdir
-        if self.subdir_count == 1 and self.file_count == 0:
-            subdir_path = os.path.join(self.directory_path, self.dir_contents[0])
-            subdir_info = DirectoryInfo(subdir_path)
-            if subdir_info.subdir_count == 0 and subdir_info.valid_for_dlu:
-                self.valid_for_dlu = True
-            else:
-                self.valid_for_dlu = False
-        # Items and no subdirectories
-        elif self.subdir_count == 0 and directory_not_empty:
-            self.valid_for_dlu = True
-        else:
-            self.valid_for_dlu = False
-
-
-def copy_from_src_to_dest(source_path: str, dest_path: str):
-    logger.info("Copying files from " + source_path + " to " + dest_path)
-    shutil.copytree(source_path, dest_path, dirs_exist_ok=True)
+        self.valid_for_dlu = (len(self.dir_contents) != 0)
 
 
 class DLUFileHandler:
 
     def __init__(self):
-        self.globus_data_directory = GLOBUS_DATA_DIRECTORY
-        self.dlu_data_directory = DLU_DATA_DIRECTORY
+        self.globus_data_directory = '/globus'
+        self.dlu_data_directory = '/data'
+        self.dlu_package_dir_prefix = 'package_'
 
-    def move_files_from_globus(self, package_id: str):
-        logger.info("Moving files for package " + package_id)
-        source_package_directory = self.globus_data_directory + '/' + package_id
-        dest_package_directory = self.dlu_data_directory + DLU_PACKAGE_DIR_PREFIX + package_id
-        source_directory_info = DirectoryInfo(source_package_directory)
-        move_response = {"success": False, "message": "", "file_list": []}
-
-        # Make sure the directory is not empty and does not have more than one subdirectory.
-        if source_directory_info.valid_for_dlu:
-            logger.info("source_directory is valid")
-            # Set the source path to the subdirectory if it has only one and is valid.
-            if source_directory_info.subdir_count == 1 and source_directory_info.file_count == 0:
-                source_package_directory = os.path.join(source_package_directory,
-                                                        source_directory_info.dir_contents[0])
-                source_directory_info = DirectoryInfo(source_package_directory)
-                logger.info(
-                    "Found one subdirectory (" + source_package_directory + "). Setting it as the main data directory.")
-
-            create_success = create_dest_directory(dest_package_directory)
-            if create_success:
-                copy_from_src_to_dest(source_package_directory, dest_package_directory)
-                dir_cmp_obj = filecmp.dircmp(source_package_directory, dest_package_directory)
-                # The files that are in the source but not the destination
-                if len(dir_cmp_obj.left_only) == 0:
-                    move_response["message"] = "Package " + package_id + " moved successfully."
-                    logger.info(move_response["message"])
-                    move_response["success"] = True
-                    move_response["file_list"] = source_directory_info.file_details
-                else:
-                    move_response["message"] = "The following files were not copied: " + dir_cmp_obj.left_only.join(",")
-                    logger.error(move_response["message"])
-                    move_response["success"] = False
+    def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
+        files_copied = 0
+        source_wd = os.getcwd()
+        for file in file_list:
+            source_package_directory = self.globus_data_directory + '/'
+            if not no_src_package:
+                source_package_directory = source_package_directory + package_id
+            if file.path:
+                source_package_directory = os.path.join(source_package_directory, file.path)
+            if preserve_path:
+                dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id,
+                                                      file.path)
             else:
-                move_response["success"] = False
-        else:
-            move_response["message"] = "Directory for package " + package_id + " failed validation."
-            logger.error(move_response["message"])
-            move_response["success"] = False
-        return move_response
+                dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
+            subdirs = [os.path.join(source_package_directory, o)
+            for o in os.listdir(source_package_directory)
+              if os.path.isdir(os.path.join(source_package_directory, o))]
+            dir = "".join(subdirs)
+            if len(os.listdir(source_package_directory)) == 1 and os.path.isdir(source_package_directory) and os.path.isdir(dir):
+                
+                os.chdir(dir)
+                allfiles = os.listdir(dir)
+
+                for f in allfiles:
+                    src_path = os.path.join(dir, f)
+                    dst_path = os.path.join(dest_package_directory, f)
+                    if not os.path.isdir(dest_package_directory):
+                        os.mkdir(dest_package_directory)
+
+                    if os.path.isfile(f):
+                        logger.info("Copying file " + f + " to " + dst_path)
+                        shutil.copy(src_path, dst_path)
+                        files_copied += 1
+                    else:
+                        logger.info("Copying directory " + src_path)
+                        files_copied += 1
+                        shutil.copytree(src_path, dst_path)
+                os.chdir(source_wd)
+            
+            if not os.path.exists(dest_package_directory):
+                logger.info("Creating directory " + dest_package_directory)
+                os.makedirs(dest_package_directory, exist_ok=True)
+            source_file = os.path.join(source_package_directory, file.name)
+            dest_file = os.path.join(dest_package_directory, file.name)
+            
+            if not os.path.exists(dest_file) and not dest_file.find(dir) == -1:
+                if os.path.isdir(source_file):
+                    logger.info("Copying directory to " + dest_file)
+                    shutil.copytree(source_file, dest_file)
+                elif os.path.isfile(source_file):
+                    logger.info("Copying file to " + dest_file)
+                    shutil.copy(source_file, dest_file)
+                files_copied = files_copied + 1
+            else:
+                logger.warning(dest_file + " already exists. Skipping.")
+        return files_copied
+
+    def validate_package_directories(self, package_id: str):
+        source_package_directory = self.globus_data_directory + '/' + package_id
+        source_directory_info = DirectoryInfo(source_package_directory, False)
+        success = True
+
+        # Make sure the directory is not empty
+        if not source_directory_info.valid_for_dlu:
+            success = False
+            logger.error("Directory for package " + package_id + " failed validation.")
+        return success
+
+    def process_globus_directory(self, directoryListing, globusDirectories: list[DirectoryInfo], packageId, initialDir):
+        for dir in globusDirectories:
+            prefix = ""
+            if not initialDir == "":
+                prefix = initialDir + "/"
+            currentDir = prefix + os.path.basename(dir.directory_path)
+
+            globusFiles = []
+            globusDirectories = []
+            for item in dir.file_details:
+                if os.path.isdir(item.path):
+                    globusDirectories.append(DirectoryInfo(item.path))
+                else:
+                    globusFiles.append(item)
+            directoryListing[currentDir] = globusFiles
+            if len(globusDirectories) > 0:
+                self.process_globus_directory(directoryListing, globusDirectories, packageId, currentDir)
+        return directoryListing
+
+    def match_files(self, packageId) -> list[DLUFile]:
+        topLevelDir = DirectoryInfo(self.globus_data_directory + '/' + packageId)
+        globusFiles = []
+        globusDirectories = []
+        for obj in topLevelDir.file_details:
+            if os.path.isdir(obj.path):
+                directory = DirectoryInfo(obj.path)
+                globusDirectories.append(directory)
+            else:
+                globusFiles.append(obj)
+        filesInGlobusDirectories = {}
+        filesInGlobusDirectories[""] = globusFiles
+        currentDir = ""
+        filesInGlobusDirectories = self.process_globus_directory(filesInGlobusDirectories, globusDirectories, packageId, currentDir)
+        return self.get_globus_file_paths(filesInGlobusDirectories)
+
+    def get_globus_file_paths(self, filesInGlobusDirectories: dict[str, list[DLUFile]]) -> list[DLUFile]:
+        fileList = []
+        for dir, files in filesInGlobusDirectories.items():
+            for file in files:
+                prefix = dir + "/" if dir else ""
+                file.name = prefix + file.name
+                fileList.append(file)
+        return fileList

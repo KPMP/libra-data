@@ -91,7 +91,7 @@ class SpectrackConnection:
         try:
             res_json = res.json()
         except json.decoder.JSONDecodeError as error:
-            print(
+            logger.error(
                 "There was a problem decoding the JSON from: "
                 + url
                 + " with params "
@@ -102,4 +102,4 @@ class SpectrackConnection:
 
 if __name__ == "__main__":
     SpectrackConnection().check_connection()
-    print("Specktrack connection successful.")
+    logger.info("Specktrack connection successful.")

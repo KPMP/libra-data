@@ -1,8 +1,9 @@
 from datetime import datetime
+from dateutil import tz
 
-def dlu_package_dict_to_tuple(dlu_inventory: dict):
+def dlu_package_dict_to_dpi_tuple(dlu_inventory: dict):
     # Java timestamp is in milliseconds
-    dt_string = datetime.fromtimestamp(dlu_inventory["dluCreated"] / 1000.0).strftime(
+    dt_string = datetime.fromtimestamp(dlu_inventory["dluCreated"] / 1000.0, tz.gettz('America/New_York')).strftime(
         "%Y-%m-%d %H:%M:%S"
     )
     return (
@@ -14,16 +15,21 @@ def dlu_package_dict_to_tuple(dlu_inventory: dict):
         dlu_inventory["dluSubjectId"],
         dlu_inventory["dluError"],
         dlu_inventory["dluLfu"],
-        dlu_inventory["knownSpecimen"],
+        dlu_inventory["globusDluStatus"]
+    )
+
+def dlu_package_dict_to_dmd_tuple(dlu_inventory: dict):
+    return (
+        dlu_inventory["dluPackageId"],
         dlu_inventory["redcapId"],
+        dlu_inventory["knownSpecimen"],
         dlu_inventory["userPackageReady"],
         dlu_inventory["packageValidated"],
         dlu_inventory["readyToMoveFromGlobus"],
-        dlu_inventory["globusDluStatus"],
         dlu_inventory["removedFromGlobus"],
-        None,
-        None,
-        dlu_inventory["notes"],
+        dlu_inventory["arPromotionStatus"],
+        dlu_inventory["svPromotionStatus"],
+        dlu_inventory["notes"]
     )
 
 

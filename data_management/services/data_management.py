@@ -7,6 +7,7 @@ from services.dlu_mongo import DLUMongo
 from services.dlu_state import DLUState
 from services.dlu_filesystem import DLUFile
 from typing import List
+import json
 
 logger = logging.getLogger("services-dataManagement")
 logger.setLevel(logging.INFO)
@@ -36,18 +37,27 @@ class DataManagement:
 
     def get_data_management_tables(self):
         data = self.db.get_data("SHOW TABLES;")
-        print("data:", data)
+        logger.info("data:", data)
 
     def get_redcap_participant_count(self, redcap_id):
         return self.db.get_data(
-            "SELECT count(redcap_id) FROM redcap_participant WHERE redcap_id = %s",
+            "SELECT count(redcap_id) as p_count FROM redcap_participant WHERE redcap_id = %s",
             (redcap_id,),
-        )[0][0]
+        )[0]["p_count"]
 
     def get_redcap_participant(self, redcap_id):
         return self.db.get_data(
             "SELECT * FROM redcap_participant WHERE redcap_id = %s", (redcap_id,)
         )[0]
+
+    def get_redcapid_by_subjectid(self, subject_id: str):
+        result = self.db.get_data(
+            "select spectrack_redcap_record_id from spectrack_specimen where spectrack_sample_id = %s", (subject_id,)
+        )
+        if len(result) > 0:
+            return result[0]["spectrack_redcap_record_id"]
+        else:
+            return None
 
     def insert_redcap_participant(self, redcap_participant):
         if self.get_redcap_participant_count(redcap_participant["redcap_id"]) == 0:
@@ -61,8 +71,8 @@ class DataManagement:
                   "redcap_exp_aki_kdigo, redcap_exp_race, redcap_exp_alb_cat_most_recent,"
                   "redcap_mh_ht_yn, redcap_mh_diabetes_yn, redcap_exp_has_med_raas, "
                   "redcap_exp_a1c_cat_most_recent, redcap_exp_pro_cat_most_recent, "
-                  "redcap_exp_diabetes_duration, redcap_exp_ht_duration, redcap_exp_egfr_bl_cat) "
-                + "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                  "redcap_exp_diabetes_duration, redcap_exp_ht_duration, redcap_exp_egfr_bl_cat, redcap_adj_primary_category) "
+                + "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (list(redcap_participant.values())),
             )
         else:
@@ -75,10 +85,11 @@ class DataManagement:
 
     def insert_spectrack_specimen(self, values: tuple):
         result = self.db.get_data(
-            "SELECT count(spectrack_specimen_id) FROM data_management.spectrack_specimen WHERE spectrack_specimen_id = %s",
+            "SELECT count(spectrack_specimen_id) as specimen_count FROM data_management.spectrack_specimen WHERE spectrack_specimen_id = %s",
             (values[0],),
-        )[0][0]
+        )[0]["specimen_count"]
         if result == 0:
+            logger.info("Inserting into spectrack_specimen for specimen id: " + values[0])
             self.db.insert_data(
                 "INSERT INTO data_management.spectrack_specimen ( "
                 + "spectrack_specimen_id, spectrack_sample_id, "
@@ -105,11 +116,21 @@ class DataManagement:
             + str(specimen_id)
         )
 
+    def get_redcap_id_by_spectrack_sample_id(self, sample_id: str):
+        return self.db.get_data(
+            "SELECT spectrack_redcap_record_id FROM data_management.spectrack_specimen WHERE spectrack_sample_id = %s",(sample_id,),
+        )
+
+    def get_participant_by_redcap_id(self, redcap_id: str):
+        return self.db.get_data(
+            "SELECT * FROM data_management.redcap_participant WHERE redcap_id = %s",(redcap_id,),
+        )
+
     def get_max_spectrack_date(self):
         result = self.db.get_data(
-            "SELECT MAX(spectrack_created_date) FROM data_management.spectrack_specimen"
+            "SELECT MAX(spectrack_created_date) as max_date FROM data_management.spectrack_specimen"
         )
-        return result[0][0]
+        return result[0]["max_date"]
 
     def update_spectrack_specimen(self, values: tuple):
         # add the specimen ID to the end of the tuple for the WHERE clause
@@ -144,54 +165,68 @@ class DataManagement:
         )
         return record_count
 
-    def insert_dlu_package(self, values: tuple):
-        logger.info(f"inserting DLU package with id: {values[0]}")
-        query = ("INSERT INTO dlu_package_inventory (dlu_package_id, dlu_created, dlu_submitter, dlu_tis, "
-                 + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, known_specimen, redcap_id, user_package_ready, "
-                 + "package_validated, ready_to_move_from_globus, globus_dlu_status, removed_from_globus, "
-                 + "ar_promotion_status, sv_promotion_status, notes) "
-                 + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
-        self.db.insert_data(query, values)
-        return query % values
+
+    def insert_dlu_package(self, dpi_values: tuple, dmd_values: tuple):
+        logger.info(f"inserting DLU package with id: {dpi_values[0]}")
+        query1 = ("INSERT INTO dlu_package_inventory (dlu_package_id, dlu_created, dlu_submitter, dlu_tis, "
+                 + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, globus_dlu_status) "
+                 + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)")
+        self.db.insert_data(query1, dpi_values)
+        dmd_values = ((dmd_values[0],) + dmd_values)
+        query2 = ("INSERT INTO dmd_data_manager (id, dlu_package_id, redcap_id, known_specimen, "
+                 + "user_package_ready, package_validated, ready_to_move_from_globus, "
+                 + "removed_from_globus, ar_promotion_status, sv_promotion_status, notes) "
+                 + "VALUES((SELECT id FROM dlu_package_inventory dpi WHERE dpi.dlu_package_id = %s), " 
+                 + "%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
+        self.db.insert_data(query2, (dmd_values))
+        return (query1 % dpi_values) + ";\n" + (query2 % dmd_values)
 
     def update_dlu_package(self, package_id: str, fields_values: dict):
-        logger.info(f"updating DLU package with id: {package_id}")
-        query_info = get_update_query_info(fields_values)
-        values = query_info["values"][0:] + (package_id,)
-        query = "UPDATE dlu_package_inventory SET " + query_info["set_clause"] + " WHERE dlu_package_id = %s"
-        self.db.insert_data(query, values)
+        if fields_values:
+            logger.info(f"updating DLU package {package_id} with " + str(fields_values))
+            query_info = get_update_query_info(fields_values)
+            values = query_info["values"][0:] + (package_id,)
+            query = "UPDATE data_manager_data_v SET " + query_info["set_clause"] + " WHERE dlu_package_id = %s"
+            self.db.insert_data(query, values)
 
     def insert_dlu_file(self, values):
-        query = "INSERT INTO dlu_file (dlu_fileName, dlu_package_id, dlu_file_id, dlu_filesize, dlu_md5checksum) VALUES(%s, %s, %s, %s, %s)"
+        query = "INSERT INTO dlu_file (dlu_fileName, dlu_package_id, dlu_file_id, dlu_filesize, dlu_md5checksum, dlu_metadata) VALUES(%s, %s, %s, %s, %s, %s)"
         self.db.insert_data(query, values)
         return query % values
 
     def insert_dlu_files(self, package_id: str, file_list: List[DLUFile]):
         logger.info(f"Inserting files for package {package_id}")
         for file in file_list:
-            query_string = self.insert_dlu_file((file.name, package_id, file.file_id, file.size, file.checksum))
+            query_string = self.insert_dlu_file((file.name, package_id, file.file_id, file.size, file.checksum, json.dumps(file.metadata)))
             logger.info(query_string)
 
+    def get_ready_to_move(self, package_id: str):
+        package_record = self.db.get_data(
+            "SELECT ready_to_move_from_globus FROM data_manager_data_v WHERE dlu_package_id = %s",
+            (package_id,)
+        )
+        if not len(package_record) == 0:
+            return package_record[0]['ready_to_move_from_globus']
+        else:
+            return "Error: package " + package_id + " not found."
+
     def move_globus_files_to_dlu(self, package_id: str):
-        move_response = self.dlu_file_handler.move_files_from_globus(package_id)
-        globus_dlu_status = "failed"
-
-        if move_response["success"]:
-            # This next bit was likely NOT needed to attain the fix to the file mover, but was put in place
-            # during the testing, so I am capturing it here. This was added to ensure we had a fresh
-            # connection to mongo before trying to do any updates
-            mongo_connection_temp = MongoConnection().get_mongo_connection()
-            dlu_mongo_temp = DLUMongo(mongo_connection_temp)
-            dlu_mongo_temp.update_package_files(package_id, move_response["file_list"])
-            self.insert_dlu_files(package_id, move_response["file_list"])
-            self.dlu_state.set_package_upload_success(package_id)
-            globus_dlu_status = "success"
-
-        self.update_dlu_package(package_id, {"globus_dlu_status": globus_dlu_status})
-        ## Convert the file list to dicts for JSON serialization
-        move_response["file_list"] = [i.__dict__ for i in move_response["file_list"]]
-        return move_response
-
+        ready_status = self.get_ready_to_move(package_id)
+        response_msg = "There was an error in marking this package ready to move."
+        if ready_status == None:
+            validated = self.dlu_file_handler.validate_package_directories(package_id)
+            if validated == False:
+                response_msg = "Error: directory for package " + package_id + " failed validation."
+            else:
+                self.update_dlu_package(package_id, {"ready_to_move_from_globus": "yes"})
+                response_msg = "Package " + package_id + " successfully marked as ready to move."
+        elif ready_status == 'yes':
+            response_msg = "Error: package " + package_id + " was already marked as ready to move."
+        elif ready_status == 'done':
+            response_msg = "Error: package " + package_id + " was already moved."
+        else:
+            response_msg = ready_status
+        return response_msg
 
 if __name__ == "__main__":
     data_management = DataManagement()
