@@ -24,7 +24,7 @@ SEGMENTATION_README = "README.md"
 
 
 class ProcessBulkUploads:
-    def __init__(self, data_directory: str, globus_only: bool = False, globus_root: str = None):
+    def __init__(self, data_directory: str, globus_only: bool = False, globus_root: str = None, preserve_path: bool = False):
         try:
             self.data_management = DataManagement()
         except:
@@ -39,6 +39,7 @@ class ProcessBulkUploads:
             self.dlu_data_directory = os.environ.get("dlu_data_directory")
 
         self.data_directory = data_directory
+        self.preserve_path = preserve_path
         self.globus_only = globus_only
         self.dlu_file_handler = DLUFileHandler()
         self.dlu_file_handler.globus_data_directory = data_directory
@@ -150,7 +151,7 @@ class ProcessBulkUploads:
                             self.data_management.insert_dlu_files(package.package_id, dlu_file_list)
                             if records_modified == 1:
                                 logger.info(f"{len(dlu_file_list)} files added to package {package_id}")
-                                files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False, True)
+                                files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, self.preserve_path, True)
                                 if files_copied == len(dlu_file_list):
                                     self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
                                     logger.info(f"{files_copied} files copied to DLU.")
@@ -158,7 +159,7 @@ class ProcessBulkUploads:
                                     logger.error(f"There was a problem adding files to package {package_id}")
                         else:
                             logger.info("Copying files to Globus.")
-                            files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False, True)
+                            files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, self.preserve_path, True)
                             if files_copied == len(dlu_file_list):
                                 logger.info(f"{files_copied} files copied to Globus.")
 
@@ -194,8 +195,16 @@ if __name__ == "__main__":
         default=None,
         help='The top-level Globus folder if globus_only is set.'
     )
+    parser.add_argument(
+        '-p',
+        '--preserve_path',
+        action='store_true',
+        required=False,
+        default=False,
+        help='Preserve the file paths, i.e. do not flatten file structure.'
+    )
     args = parser.parse_args()
     if args.globus_only and args.globus_root is None:
         parser.error("--globus_only requires --globus_root to be set.")
-    process_bulk_uploads = ProcessBulkUploads(args.data_directory, args.globus_only, args.globus_root)
+    process_bulk_uploads = ProcessBulkUploads(args.data_directory, args.globus_only, args.globus_root, args.preserve_path)
     process_bulk_uploads.process_bulk_uploads()
