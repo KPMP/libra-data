@@ -49,7 +49,7 @@ class DLUPackage:
             "createdAt": self.dlu_created
         }
 
-    def get_mysql_tuple(self):
+    def get_dmd_dpi_tuple(self):
         return (
             self.package_id,
             self.dlu_created.strftime(
@@ -60,17 +60,7 @@ class DLUPackage:
             self.redcap_id,
             self.dlu_error,
             self.dlu_lfu,
-            self.known_specimen,
-            self.redcap_id,
-            # Setting these to None for now until I talk to Rachel
-            None,  # dlu_inventory["userPackageReady"],
-            None,  # dlu_inventory["dvcValidationComplete"],
-            None,  # dlu_inventory["packageValidated"],
-            None,  # dlu_inventory["readyToMoveFromGlobus"],
-            None,  # dlu_inventory["globusDluStatus"],
-            None,  # dlu_inventory["removedFromGlobus"],
-            None,  # dlu_inventory["promotionStatus"],
-            None  # dlu_inventory["notes"],
+            self.globus_dlu_status
         )
 
     def get_dmd_tuple(self):
