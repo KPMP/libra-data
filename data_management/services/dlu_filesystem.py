@@ -69,8 +69,7 @@ class DLUFileHandler:
     def split_path(self, path: str, preserve_path: bool = False):
         if len(path.split("/")) > 0:
             if preserve_path:
-                "/".join(path.replace(self.globus_data_directory, "").split("/")[2:])
-                file_name = "/".join(path.split("/")[1:])
+                file_name = "/".join(path.replace(self.globus_data_directory, "").split("/")[2:])
             else:
                 file_name = path.split("/")[-1]
             file_path_arr = path.split("/")[:-1]
@@ -79,7 +78,7 @@ class DLUFileHandler:
             file_name = path
             file_path = ""
 
-        return {"file_name": file_name, "file_path": file_path}
+        return {"file_name": file_name, "file_path": file_path, "short_path": file_name}
 
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
@@ -92,7 +91,7 @@ class DLUFileHandler:
                 source_package_directory = os.path.join(source_package_directory, file.path)
             if preserve_path:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id,
-                                                      file.path)
+                                                      self.split_path(file.path)["file_name"])
             else:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
             subdirs = [os.path.join(source_package_directory, o)
