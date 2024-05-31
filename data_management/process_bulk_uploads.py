@@ -3,6 +3,7 @@ from services.data_management import DataManagement
 from services.dlu_filesystem import DLUFile, DLUFileHandler, calculate_checksum, split_path
 from services.dlu_state import PackageState, DLUState
 from services.dlu_mongo import PackageType
+from services.dlu_utils import dlu_package_dict_to_dmd_tuple
 from model.dlu_package import DLUPackage
 import argparse
 import logging
@@ -144,7 +145,7 @@ class ProcessBulkUploads:
                             package.globus_dlu_status = 'success'
                         package_id = self.data_management.dlu_mongo.add_package(package.get_mongo_dict())
                         self.dlu_state.set_package_state(package_id, PackageState.METADATA_RECEIVED)
-                        self.data_management.insert_dlu_package(package.get_mysql_tuple())
+                        self.data_management.insert_dlu_package(package.get_mysql_tuple(), package.get_dmd_tuple())
                         if not self.globus_only:
                             logger.info("Copying files to DLU.")
                             records_modified = self.data_management.dlu_mongo.update_package_files(package_id, dlu_file_list)

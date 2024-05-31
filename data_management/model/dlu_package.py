@@ -72,3 +72,17 @@ class DLUPackage:
             None,  # dlu_inventory["promotionStatus"],
             None  # dlu_inventory["notes"],
         )
+
+    def get_dmd_tuple(self):
+        return (
+            self.package_id,
+            self.redcap_id,
+            self.known_specimen,
+            self.user_package_ready,
+            self.package_validated,
+            self.ready_to_move_from_globus,
+            self.removed_from_globus,
+            self.ar_promotion_status,
+            self.sv_promotion_status,
+            self.notes
+        )
