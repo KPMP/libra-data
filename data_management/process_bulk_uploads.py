@@ -1,9 +1,8 @@
 import sys
 from services.data_management import DataManagement
-from services.dlu_filesystem import DLUFile, DLUFileHandler, calculate_checksum, split_path
+from services.dlu_filesystem import DLUFile, DLUFileHandler, calculate_checksum
 from services.dlu_state import PackageState, DLUState
 from services.dlu_mongo import PackageType
-from services.dlu_utils import dlu_package_dict_to_dmd_tuple
 from model.dlu_package import DLUPackage
 import argparse
 import logging
@@ -56,7 +55,7 @@ class ProcessBulkUploads:
         full_path = os.path.join(self.data_directory, file_path)
         size = os.path.getsize(full_path)
         checksum = calculate_checksum(full_path)
-        file_info = split_path(file_path)
+        file_info = self.dlu_file_handler.split_path(file_path, True)
         return DLUFile(file_info["file_name"], file_info["file_path"], checksum, size, {})
 
     def process_files(self, manifest_files_arr: list) -> list:
@@ -65,7 +64,7 @@ class ProcessBulkUploads:
             file_path = file["relative_file_path_and_name"]
             file_full_path = os.path.join(self.data_directory, file_path)
             size = os.path.getsize(file_full_path)
-            file_info = split_path(file_path)
+            file_info = self.dlu_file_handler.split_path(file_path, True)
             if file["file_metadata"] and "md5_hash" in file["file_metadata"]:
                 checksum = file["file_metadata"]["md5_hash"]
                 del file["file_metadata"]["md5_hash"]
@@ -139,6 +138,7 @@ class ProcessBulkUploads:
                         package.known_specimen = sample_id
                         package.dlu_version = 4
                         package.dlu_dataset_information_version = 1
+                        package.dlu_error = 0
                         if self.globus_only:
                             package.globus_dlu_status = None
                         else:

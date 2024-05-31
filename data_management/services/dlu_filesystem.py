@@ -11,18 +11,6 @@ from mmap import mmap, ACCESS_READ
 logger = logging.getLogger("DLUFilesystem")
 logger.setLevel(logging.INFO)
 
-def split_path(path: str):
-    if len(path.split("/")) > 0:
-        file_name = path.split("/")[-1]
-        file_path_arr = path.split("/")[:-1]
-        file_path = "/".join(file_path_arr)
-    else:
-        file_name = path
-        file_path = ""
-
-    return {"file_name": file_name, "file_path": file_path}
-
-
 def calculate_checksum(file_path: str):
 
     if os.path.isdir(file_path):
@@ -77,6 +65,21 @@ class DLUFileHandler:
         self.globus_data_directory = '/globus'
         self.dlu_data_directory = '/data'
         self.dlu_package_dir_prefix = 'package_'
+
+    def split_path(self, path: str, preserve_path: bool = False):
+        if len(path.split("/")) > 0:
+            if preserve_path:
+                "/".join(path.replace(self.globus_data_directory, "").split("/")[2:])
+                file_name = "/".join(path.split("/")[1:])
+            else:
+                file_name = path.split("/")[-1]
+            file_path_arr = path.split("/")[:-1]
+            file_path = "/".join(file_path_arr)
+        else:
+            file_name = path
+            file_path = ""
+
+        return {"file_name": file_name, "file_path": file_path}
 
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
