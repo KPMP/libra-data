@@ -31,6 +31,9 @@ class DLUFile:
         self.file_id = str(uuid.uuid4())
         self.metadata = metadata
 
+    def get_short_path(self):
+        return "/".join(self.path.split("/")[1:-1])
+
 
 class DirectoryInfo:
     def __init__(self, directory_path: str, calculate_checksums: bool = True):
@@ -74,19 +77,16 @@ class DLUFileHandler:
                 file_name = path.split("/")[-1]
             file_path_arr = path.split("/")[:-1]
             file_path = "/".join(file_path_arr)
-            short_path = "/".join(path.replace(self.globus_data_directory, "").split("/")[2:-1])
         else:
             file_name = path
             file_path = ""
-            short_path = ""
 
-        return {"file_name": file_name, "file_path": file_path, "short_path": short_path}
+        return {"file_name": file_name, "file_path": file_path}
 
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
         source_wd = os.getcwd()
         for file in file_list:
-            file_path_info = self.split_path(file.path, preserve_path)
 
             source_package_directory = self.globus_data_directory + '/'
             if not no_src_package:
@@ -95,7 +95,7 @@ class DLUFileHandler:
                 source_package_directory = os.path.join(source_package_directory, file.path)
             if preserve_path:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id,
-                                                      file_path_info["short_path"])
+                                                      file.get_short_path())
             else:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
             subdirs = [os.path.join(source_package_directory, o)

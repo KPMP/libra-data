@@ -65,6 +65,7 @@ class ProcessBulkUploads:
             file_full_path = os.path.join(self.data_directory, file_path)
             size = os.path.getsize(file_full_path)
             file_info = self.dlu_file_handler.split_path(file_path, self.preserve_path)
+            print(file_info)
             if file["file_metadata"] and "md5_hash" in file["file_metadata"]:
                 checksum = file["file_metadata"]["md5_hash"]
                 del file["file_metadata"]["md5_hash"]
