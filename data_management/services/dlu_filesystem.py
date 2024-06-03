@@ -35,7 +35,7 @@ class DLUFile:
         return "/".join(self.path.split("/")[1:])
 
     def get_short_filename(self):
-        return self.name.split("/")[-1:]
+        return self.name.split("/")[-1:][0]
 
 
 
