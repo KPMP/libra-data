@@ -31,9 +31,11 @@ class DLUFile:
         self.file_id = str(uuid.uuid4())
         self.metadata = metadata
 
+    # Returns path without top directory, i.e. package dir or participant dir (bulk uploads)
     def get_short_path(self):
         return "/".join(self.path.split("/")[1:])
 
+    # Returns the filename without path prefix, if it has it.
     def get_short_filename(self):
         return self.name.split("/")[-1:][0]
 
@@ -92,6 +94,7 @@ class DLUFileHandler:
         source_wd = os.getcwd()
         for file in file_list:
             source_package_directory = self.globus_data_directory + '/'
+            # I.e. isn't a bulk upload that doesn't already have a package ID.
             if not no_src_package:
                 source_package_directory = source_package_directory + package_id
             if file.path:
@@ -102,7 +105,7 @@ class DLUFileHandler:
             else:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
 
-            ## Is any of this code used? START >>
+            # Is any of this code used? START >>
             subdirs = [os.path.join(source_package_directory, o)
             for o in os.listdir(source_package_directory)
               if os.path.isdir(os.path.join(source_package_directory, o))]
@@ -127,7 +130,7 @@ class DLUFileHandler:
                         files_copied += 1
                         shutil.copytree(src_path, dst_path)
                 os.chdir(source_wd)
-            ## << END
+            # << END
             
             if not os.path.exists(dest_package_directory):
                 logger.info("Creating directory " + dest_package_directory)
