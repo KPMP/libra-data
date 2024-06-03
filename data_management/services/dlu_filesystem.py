@@ -26,6 +26,7 @@ class DLUFile:
     def __init__(self, name: str, path: str, checksum: str, size: int, metadata: dict = {}):
         self.name = name
         self.path = path
+        self.path_info =
         self.checksum = checksum
         self.size = size
         self.file_id = str(uuid.uuid4())
@@ -69,21 +70,25 @@ class DLUFileHandler:
     def split_path(self, path: str, preserve_path: bool = False):
         if len(path.split("/")) > 0:
             if preserve_path:
-                file_name = "/".join(path.replace(self.globus_data_directory, "").split("/")[2:])
+                file_name = "/".join(path.replace(self.globus_data_directory, "").split("/")[1:])
             else:
                 file_name = path.split("/")[-1]
             file_path_arr = path.split("/")[:-1]
             file_path = "/".join(file_path_arr)
+            short_path = "/".join(path.replace(self.globus_data_directory, "").split("/")[1:-1])
         else:
             file_name = path
             file_path = ""
+            short_path = ""
 
-        return {"file_name": file_name, "file_path": file_path, "short_path": file_name}
+        return {"file_name": file_name, "file_path": file_path, "short_path": short_path}
 
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
         source_wd = os.getcwd()
         for file in file_list:
+            file_path_info = self.split_path(file.path, preserve_path)
+
             source_package_directory = self.globus_data_directory + '/'
             if not no_src_package:
                 source_package_directory = source_package_directory + package_id
@@ -91,7 +96,7 @@ class DLUFileHandler:
                 source_package_directory = os.path.join(source_package_directory, file.path)
             if preserve_path:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id,
-                                                      self.split_path(file.path)["file_name"])
+                                                      file_path_info["short_path"])
             else:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
             subdirs = [os.path.join(source_package_directory, o)
