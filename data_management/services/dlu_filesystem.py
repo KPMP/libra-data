@@ -32,7 +32,7 @@ class DLUFile:
         self.metadata = metadata
 
     def get_short_path(self):
-        return "/".join(self.path.split("/")[1:-1])
+        return "/".join(self.path.split("/")[1:])
 
 
 class DirectoryInfo:
@@ -87,7 +87,6 @@ class DLUFileHandler:
         files_copied = 0
         source_wd = os.getcwd()
         for file in file_list:
-
             source_package_directory = self.globus_data_directory + '/'
             if not no_src_package:
                 source_package_directory = source_package_directory + package_id
