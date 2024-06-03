@@ -119,5 +119,12 @@ This endpoint retrieves the packages that are ready to be moved from Globus. The
 ## Running this on the DLU / DMD Server
 The heavens-docker/libra directory has a docker-compose file for running this on the DLU / DMD server. 
 
+## Running the Bulk Upload inside Docker
+If you're running into Python library errors while running the Bulk Upload Script locally, try running it in Docker with the options added to the end:
+```
+docker run -v [file source directory]:/source -v [dataLake directory]:/dataLake -v .:/usr/src/app --network=dataLake --env INSIDE_DOCKER=true --rm -ti kingstonduo/data-management:latest python3 process_bulk_uploads.py -d /source -p
+```
+NOTE: The .env file variable "dlu_data_directory" is used by this script as the destination (e.g. Data Lake) directory. In the example above you would set it to "/dataLake". 
+
 ## Known Bug
 There is a known [bug with docker on MacOS](https://github.com/docker/for-mac/issues/2670) in which the container is unable to talk to the host network. This problem may occur when attempting to connect to a tunnel created on the host machine. To work around this issue, you can either run this on a linux machine/windows machine, or bypass docker completely and run the script directly on your local machine.

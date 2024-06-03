@@ -11,18 +11,6 @@ from mmap import mmap, ACCESS_READ
 logger = logging.getLogger("DLUFilesystem")
 logger.setLevel(logging.INFO)
 
-def split_path(path: str):
-    if len(path.split("/")) > 0:
-        file_name = path.split("/")[-1]
-        file_path_arr = path.split("/")[:-1]
-        file_path = "/".join(file_path_arr)
-    else:
-        file_name = path
-        file_path = ""
-
-    return {"file_name": file_name, "file_path": file_path}
-
-
 def calculate_checksum(file_path: str):
 
     if os.path.isdir(file_path):
@@ -42,6 +30,15 @@ class DLUFile:
         self.size = size
         self.file_id = str(uuid.uuid4())
         self.metadata = metadata
+
+    # Returns path without top directory, i.e. package dir or participant dir (bulk uploads)
+    def get_short_path(self):
+        return "/".join(self.path.split("/")[1:])
+
+    # Returns the filename without path prefix, if it has it.
+    def get_short_filename(self):
+        return self.name.split("/")[-1:][0]
+
 
 
 class DirectoryInfo:
@@ -78,20 +75,37 @@ class DLUFileHandler:
         self.dlu_data_directory = '/data'
         self.dlu_package_dir_prefix = 'package_'
 
+    def split_path(self, path: str, preserve_path: bool = False):
+        if len(path.split("/")) > 0:
+            if preserve_path:
+                file_name = "/".join(path.replace(self.globus_data_directory, "").split("/")[1:])
+            else:
+                file_name = path.split("/")[-1]
+            file_path_arr = path.split("/")[:-1]
+            file_path = "/".join(file_path_arr)
+        else:
+            file_name = path
+            file_path = ""
+
+        return {"file_name": file_name, "file_path": file_path}
+
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
         source_wd = os.getcwd()
         for file in file_list:
             source_package_directory = self.globus_data_directory + '/'
+            # I.e. isn't a bulk upload that doesn't already have a package ID.
             if not no_src_package:
                 source_package_directory = source_package_directory + package_id
             if file.path:
                 source_package_directory = os.path.join(source_package_directory, file.path)
             if preserve_path:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id,
-                                                      file.path)
+                                                      file.get_short_path())
             else:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
+
+            # Is any of this code used? START >>
             subdirs = [os.path.join(source_package_directory, o)
             for o in os.listdir(source_package_directory)
               if os.path.isdir(os.path.join(source_package_directory, o))]
@@ -116,12 +130,13 @@ class DLUFileHandler:
                         files_copied += 1
                         shutil.copytree(src_path, dst_path)
                 os.chdir(source_wd)
+            # << END
             
             if not os.path.exists(dest_package_directory):
                 logger.info("Creating directory " + dest_package_directory)
                 os.makedirs(dest_package_directory, exist_ok=True)
-            source_file = os.path.join(source_package_directory, file.name)
-            dest_file = os.path.join(dest_package_directory, file.name)
+            source_file = os.path.join(source_package_directory, file.get_short_filename())
+            dest_file = os.path.join(dest_package_directory, file.get_short_filename())
             
             if not os.path.exists(dest_file) and not dest_file.find(dir) == -1:
                 if os.path.isdir(source_file):

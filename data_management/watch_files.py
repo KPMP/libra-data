@@ -2,7 +2,7 @@ from lib.mongo_connection import MongoConnection
 from bson.dbref import DBRef
 from bson import ObjectId
 
-from services.dlu_filesystem import DLUFileHandler, DirectoryInfo, DLUFile, split_path
+from services.dlu_filesystem import DLUFileHandler, DirectoryInfo, DLUFile
 from services.dlu_package_inventory import DLUPackageInventory
 from services.dlu_state import DLUState, PackageState
 from services.data_management import DataManagement
@@ -50,7 +50,7 @@ class DLUWatcher:
     def process_file_paths(self, file_list: list[DLUFile]) -> list:
         dlu_files = []
         for file in file_list:
-            file.path = split_path(file.path)['file_path']
+            file.path = self.dlu_file_handler.split_path(file.path)['file_path']
             dlu_files.append(file)
         return dlu_files
 

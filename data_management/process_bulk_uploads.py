@@ -1,6 +1,6 @@
 import sys
 from services.data_management import DataManagement
-from services.dlu_filesystem import DLUFile, DLUFileHandler, calculate_checksum, split_path
+from services.dlu_filesystem import DLUFile, DLUFileHandler, calculate_checksum
 from services.dlu_state import PackageState, DLUState
 from services.dlu_mongo import PackageType
 from model.dlu_package import DLUPackage
@@ -24,7 +24,7 @@ SEGMENTATION_README = "README.md"
 
 
 class ProcessBulkUploads:
-    def __init__(self, data_directory: str, globus_only: bool = False, globus_root: str = None):
+    def __init__(self, data_directory: str, globus_only: bool = False, globus_root: str = None, preserve_path: bool = False):
         try:
             self.data_management = DataManagement()
         except:
@@ -39,6 +39,7 @@ class ProcessBulkUploads:
             self.dlu_data_directory = os.environ.get("dlu_data_directory")
 
         self.data_directory = data_directory
+        self.preserve_path = preserve_path
         self.globus_only = globus_only
         self.dlu_file_handler = DLUFileHandler()
         self.dlu_file_handler.globus_data_directory = data_directory
@@ -54,7 +55,7 @@ class ProcessBulkUploads:
         full_path = os.path.join(self.data_directory, file_path)
         size = os.path.getsize(full_path)
         checksum = calculate_checksum(full_path)
-        file_info = split_path(file_path)
+        file_info = self.dlu_file_handler.split_path(file_path, self.preserve_path)
         return DLUFile(file_info["file_name"], file_info["file_path"], checksum, size, {})
 
     def process_files(self, manifest_files_arr: list) -> list:
@@ -63,7 +64,7 @@ class ProcessBulkUploads:
             file_path = file["relative_file_path_and_name"]
             file_full_path = os.path.join(self.data_directory, file_path)
             size = os.path.getsize(file_full_path)
-            file_info = split_path(file_path)
+            file_info = self.dlu_file_handler.split_path(file_path, self.preserve_path)
             if file["file_metadata"] and "md5_hash" in file["file_metadata"]:
                 checksum = file["file_metadata"]["md5_hash"]
                 del file["file_metadata"]["md5_hash"]
@@ -137,20 +138,21 @@ class ProcessBulkUploads:
                         package.known_specimen = sample_id
                         package.dlu_version = 4
                         package.dlu_dataset_information_version = 1
+                        package.dlu_error = 0
                         if self.globus_only:
                             package.globus_dlu_status = None
                         else:
                             package.globus_dlu_status = 'success'
                         package_id = self.data_management.dlu_mongo.add_package(package.get_mongo_dict())
                         self.dlu_state.set_package_state(package_id, PackageState.METADATA_RECEIVED)
-                        self.data_management.insert_dlu_package(package.get_mysql_tuple())
+                        self.data_management.insert_dlu_package(package.get_dmd_dpi_tuple(), package.get_dmd_tuple())
                         if not self.globus_only:
                             logger.info("Copying files to DLU.")
                             records_modified = self.data_management.dlu_mongo.update_package_files(package_id, dlu_file_list)
                             self.data_management.insert_dlu_files(package.package_id, dlu_file_list)
                             if records_modified == 1:
                                 logger.info(f"{len(dlu_file_list)} files added to package {package_id}")
-                                files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False, True)
+                                files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, self.preserve_path, True)
                                 if files_copied == len(dlu_file_list):
                                     self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
                                     logger.info(f"{files_copied} files copied to DLU.")
@@ -158,7 +160,7 @@ class ProcessBulkUploads:
                                     logger.error(f"There was a problem adding files to package {package_id}")
                         else:
                             logger.info("Copying files to Globus.")
-                            files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, False, True)
+                            files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, self.preserve_path, True)
                             if files_copied == len(dlu_file_list):
                                 logger.info(f"{files_copied} files copied to Globus.")
 
@@ -194,8 +196,16 @@ if __name__ == "__main__":
         default=None,
         help='The top-level Globus folder if globus_only is set.'
     )
+    parser.add_argument(
+        '-p',
+        '--preserve_path',
+        action='store_true',
+        required=False,
+        default=False,
+        help='Preserve the file paths, i.e. do not flatten file structure.'
+    )
     args = parser.parse_args()
     if args.globus_only and args.globus_root is None:
         parser.error("--globus_only requires --globus_root to be set.")
-    process_bulk_uploads = ProcessBulkUploads(args.data_directory, args.globus_only, args.globus_root)
+    process_bulk_uploads = ProcessBulkUploads(args.data_directory, args.globus_only, args.globus_root, args.preserve_path)
     process_bulk_uploads.process_bulk_uploads()
