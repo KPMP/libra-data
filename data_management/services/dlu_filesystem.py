@@ -26,7 +26,6 @@ class DLUFile:
     def __init__(self, name: str, path: str, checksum: str, size: int, metadata: dict = {}):
         self.name = name
         self.path = path
-        self.path_info =
         self.checksum = checksum
         self.size = size
         self.file_id = str(uuid.uuid4())
