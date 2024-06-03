@@ -74,7 +74,7 @@ class DLUFileHandler:
                 file_name = path.split("/")[-1]
             file_path_arr = path.split("/")[:-1]
             file_path = "/".join(file_path_arr)
-            short_path = "/".join(path.replace(self.globus_data_directory, "").split("/")[0:-1])
+            short_path = "/".join(path.replace(self.globus_data_directory, "").split("/")[2:-1])
         else:
             file_name = path
             file_path = ""
