@@ -34,6 +34,10 @@ class DLUFile:
     def get_short_path(self):
         return "/".join(self.path.split("/")[1:])
 
+    def get_short_filename(self):
+        return self.name.split("/")[-1:]
+
+
 
 class DirectoryInfo:
     def __init__(self, directory_path: str, calculate_checksums: bool = True):
@@ -97,6 +101,8 @@ class DLUFileHandler:
                                                       file.get_short_path())
             else:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
+
+            ## Is any of this code used? START >>
             subdirs = [os.path.join(source_package_directory, o)
             for o in os.listdir(source_package_directory)
               if os.path.isdir(os.path.join(source_package_directory, o))]
@@ -121,12 +127,13 @@ class DLUFileHandler:
                         files_copied += 1
                         shutil.copytree(src_path, dst_path)
                 os.chdir(source_wd)
+            ## << END
             
             if not os.path.exists(dest_package_directory):
                 logger.info("Creating directory " + dest_package_directory)
                 os.makedirs(dest_package_directory, exist_ok=True)
-            source_file = os.path.join(source_package_directory, file.name)
-            dest_file = os.path.join(dest_package_directory, file.name)
+            source_file = os.path.join(source_package_directory, file.get_short_filename())
+            dest_file = os.path.join(dest_package_directory, file.get_short_filename())
             
             if not os.path.exists(dest_file) and not dest_file.find(dir) == -1:
                 if os.path.isdir(source_file):
