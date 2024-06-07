@@ -91,6 +91,8 @@ class ProcessBulkUploads:
                 package_type = PackageType.ELECTRON_MICROSCOPY
             elif manifest_data["package_type"] == "Segmentation Masks":
                 package_type = PackageType.SEGMENTATION
+            elif manifest_data["package_type"] == "Multimodal Images":
+                package_type = PackageType.MULTI_MODAL
             else:
                 package_type = PackageType.OTHER
             for experiment in manifest_data["experiments"]:
