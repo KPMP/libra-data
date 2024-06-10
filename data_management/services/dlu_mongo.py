@@ -14,6 +14,7 @@ EM_IMAGE_TYPE = "EM Images"
 class PackageType(Enum):
     ELECTRON_MICROSCOPY = "Electron Microscopy Imaging"
     SEGMENTATION = "Segmentation Masks"
+    MULTI_MODAL = "Multimodal Mass Spectrometry"
     OTHER = "Other"
 
 class DLUMongo:
