@@ -92,7 +92,7 @@ class DLUFileHandler:
         return {"file_name": file_name, "file_path": file_path}
     
     def chown_dir(self, package_id: str):
-        package_path = os.environ['dlu_data_direcotory'] + "/" + package_id
+        package_path = self.dlu_data_directory + "/" + package_id
         path = Path(package_path)
         if path.owner() != os.environ['dlu_user'] or path.group() != os.environ['dlu_group']:
             subprocess.call(["chown", "-R", os.environ['dlu_user'], os.environ['dlu_group'], package_path])
