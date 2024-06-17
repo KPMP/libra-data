@@ -3,6 +3,7 @@
 ## Release 1.8 [unreleased]
 Brief summary of what's in this release:
 
+- Added logic to change ownership of moved files off of root user
 
 ### Breaking changes
 

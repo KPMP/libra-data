@@ -1,4 +1,6 @@
+import shutil
 import os
+from pathlib import Path
 import logging
 import shutil
 import filecmp
@@ -88,6 +90,14 @@ class DLUFileHandler:
             file_path = ""
 
         return {"file_name": file_name, "file_path": file_path}
+    
+    def chown_dir(self, package_id: str, files: list[DLUFile]):
+        package_path = self.dlu_data_directory + "/" + self.dlu_package_dir_prefix + package_id
+        if os.stat(package_path).st_uid != int(os.environ['dlu_user']) or os.stat(package_path).st_gid != int(os.environ['dlu_group']):
+            os.chown(package_path, int(os.environ['dlu_user']), int(os.environ['dlu_group']))
+            for file in files:
+                os.chown(package_path + "/" + file.name, int(os.environ['dlu_user']), int(os.environ['dlu_group']))
+        
 
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
