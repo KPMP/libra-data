@@ -16,7 +16,13 @@ class Main:
 
     def report_mongo_records_missing_md5s(self):
         packages_missing_checksums = self.dlu_mongo.find_all_packages_missing_md5s()
-        logger.warning(packages_missing_checksums)
+        logger.info("Package Ids missing md5checksums in at least one file")
+        for package in packages_missing_checksums:
+            count = 0
+            for file in package["files"]:
+                if "md5Checksum" not in file:
+                   count = count + 1
+            logger.error(package["_id"] + " missing checksums in " + str(count) + " file(s)")
 
     def report_mongo_records_incorrect_md5s(self):
         pass
