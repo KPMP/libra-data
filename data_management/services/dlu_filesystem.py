@@ -1,4 +1,6 @@
+import subprocess
 import os
+from pathlib import Path
 import logging
 import shutil
 import filecmp
@@ -88,6 +90,13 @@ class DLUFileHandler:
             file_path = ""
 
         return {"file_name": file_name, "file_path": file_path}
+    
+    def chown_dir(self, package_id: str):
+        package_path = os.environ['dlu_data_direcotory'] + "/" + package_id
+        path = Path(package_path)
+        if path.owner() != os.environ['dlu_user'] or path.group() != os.environ['dlu_group']:
+            subprocess.call(["chown", "-R", os.environ['dlu_user'], os.environ['dlu_group'], package_path])
+        
 
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
