@@ -210,6 +210,11 @@ class DataManagement:
         else:
             return "Error: package " + package_id + " not found."
 
+    def find_files_missing_md5(self):
+        return self.db.get_data(
+            "SELECT * from dlu_file where dlu_md5checksum is NULL"
+        )
+
     def move_globus_files_to_dlu(self, package_id: str):
         ready_status = self.get_ready_to_move(package_id)
         response_msg = "There was an error in marking this package ready to move."

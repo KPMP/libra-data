@@ -2,6 +2,7 @@ import argparse
 import logging
 from services.dlu_mongo import DLUMongo
 from lib.mongo_connection import MongoConnection
+from services.data_management import DataManagement
 from dotenv import load_dotenv
 
 logger = logging.getLogger("md5-updater")
@@ -13,22 +14,26 @@ class Main:
     def __init__(self):
         self.mongo_connection = MongoConnection().get_mongo_connection()
         self.dlu_mongo = DLUMongo(self.mongo_connection)
+        self.data_management = DataManagement()
 
     def report_mongo_records_missing_md5s(self):
         packages_missing_checksums = self.dlu_mongo.find_all_packages_missing_md5s()
-        logger.info("Package Ids missing md5checksums in at least one file")
+        logger.info("Mongo records missing md5checksum")
         for package in packages_missing_checksums:
-            count = 0
             for file in package["files"]:
                 if "md5Checksum" not in file:
-                   count = count + 1
-            logger.error(package["_id"] + " missing checksums in " + str(count) + " file(s)")
+                   logger.error("file uuid: " + file["_id"] + " in package :" + package["_id"] + " missing md5")
 
     def report_mongo_records_incorrect_md5s(self):
         pass
 
     def report_dmd_records_missing_md5s(self):
-        pass
+        logger.info("DMD records missing md5checksum")
+        files = self.data_management.find_files_missing_md5()
+        logger.info(files)
+        for file in files:
+            logger.error("file uuid: " + file["dlu_file_id"] + " in package: " + file["dlu_package_id"] + " missing md5")
+
 
     def report_dmd_records_incorrect_md5s(self):
         pass
