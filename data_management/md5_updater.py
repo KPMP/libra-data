@@ -101,5 +101,7 @@ if __name__ == "__main__":
         main.fill_mongo_missing_md5s()
         main.fill_dmd_missing_md5s()
     else:
+        main.fill_mongo_missing_md5s()
+        main.fill_dmd_missing_md5s()
         main.fix_mongo_md5s()
         main.fix_dmd_md5s()

@@ -17,7 +17,7 @@ def calculate_checksum(file_path: str):
         return "0"
     if ".zarr" not in file_path:
         with open(file_path) as f, mmap(f.fileno(), 0, access=ACCESS_READ) as f:
-            return md5(f).hexdigest();
+            return md5(f).hexdigest()
     else:
         return compute_zarr_checksum(yield_files_local(file_path)).md5
 
