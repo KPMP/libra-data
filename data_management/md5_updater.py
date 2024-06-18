@@ -64,7 +64,13 @@ class Main:
         pass
 
     def fill_dmd_missing_md5s(self):
-        pass
+        files = self.data_management.find_files_missing_md5()
+        for file in files:
+            full_path = os.path.join(self.data_lake_directory, "package_" + file["dlu_package_id"] + "/"
+                                     + file["dlu_fileName"])
+            new_checksum = calculate_checksum(full_path)
+            self.data_management.update_md5(file["dlu_file_id"], new_checksum, file["dlu_package_id"])
+
 
     def fix_dmd_md5s(self):
         pass
