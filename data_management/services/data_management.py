@@ -89,7 +89,7 @@ class DataManagement:
             (values[0],),
         )[0]["specimen_count"]
         if result == 0:
-            logger.info("Inserting into spectrack_specimen for specimen id: " + values[0])
+            logger.info("Inserting into spectrack_specimen for specimen id: " + str(values[0]))
             self.db.insert_data(
                 "INSERT INTO data_management.spectrack_specimen ( "
                 + "spectrack_specimen_id, spectrack_sample_id, "
