@@ -110,7 +110,7 @@ class Main:
             new_checksum = calculate_checksum(full_path)
             return new_checksum
         else:
-            logger.error("file name: " + file_name + " for package: " + package_id + " missing")
+            logger.error("file : " + full_path + " not found")
             return None
 
 
