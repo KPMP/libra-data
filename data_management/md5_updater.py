@@ -45,6 +45,7 @@ class Main:
 
     def fix_mongo_md5s(self, report_only: bool = False, fill_missing_only: bool = False):
         if fill_missing_only:
+            logger.info("reporting only")
             self.fill_mongo_missing_md5s(report_only=report_only)
         else:
             logger.info("Handling Mongo records with incorrect md5checksums")
@@ -86,6 +87,7 @@ class Main:
 
     def fix_dmd_md5s(self, report_only: bool = False, fill_missing_only: bool = False):
         if fill_missing_only:
+            logger.info("reporting only")
             self.fill_dmd_missing_md5s(report_only= report_only)
         else:
             files = self.data_management.find_all_files()
