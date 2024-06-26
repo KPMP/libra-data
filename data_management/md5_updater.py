@@ -20,6 +20,7 @@ class Main:
         self.data_lake_directory = os.environ["dlu_data_directory"]
 
     def fill_mongo_missing_md5s(self, report_only: bool = False):
+        logger.info(report_only)
         logger.info("Handling Mongo records missing md5checksum")
         packages_missing_checksums = self.dlu_mongo.find_all_packages_missing_md5s()
         for package in packages_missing_checksums:
@@ -45,7 +46,7 @@ class Main:
 
     def fix_mongo_md5s(self, report_only: bool = False, fill_missing_only: bool = False):
         if fill_missing_only:
-            logger.info("reporting only")
+            logger.info("fill missing only")
             self.fill_mongo_missing_md5s(report_only=report_only)
         else:
             logger.info("Handling Mongo records with incorrect md5checksums")
@@ -74,6 +75,7 @@ class Main:
                     self.dlu_mongo.update_package_files(package["_id"], package_files)
 
     def fill_dmd_missing_md5s(self, report_only: bool = False):
+        logger.info(report_only)
         logger.info("Handling DMD records missing md5checksum")
         files = self.data_management.find_files_missing_md5()
         for file in files:
@@ -87,8 +89,8 @@ class Main:
 
     def fix_dmd_md5s(self, report_only: bool = False, fill_missing_only: bool = False):
         if fill_missing_only:
-            logger.info("reporting only")
-            self.fill_dmd_missing_md5s(report_only= report_only)
+            logger.info("fill missing only")
+            self.fill_dmd_missing_md5s(report_only=report_only)
         else:
             files = self.data_management.find_all_files()
             for file in files:
