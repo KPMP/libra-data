@@ -27,7 +27,7 @@ class Main:
             package_files = []
             for file in package["files"]:
                 if "md5Checksum" not in file:
-                    if report_only is True:
+                    if report_only == True:
                         logger.error("file uuid: " + file["_id"] + " in package :" + package["_id"] + " missing md5")
                     else:
                         new_checksum = self.calculate_md5(file_name=file['fileName'], package_id=package["_id"])
@@ -79,7 +79,7 @@ class Main:
         logger.info("Handling DMD records missing md5checksum")
         files = self.data_management.find_files_missing_md5()
         for file in files:
-            if report_only is True:
+            if report_only == True:
                 logger.error(
                     "file uuid: " + file["dlu_file_id"] + " in package: " + file["dlu_package_id"] + " missing md5")
             else:
