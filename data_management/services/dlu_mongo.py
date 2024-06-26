@@ -48,4 +48,7 @@ class DLUMongo:
         return result.inserted_id
 
     def find_all_packages_missing_md5s(self):
-        return self.package_collection.find({ "files": { "$elemMatch": {"md5Checksum": { "$exists": False}}}})
+        return self.package_collection.find({ "files": {"$elemMatch": {"md5Checksum": {"$exists": False}}}})
+
+    def find_all_packages(self):
+        return self.package_collection.find({})

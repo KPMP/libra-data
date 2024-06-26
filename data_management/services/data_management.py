@@ -215,6 +215,11 @@ class DataManagement:
             "SELECT * from dlu_file where dlu_md5checksum is NULL"
         )
 
+    def find_all_files(self):
+        return self.db.get_data(
+            "SELECT * FROM dlu_file"
+        )
+
     def update_md5(self, file_id: str, checksum: str, package_id: str):
         self.db.insert_data("UPDATE dlu_file SET dlu_md5checksum = %s WHERE dlu_file_id = %s and dlu_package_id = %s",
                             (checksum, file_id,package_id))
@@ -236,6 +241,7 @@ class DataManagement:
         else:
             response_msg = ready_status
         return response_msg
+
 
 if __name__ == "__main__":
     data_management = DataManagement()
