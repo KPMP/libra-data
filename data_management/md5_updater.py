@@ -30,8 +30,12 @@ class Main:
                         logger.error("file uuid: " + file["_id"] + " in package :" + package["_id"] + " missing md5")
                     else:
                         new_checksum = self.calculate_md5(file_name=file['fileName'], package_id=package["_id"])
-                        dlu_file = DLUFile(name=file["fileName"], size=file["size"], path="", checksum=new_checksum,
-                                           file_id=file["_id"])
+                        if new_checksum is not None:
+                            dlu_file = DLUFile(name=file["fileName"], size=file["size"], path="", checksum=new_checksum,
+                                               file_id=file["_id"])
+                        else:
+                            dlu_file = DLUFile(name=file["fileName"], size=file["size"], path="", checksum="",
+                                               file_id=file["_id"])
                         package_files.append(dlu_file)
                 else:
                     dlu_file = DLUFile(name=file["fileName"], size=file["size"], path="", checksum=file['md5Checksum'],
@@ -58,7 +62,7 @@ class Main:
                             logger.error("file uuid: " + file["_id"] + " in package: " + package['_id'] +
                                          " incorrect md5")
 
-                    if "md5Checksum" not in file or file["md5Checksum"] != checksum:
+                    if "md5Checksum" not in file or file["md5Checksum"] != checksum and checksum is not None:
                         dlu_file = DLUFile(name=file["fileName"], size=file["size"], path="", checksum=checksum,
                                            file_id=file["_id"])
                         package_files.append(dlu_file)
@@ -77,7 +81,8 @@ class Main:
                     "file uuid: " + file["dlu_file_id"] + " in package: " + file["dlu_package_id"] + " missing md5")
             else:
                 new_checksum = self.calculate_md5(file_name=file["dlu_fileName"], package_id=file["dlu_package_id"])
-                self.data_management.update_md5(file["dlu_file_id"], new_checksum, file["dlu_package_id"])
+                if new_checksum is not None:
+                    self.data_management.update_md5(file["dlu_file_id"], new_checksum, file["dlu_package_id"])
 
     def fix_dmd_md5s(self, report_only: bool = False, fill_missing_only: bool = False):
         if fill_missing_only:
@@ -95,14 +100,18 @@ class Main:
                         logger.error("file uuid: " + file["dlu_file_id"] + " in package: " + file["dlu_package_id"] +
                                      " incorrect md5")
                 else:
-                    if file["dlu_md5checksum"] is None or file["dlu_md5checksum"] != checksum:
+                    if file["dlu_md5checksum"] is None or file["dlu_md5checksum"] != checksum and checksum is not None:
                         self.data_management.update_md5(file["dlu_file_id"], checksum, file["dlu_package_id"])
 
     def calculate_md5(self, file_name, package_id):
         full_path = os.path.join(self.data_lake_directory, "package_" + package_id + "/"
                                  + file_name)
-        new_checksum = calculate_checksum(full_path)
-        return new_checksum
+        if os.path.isfile(full_path):
+            new_checksum = calculate_checksum(full_path)
+            return new_checksum
+        else:
+            logger.error("file name: " + file_name + " for package: " + package_id + " missing")
+            return None
 
 
 if __name__ == "__main__":
