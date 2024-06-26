@@ -27,7 +27,7 @@ class Main:
             package_files = []
             for file in package["files"]:
                 if "md5Checksum" not in file:
-                    if report_only:
+                    if report_only is True:
                         logger.error("file uuid: " + file["_id"] + " in package :" + package["_id"] + " missing md5")
                     else:
                         new_checksum = self.calculate_md5(file_name=file['fileName'], package_id=package["_id"])
