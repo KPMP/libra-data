@@ -136,8 +136,8 @@ if __name__ == "__main__":
         main.fill_dmd_missing_md5s(report_only=True)
         main.fix_dmd_md5s(report_only=True)
     elif args.fill_missing:
-        main.fix_mongo_md5s(fill_missing_only=True)
-        main.fix_dmd_md5s(fill_missing_only=True)
+        main.fix_mongo_md5s(report_only=False, fill_missing_only=True)
+        main.fix_dmd_md5s(report_only=False, fill_missing_only=True)
     else:
         main.fix_mongo_md5s()
         main.fix_dmd_md5s()
