@@ -133,13 +133,16 @@ if __name__ == "__main__":
     args = parser.parse_args()
     main = Main()
     if args.dryrun:
+        logger.info("dry run")
         main.fill_mongo_missing_md5s(report_only=True)
         main.fix_mongo_md5s(report_only=True)
         main.fill_dmd_missing_md5s(report_only=True)
         main.fix_dmd_md5s(report_only=True)
     elif args.fill_missing:
+        logger.info("fill missing")
         main.fix_mongo_md5s(report_only=False, fill_missing_only=True)
         main.fix_dmd_md5s(report_only=False, fill_missing_only=True)
     else:
+        logger.info("full fix")
         main.fix_mongo_md5s()
         main.fix_dmd_md5s()
