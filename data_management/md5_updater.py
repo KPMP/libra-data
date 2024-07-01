@@ -58,7 +58,7 @@ class Main:
                         if "md5Checksum" not in file:
                             logger.error(
                                 "file uuid: " + file["_id"] + " in package :" + package["_id"] + " missing md5")
-                        elif file["md5Checksum"] != checksum:
+                        elif file["md5Checksum"] != checksum and checksum is not None:
                             logger.error("file uuid: " + file["_id"] + " in package: " + package['_id'] +
                                          " incorrect md5")
 
@@ -96,7 +96,7 @@ class Main:
                         logger.error(
                             "file uuid: " + file["dlu_file_id"] + " in package :" + file["dlu_package_id"] +
                             " missing md5")
-                    elif file["dlu_md5checksum"] != checksum:
+                    elif file["dlu_md5checksum"] != checksum and checksum is not None:
                         logger.error("file uuid: " + file["dlu_file_id"] + " in package: " + file["dlu_package_id"] +
                                      " incorrect md5")
                 else:
