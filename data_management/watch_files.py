@@ -1,7 +1,4 @@
 from lib.mongo_connection import MongoConnection
-from bson.dbref import DBRef
-from bson import ObjectId
-
 from services.dlu_filesystem import DLUFileHandler, DirectoryInfo, DLUFile
 from services.dlu_package_inventory import DLUPackageInventory
 from services.dlu_state import DLUState, PackageState
@@ -12,13 +9,13 @@ from services.dlu_mongo import DLUMongo
 from dotenv import load_dotenv
 import logging
 import time
-import datetime
 import os
 
 logger = logging.getLogger("services-dlu_package_watcher")
 logger.setLevel(logging.INFO)
 load_dotenv()
-  
+
+
 class DLUWatcher:   
     def __init__ (self, db: DLUPackageInventory = None):
         if db:

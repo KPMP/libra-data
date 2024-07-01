@@ -17,6 +17,7 @@ class PackageType(Enum):
     MULTI_MODAL = "Multimodal Mass Spectrometry"
     OTHER = "Other"
 
+
 class DLUMongo:
 
     def __init__(self, mongo_connection: MongoConnection):
@@ -45,3 +46,9 @@ class DLUMongo:
     def add_package(self, package: dict) -> str:
         result = self.package_collection.insert_one(package)
         return result.inserted_id
+
+    def find_all_packages_missing_md5s(self):
+        return self.package_collection.find({ "files": {"$elemMatch": {"md5Checksum": {"$exists": False}}}})
+
+    def find_all_packages(self):
+        return self.package_collection.find({})

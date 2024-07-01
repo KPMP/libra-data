@@ -3,7 +3,6 @@ import os
 from pathlib import Path
 import logging
 import shutil
-import filecmp
 from hashlib import md5
 import uuid
 from zarr_checksum import compute_zarr_checksum
@@ -13,24 +12,26 @@ from mmap import mmap, ACCESS_READ
 logger = logging.getLogger("DLUFilesystem")
 logger.setLevel(logging.INFO)
 
+
 def calculate_checksum(file_path: str):
 
     if os.path.isdir(file_path):
         return "0"
     if ".zarr" not in file_path:
         with open(file_path) as f, mmap(f.fileno(), 0, access=ACCESS_READ) as f:
-            return md5(f).hexdigest();
+            return md5(f).hexdigest()
     else:
         return compute_zarr_checksum(yield_files_local(file_path)).md5
 
 
 class DLUFile:
-    def __init__(self, name: str, path: str, checksum: str, size: int, metadata: dict = {}):
+    def __init__(self, name: str, path: str, checksum: str, size: int, metadata: dict = {},
+                 file_id: str = str(uuid.uuid4())):
         self.name = name
         self.path = path
         self.checksum = checksum
         self.size = size
-        self.file_id = str(uuid.uuid4())
+        self.file_id = file_id
         self.metadata = metadata
 
     # Returns path without top directory, i.e. package dir or participant dir (bulk uploads)
@@ -40,7 +41,6 @@ class DLUFile:
     # Returns the filename without path prefix, if it has it.
     def get_short_filename(self):
         return self.name.split("/")[-1:][0]
-
 
 
 class DirectoryInfo:
