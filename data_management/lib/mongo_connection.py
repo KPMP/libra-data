@@ -46,6 +46,7 @@ class MongoConnection:
             logger.error(
                 f"Can't connect to Mongo\nMake sure you have filled out the correct environment variables in the .env file"
             )
+            logger.error(self.host)
             os.sys.exit()
 
 

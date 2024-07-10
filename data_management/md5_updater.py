@@ -42,6 +42,7 @@ class Main:
                                        file_id=file["_id"])
                     package_files.append(dlu_file)
                 self.dlu_mongo.update_package_files(package["_id"], package_files)
+        packages_missing_checksums.close()
 
     def fix_mongo_md5s(self, report_only: bool = False, fill_missing_only: bool = False):
         if fill_missing_only:
@@ -71,6 +72,7 @@ class Main:
                                            checksum=file['md5Checksum'], file_id=file["_id"])
                         package_files.append(dlu_file)
                     self.dlu_mongo.update_package_files(package["_id"], package_files)
+            all_packages.close()
 
     def fill_dmd_missing_md5s(self, report_only: bool = False):
         logger.info("Handling DMD records missing md5checksum")
