@@ -50,6 +50,6 @@ class DLUMongo:
     def find_all_packages_missing_md5s(self):
         return self.package_collection.find({ "files": {"$elemMatch": {"md5Checksum": {"$exists": False}}}})
 
-    # WARNING!!! If you use this method, you MUST call .close() on the returned cursor (this returns a cursor)
+    # WARNING!!! If you use this method, you MUST call .close() on the returned cursor
     def find_all_packages(self):
         return self.package_collection.find({}, no_cursor_timeout=True)
