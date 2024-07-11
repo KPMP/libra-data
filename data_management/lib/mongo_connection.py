@@ -38,7 +38,7 @@ class MongoConnection:
     def get_mongo_connection(self):
         try:
             mongo_client = pymongo.MongoClient(
-                f"mongodb://{self.host}:{self.port}/", serverSelectionTimeoutMS=1200000
+                f"mongodb://{self.host}:{self.port}/"
             )
             database = mongo_client[self.database]
             return database
@@ -50,8 +50,10 @@ class MongoConnection:
             os.sys.exit()
 
     def get_mongo_session(self):
-        session = self.database.startSession()
-        return session
+        session = pymongo.MongoClient(
+            f"mongodb://{self.host}:{self.port}/").start_session()
+        session.
+
 
 
 if __name__ == "__main__":
