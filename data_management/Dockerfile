@@ -29,7 +29,7 @@ COPY main.py ./
 COPY app.py ./
 COPY process_bulk_uploads.py ./
 RUN mkdir -p ./services
-COPY ./data_management/services/ /usr/src/app/services
+COPY services/ /usr/src/app/services
 
 ENTRYPOINT []
 
