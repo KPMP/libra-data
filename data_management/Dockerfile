@@ -32,6 +32,7 @@ COPY main.py ./
 COPY app.py ./
 COPY process_bulk_uploads.py ./
 RUN mkdir -p ./services
+RUN echo ${PWD} && ls -lR
 COPY services/ ./services
 
 ENTRYPOINT []
