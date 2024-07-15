@@ -30,8 +30,8 @@ jobs:
             - name: Build and push docker image for develop branch
               if: steps.branch-names.outputs.current_branch == 'develop'
               run: | 
-               docker build -t "kingstonduo/data-management:$IMAGE_TAG"
-               docker build -t "kingstonduo/dlu-watcher:$IMAGE_TAG"
+               docker build -t "kingstonduo/data-management:$IMAGE_TAG ."
+               docker build -t "kingstonduo/dlu-watcher:$IMAGE_TAG -f DluWatcher ."
                docker push "kingstonduo/data-management:$IMAGE_TAG"
                docker push "kingstonduo/dlu-watcher:$IMAGE_TAG"
             
