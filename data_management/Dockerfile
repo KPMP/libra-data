@@ -28,7 +28,6 @@ COPY lib/ ./lib
 COPY main.py ./
 COPY app.py ./
 COPY process_bulk_uploads.py ./
-RUN mkdir -p ./services
 COPY services/ ./services
 
 ENTRYPOINT []
