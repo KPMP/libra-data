@@ -1,12 +1,12 @@
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.Python
-.coverage
-.coverage.*
-.cache
-*.cover
-*.log
-.git
-.pytest_cache
+# __pycache__
+# *.pyc
+# *.pyo
+# *.pyd
+# .Python
+# .coverage
+# .coverage.*
+# .cache
+# *.cover
+# *.log
+# .git
+# .pytest_cache
