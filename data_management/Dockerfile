@@ -29,8 +29,7 @@ COPY main.py ./
 COPY app.py ./
 COPY process_bulk_uploads.py ./
 RUN mkdir -p ./services
-RUN echo ${PWD} && ls -lR
-ADD services/ ./services
+COPY ./data_management/services/ /usr/src/app/services
 
 ENTRYPOINT []
 
