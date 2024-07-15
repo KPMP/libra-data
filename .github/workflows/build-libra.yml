@@ -4,41 +4,62 @@ on:
     push:
 
 jobs:
-    build-libra:
-        env:
-            IMAGE_TAG: 1.8 
-        runs-on:
-            ubuntu-latest
-        steps:
-            - name: Get branch names
-              id: branch-names
-              uses: tj-actions/branch-names@v8
-
-            - name: Get current branch name
-              if: steps.branch-names.outputs.is_default == 'false'
-              run: |
-                 echo "Running on branch: ${{ steps.branch-names.outputs.current_branch }}"
-            - name: Checkout project sources
-              uses: actions/checkout@v3
-            
-            - name: Login to Docker Hub
-              uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
-              with:
-                username: ${{ secrets.ENV_DOCKER_USER }}
-                password: ${{ secrets.ENV_DOCKER_PASS }}
-            
-            - name: Build and push docker image for develop branch
-              if: steps.branch-names.outputs.current_branch == 'develop'
-              run: | 
-               docker build -t "kingstonduo/data-management:$IMAGE_TAG" .
-               docker build -t "kingstonduo/dlu-watcher:$IMAGE_TAG" -f DluWatcher .
-               docker push "kingstonduo/data-management:$IMAGE_TAG"
-               docker push "kingstonduo/dlu-watcher:$IMAGE_TAG"
-            
-            - name: Build and push to docker image for non develop branch
-              if: steps.branch-names.outputs.current_branch != 'develop'
-              run: |
-               docker build -t "kingstonduo/data-management:${{ steps.branch-names.outputs.current_branch }}" .
-               docker build -t "kingstonduo/dlu-watcher:${{steps.branch-names.outputs.current_branch}}" -f DluWatcher .
-               docker push "kingstonduo/data-management:${{ steps.branch-names.outputs.current_branch }}"
-               docker push "kingstonduo/dlu-watcher:${{ steps.branch-names.outputs.current_branch }}"
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+        - name: Get branch names
+          id: branch-names
+          uses: tj-actions/branch-names@v8
+        - name: Get current branch name
+          if: steps.branch-names.outputs.is_default == 'false'
+          run: |
+             echo "Running on branch: ${{ steps.branch-names.outputs.current_branch }}"
+        - name: Checkout project sources
+          uses: actions/checkout@v3
+        -
+          name: Set up QEMU
+          uses: docker/setup-qemu-action@v3
+        -
+          name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v3
+        -
+          name: Login to Docker Hub
+          uses: docker/login-action@v3
+          with:
+            username: ${{ secrets.ENV_DOCKER_USER }}
+            password: ${{ secrets.ENV_DOCKER_PASS }}
+        -
+          name: Build and push data-management image for develop branch
+          if: steps.branch-names.outputs.current_branch == 'develop'
+          uses: docker/build-push-action@v6
+          with:
+            push: true
+            tags: 
+              "kingstonduo/data-management:$IMAGE_TAG"
+        -
+          name: Build and push dlu-watcher image for develop branch
+          if: steps.branch-names.outputs.current_branch == 'develop'
+          uses: docker/build-push-action@v6
+          with:
+            push: true
+            file: "./DluWatcher"
+            tags: 
+              "kingstonduo/data-management:$IMAGE_TAG"
+        
+        -
+          name: Build and push data-management image for non develop branch
+          if: steps.branch-names.outputs.current_branch != 'develop'
+          uses: docker/build-push-action@v6
+          with:
+            push: true
+            tags: 
+              "kingstonduo/data-management:${{steps.branch-names.outputs.current_branch}}"
+        -
+          name: Build and push dlu-watcher image for non develop branch
+          if: steps.branch-names.outputs.current_branch != 'develop'
+          uses: docker/build-push-action@v6
+          with:
+            push: true
+            file: "./DluWatcher"
+            tags: 
+              "kingstonduo/data-management:${{steps.branch-names.outputs.current_branch}}"
