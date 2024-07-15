@@ -33,7 +33,7 @@ jobs:
           if: steps.branch-names.outputs.current_branch == 'develop'
           uses: docker/build-push-action@v6
           with:
-            context: .
+            file: ./data_management/Dockerfile
             push: true
             tags: 
               "kingstonduo/data-management:$IMAGE_TAG"
@@ -44,16 +44,16 @@ jobs:
           with:
             context: .
             push: true
-            file: "./DluWatcher"
+            file: "./data_management/DluWatcher"
             tags: 
-              "kingstonduo/data-management:$IMAGE_TAG"
+              "kingstonduo/dlu-watcher:$IMAGE_TAG"
         
         -
           name: Build and push data-management image for non develop branch
           if: steps.branch-names.outputs.current_branch != 'develop'
           uses: docker/build-push-action@v6
           with:
-            file: "./Dockerfile"
+            file: "./data_management/Dockerfile"
             push: true
             tags: 
               "kingstonduo/data-management:${{steps.branch-names.outputs.current_branch}}"
@@ -63,6 +63,6 @@ jobs:
           uses: docker/build-push-action@v6
           with:
             push: true
-            file: "./DluWatcher"
+            file: "./data_management/DluWatcher"
             tags: 
-              "kingstonduo/data-management:${{steps.branch-names.outputs.current_branch}}"
+              "kingstonduo/dlu-watcher:${{steps.branch-names.outputs.current_branch}}"
