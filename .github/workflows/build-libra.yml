@@ -33,6 +33,7 @@ jobs:
           if: steps.branch-names.outputs.current_branch == 'develop'
           uses: docker/build-push-action@v6
           with:
+            context: ./data_management
             file: ./data_management/Dockerfile
             push: true
             tags: 
@@ -42,7 +43,7 @@ jobs:
           if: steps.branch-names.outputs.current_branch == 'develop'
           uses: docker/build-push-action@v6
           with:
-            context: .
+            context: ./data_management
             push: true
             file: "./data_management/DluWatcher"
             tags: 
@@ -53,6 +54,7 @@ jobs:
           if: steps.branch-names.outputs.current_branch != 'develop'
           uses: docker/build-push-action@v6
           with:
+            context: ./data_management
             file: "./data_management/Dockerfile"
             push: true
             tags: 
@@ -62,6 +64,7 @@ jobs:
           if: steps.branch-names.outputs.current_branch != 'develop'
           uses: docker/build-push-action@v6
           with:
+            context: ./data_management
             push: true
             file: "./data_management/DluWatcher"
             tags: 
