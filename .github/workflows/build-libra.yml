@@ -15,7 +15,7 @@ jobs:
           run: |
              echo "Running on branch: ${{ steps.branch-names.outputs.current_branch }}"
         - name: Checkout project sources
-          uses: actions/checkout@v3
+          uses: actions/checkout@v4
         -
           name: Set up QEMU
           uses: docker/setup-qemu-action@v3
@@ -53,7 +53,7 @@ jobs:
           if: steps.branch-names.outputs.current_branch != 'develop'
           uses: docker/build-push-action@v6
           with:
-            context: .
+            file: "./Dockerfile"
             push: true
             tags: 
               "kingstonduo/data-management:${{steps.branch-names.outputs.current_branch}}"
@@ -62,7 +62,6 @@ jobs:
           if: steps.branch-names.outputs.current_branch != 'develop'
           uses: docker/build-push-action@v6
           with:
-            context: .
             push: true
             file: "./DluWatcher"
             tags: 
