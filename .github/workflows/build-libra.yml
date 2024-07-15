@@ -38,7 +38,7 @@ jobs:
             - name: Build and push to docker image for non develop branch
               if: steps.branch-names.outputs.current_branch != 'develop'
               run: |
-               docker build -t "kingstonduo/data-management:${{ steps.branch-names.outputs.current_branch }}"
-               docker build -t "kingstonduo/dlu-watcher:${{steps.branch-names.outputs.current_branch}}"
+               docker build -t "kingstonduo/data-management:${{ steps.branch-names.outputs.current_branch }}" .
+               docker build -t "kingstonduo/dlu-watcher:${{steps.branch-names.outputs.current_branch}}" -f DluWatcher .
                docker push "kingstonduo/data-management:${{ steps.branch-names.outputs.current_branch }}"
                docker push "kingstonduo/dlu-watcher:${{ steps.branch-names.outputs.current_branch }}"
