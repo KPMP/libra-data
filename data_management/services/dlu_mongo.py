@@ -52,4 +52,4 @@ class DLUMongo:
 
     # WARNING!!! If you use this method, you MUST call .close() on the returned cursor
     def find_all_packages(self):
-        return self.package_collection.find({}, no_cursor_timeout=True)
+        return self.package_collection.find({}, no_cursor_timeout=True, batch_size=1)
