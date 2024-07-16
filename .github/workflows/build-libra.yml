@@ -5,6 +5,8 @@ on:
 
 jobs:
   docker:
+    env:
+        IMAGE_TAG: 1.8
     runs-on: ubuntu-latest
     steps:
         - name: Get branch names
