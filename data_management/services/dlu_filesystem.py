@@ -17,7 +17,10 @@ def calculate_checksum(file_path: str):
 
     if os.path.isdir(file_path):
         return "0"
-    if ".zarr" not in file_path:
+    if os.path.getsize(file_path) == 0:
+        # This is apparently the md5 returned for an empty file
+        return 'd41d8cd98f00b204e9800998ecf8427e'
+    elif ".zarr" not in file_path:
         with open(file_path) as f, mmap(f.fileno(), 0, access=ACCESS_READ) as f:
             return md5(f).hexdigest()
     else:
