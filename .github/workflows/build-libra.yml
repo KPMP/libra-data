@@ -6,7 +6,7 @@ on:
 jobs:
   docker:
     env:
-        IMAGE_TAG: blahblah
+        IMAGE_TAG: "blahblah"
     runs-on: ubuntu-latest
     steps:
         - name: Get branch names
