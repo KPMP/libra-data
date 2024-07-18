@@ -32,7 +32,7 @@ jobs:
             password: ${{ secrets.ENV_DOCKER_PASS }}
         -
           name: Build and push data-management image for develop branch
-          if: steps.branch-names.outputs.current_branch != 'develop'
+          if: steps.branch-names.outputs.current_branch == 'develop'
           uses: docker/build-push-action@v6
           with:
             context: ./data_management
@@ -42,7 +42,7 @@ jobs:
               "kingstonduo/data-management:${{env.IMAGE_TAG}}"
         -
           name: Build and push dlu-watcher image for develop branch
-          if: steps.branch-names.outputs.current_branch != 'develop'
+          if: steps.branch-names.outputs.current_branch == 'develop'
           uses: docker/build-push-action@v6
           with:
             context: ./data_management
@@ -51,23 +51,23 @@ jobs:
             tags: 
               "kingstonduo/dlu-watcher:${{env.IMAGE_TAG}}"
         
-        # -
-        #   name: Build and push data-management image for non develop branch
-        #   if: steps.branch-names.outputs.current_branch != 'develop'
-        #   uses: docker/build-push-action@v6
-        #   with:
-        #     context: ./data_management
-        #     file: "./data_management/Dockerfile"
-        #     push: true
-        #     tags: 
-        #       "kingstonduo/data-management:${{steps.branch-names.outputs.current_branch}}"
-        # -
-        #   name: Build and push dlu-watcher image for non develop branch
-        #   if: steps.branch-names.outputs.current_branch != 'develop'
-        #   uses: docker/build-push-action@v6
-        #   with:
-        #     context: ./data_management
-        #     push: true
-        #     file: "./data_management/DluWatcher"
-        #     tags: 
-        #       "kingstonduo/dlu-watcher:${{steps.branch-names.outputs.current_branch}}"
+        -
+          name: Build and push data-management image for non develop branch
+          if: steps.branch-names.outputs.current_branch != 'develop'
+          uses: docker/build-push-action@v6
+          with:
+            context: ./data_management
+            file: "./data_management/Dockerfile"
+            push: true
+            tags: 
+              "kingstonduo/data-management:${{steps.branch-names.outputs.current_branch}}"
+        -
+          name: Build and push dlu-watcher image for non develop branch
+          if: steps.branch-names.outputs.current_branch != 'develop'
+          uses: docker/build-push-action@v6
+          with:
+            context: ./data_management
+            push: true
+            file: "./data_management/DluWatcher"
+            tags: 
+              "kingstonduo/dlu-watcher:${{steps.branch-names.outputs.current_branch}}"
