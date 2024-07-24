@@ -90,6 +90,7 @@ class Main:
         if fill_missing_only:
             self.fill_dmd_missing_md5s(report_only=report_only)
         else:
+            logger.info("Handling DMD records with incorrect md5checksums")
             files = self.data_management.find_all_files()
             for file in files:
                 checksum = self.calculate_md5(file_name=file["dlu_fileName"], package_id=file["dlu_package_id"])
@@ -108,6 +109,7 @@ class Main:
     def calculate_md5(self, file_name, package_id):
         full_path = os.path.join(self.data_lake_directory, "package_" + package_id + "/"
                                  + file_name)
+        logger.info(full_path);
         if os.path.isfile(full_path):
             new_checksum = calculate_checksum(full_path)
             return new_checksum
@@ -149,5 +151,5 @@ if __name__ == "__main__":
         main.fix_dmd_md5s(report_only=False, fill_missing_only=True)
     else:
         logger.info("Default behavior will fix ALL md5s (missing and incorrect)")
-        main.fix_mongo_md5s()
-        main.fix_dmd_md5s()
+        main.fix_mongo_md5s(report_only=False, fill_missing_only=False)
+        main.fix_dmd_md5s(report_only=False, fill_missing_only=False)
