@@ -17,7 +17,7 @@ class Main:
         self.mongo_connection = MongoConnection().get_mongo_connection()
         self.dlu_mongo = DLUMongo(self.mongo_connection)
         self.data_management = DataManagement()
-        self.data_lake_directory = os.environ["dlu_data_directory"]
+        self.data_lake_directory = os.environ["checker_dlu_data_directory"]
 
     def fill_mongo_missing_md5s(self, report_only: bool = False):
         logger.info("Handling Mongo records missing md5checksum")
