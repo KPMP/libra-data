@@ -54,7 +54,7 @@ class Main:
                 package_files = []
                 for file in package['files']:
                     checksum = self.calculate_md5(file_name=file['fileName'], package_id=package["_id"])
-
+                    logger.info(checksum)
                     if report_only:
                         if "md5Checksum" not in file:
                             logger.error(
@@ -94,6 +94,7 @@ class Main:
             files = self.data_management.find_all_files()
             for file in files:
                 checksum = self.calculate_md5(file_name=file["dlu_fileName"], package_id=file["dlu_package_id"])
+                logger.info(checksum)
                 if report_only is True:
                     if file["dlu_md5checksum"] is None:
                         logger.error(
