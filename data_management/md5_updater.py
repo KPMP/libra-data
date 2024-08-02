@@ -2,7 +2,7 @@ import argparse
 import logging
 from services.dlu_mongo import DLUMongo
 from lib.mongo_connection import MongoConnection
-from services.data_management import DataManagement
+from services.dlu_management import DluManagement
 from dotenv import load_dotenv
 from services.dlu_filesystem import calculate_checksum, DLUFile
 import os
@@ -16,7 +16,7 @@ class Main:
     def __init__(self):
         self.mongo_connection = MongoConnection().get_mongo_connection()
         self.dlu_mongo = DLUMongo(self.mongo_connection)
-        self.data_management = DataManagement()
+        self.dlu_management = DluManagement()
         self.data_lake_directory = os.environ["dlu_data_directory"]
 
     def fill_mongo_missing_md5s(self, report_only: bool = False):
@@ -74,7 +74,7 @@ class Main:
 
     def fill_dmd_missing_md5s(self, report_only: bool = False):
         logger.info("Handling DMD records missing md5checksum")
-        files = self.data_management.find_files_missing_md5()
+        files = self.dlu_management.find_files_missing_md5()
         for file in files:
             if report_only:
                 logger.error(
@@ -82,13 +82,13 @@ class Main:
             else:
                 new_checksum = self.calculate_md5(file_name=file["dlu_fileName"], package_id=file["dlu_package_id"])
                 if new_checksum is not None:
-                    self.data_management.update_md5(file["dlu_file_id"], new_checksum, file["dlu_package_id"])
+                    self.dlu_management.update_md5(file["dlu_file_id"], new_checksum, file["dlu_package_id"])
 
     def fix_dmd_md5s(self, report_only: bool = False, fill_missing_only: bool = False):
         if fill_missing_only:
             self.fill_dmd_missing_md5s(report_only=report_only)
         else:
-            files = self.data_management.find_all_files()
+            files = self.dlu_management.find_all_files()
             for file in files:
                 checksum = self.calculate_md5(file_name=file["dlu_fileName"], package_id=file["dlu_package_id"])
                 if report_only is True:
@@ -101,7 +101,7 @@ class Main:
                                      " incorrect md5")
                 else:
                     if file["dlu_md5checksum"] is None or file["dlu_md5checksum"] != checksum and checksum is not None:
-                        self.data_management.update_md5(file["dlu_file_id"], checksum, file["dlu_package_id"])
+                        self.dlu_management.update_md5(file["dlu_file_id"], checksum, file["dlu_package_id"])
 
     def calculate_md5(self, file_name, package_id):
         full_path = os.path.join(self.data_lake_directory, "package_" + package_id + "/"
