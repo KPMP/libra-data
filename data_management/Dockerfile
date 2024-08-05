@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 python:3.10-slim
+FROM python:3.10-slim-bullseye
 
 WORKDIR /usr/src/app
 
@@ -10,13 +10,13 @@ RUN apt-get update \
 
 RUN curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \
     && bash /tmp/miniconda.sh -bfp /usr/local/ \
-    && rm -rf /tmp/miniconda.sh \
-    && conda install -y python=3 \
+    && rm -rf /tmp/miniconda.sh 
+RUN conda install --yes python=3 \
     && conda update conda \
-    && conda clean --all --yes \
-    && conda install -c conda-forge leidenalg -y \
+    && conda clean --all --yes 
+RUN conda install -c conda-forge leidenalg --yes \
     && conda config --set solver classic \
-    && conda install conda-libmamba-solver -y 
+    && conda install conda-libmamba-solver --yes 
 
 COPY requirements.txt ./
 
