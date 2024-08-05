@@ -2,8 +2,8 @@ FROM python:3.10-slim-bullseye
 
 WORKDIR /usr/src/app
 
-ENV FLASK_APP app.py
-ENV FLASK_RUN_HOST 0.0.0.0
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
 
 RUN apt-get update \
     && apt-get install -y curl
@@ -25,9 +25,6 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 RUN pip3 install -U flask-cors
 
 COPY lib/ ./lib
-COPY build ./build
-COPY lib.egg-info/ ./lib.egg-info
-COPY dist/ ./dist
 COPY main.py ./
 COPY app.py ./
 COPY process_bulk_uploads.py ./
