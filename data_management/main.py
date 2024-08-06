@@ -1,4 +1,5 @@
-from services.data_management import DataManagement
+from services.dlu_management import DluManagement
+from services.spectrack_management import SpectrackManagement
 from services.redcap import Redcap
 import argparse
 import logging
@@ -9,21 +10,22 @@ logger.setLevel(logging.INFO)
 
 class Main:
     def __init__(self):
-        self.data_management = DataManagement()
+        self.dlu_management = DluManagement()
+        self.spectrack_management = SpectrackManagement()
 
     def import_redcap_data(self):
-        data_management = DataManagement()
+        dlu_management = DluManagement()
         redcap = Redcap()
         redcap.set_redcap_participant_data()
         redcap_participant_data = redcap.get_redcap_participant_data()
         for redcap_participant in redcap_participant_data:
-            data_management.insert_redcap_participant(redcap_participant)
+            dlu_management.insert_redcap_participant(redcap_participant)
 
     def insert_all_spectrack_specimens(self):
-        return self.data_management.insert_all_spectrack_specimens()
+        return self.spectrack_management.insert_all_spectrack_specimens()
 
     def upsert_new_spectrack_specimens(self):
-        return self.data_management.upsert_new_spectrack_specimens()
+        return self.spectrack_management.upsert_new_spectrack_specimens()
 
 
 if __name__ == "__main__":

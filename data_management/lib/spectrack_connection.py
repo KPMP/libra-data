@@ -8,7 +8,6 @@ import logging
 
 logger = logging.getLogger("lib-SpectrackConnection")
 logging.basicConfig(level=logging.ERROR)
-
 class SpectrackConnection:
 
     SPECIMEN_URL_SUFFIX = "/specimens"

@@ -1,5 +1,5 @@
 import sys
-from services.data_management import DataManagement
+from services.dlu_management import DluManagement
 from services.dlu_filesystem import DLUFile, DLUFileHandler, calculate_checksum
 from services.dlu_state import PackageState, DLUState
 from services.dlu_mongo import PackageType
@@ -26,7 +26,7 @@ SEGMENTATION_README = "README.md"
 class ProcessBulkUploads:
     def __init__(self, data_directory: str, globus_only: bool = False, globus_root: str = None, preserve_path: bool = False):
         try:
-            self.data_management = DataManagement()
+            self.dlu_management = DluManagement()
         except:
             logger.error("There was a problem loading the Data Management library.")
         try:
@@ -102,7 +102,7 @@ class ProcessBulkUploads:
                 sample_id = experiment["files"][0]["spectrack_sample_id"]
                 if redcap_id and redcap_id.startswith("S-"):
                     sample_id = redcap_id
-                    redcap_results = self.data_management.get_redcap_id_by_spectrack_sample_id(sample_id)
+                    redcap_results = self.dlu_management.get_redcap_id_by_spectrack_sample_id(sample_id)
                     if len(redcap_results) == 1:
                         redcap_id = redcap_results[0]["spectrack_redcap_record_id"]
                     else:
@@ -111,7 +111,7 @@ class ProcessBulkUploads:
                 if not sample_id:
                     sample_id = redcap_id
 
-                if sample_id and len(self.data_management.get_participant_by_redcap_id(redcap_id)) > 0:
+                if sample_id and len(self.dlu_management.get_participant_by_redcap_id(redcap_id)) > 0:
                     if "recruitment_site" in experiment:
                         tis = experiment["recruitment_site"]
                     else:
@@ -121,7 +121,7 @@ class ProcessBulkUploads:
                     if package_type == PackageType.SEGMENTATION:
                         dlu_file_list.append(self.get_single_file(SEGMENTATION_README))
                         tis = "UFL"
-                    result = self.data_management.dlu_mongo.find_by_package_type_and_redcap_id(package_type.value, sample_id)
+                    result = self.dlu_management.dlu_mongo.find_by_package_type_and_redcap_id(package_type.value, sample_id)
                     if result is None:
                         logger.info(f"Adding package for {redcap_id}")
                         package = DLUPackage()
@@ -145,13 +145,13 @@ class ProcessBulkUploads:
                             package.globus_dlu_status = None
                         else:
                             package.globus_dlu_status = 'success'
-                        package_id = self.data_management.dlu_mongo.add_package(package.get_mongo_dict())
+                        package_id = self.dlu_management.dlu_mongo.add_package(package.get_mongo_dict())
                         self.dlu_state.set_package_state(package_id, PackageState.METADATA_RECEIVED)
-                        self.data_management.insert_dlu_package(package.get_dmd_dpi_tuple(), package.get_dmd_tuple())
+                        self.dlu_management.insert_dlu_package(package.get_dmd_dpi_tuple(), package.get_dmd_tuple())
                         if not self.globus_only:
                             logger.info("Copying files to DLU.")
-                            records_modified = self.data_management.dlu_mongo.update_package_files(package_id, dlu_file_list)
-                            self.data_management.insert_dlu_files(package.package_id, dlu_file_list)
+                            records_modified = self.dlu_management.dlu_mongo.update_package_files(package_id, dlu_file_list)
+                            self.dlu_management.insert_dlu_files(package.package_id, dlu_file_list)
                             if records_modified == 1:
                                 logger.info(f"{len(dlu_file_list)} files added to package {package_id}")
                                 files_copied = self.dlu_file_handler.copy_files(package_id, dlu_file_list, self.preserve_path, True)
