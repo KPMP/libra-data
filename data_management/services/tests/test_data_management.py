@@ -1,7 +1,7 @@
 import unittest
 from unittest import mock
 
-from ..dlu_management import DluManagement
+from ..data_management import DataManagement
 
 
 @mock.patch('lib.mysql_connection.MYSQLConnection')
@@ -12,7 +12,7 @@ class TestDataManagement(unittest.TestCase):
         mock_db = mock_mysqlconnection_constructor.return_value
         mock_db.get_db_connection.return_value = ""
         mock_connect.return_value = ""
-        dm = DluManagement()
+        dm = DataManagement()
         dpi_data = ('package_id', '1970-01-20 01:42:48', 'submitter', 'tis', 'package_type', 'subj_id', True, False, 'promoted')
         ddm_data = ('specimen', 'redcap', True, True, True, True, False, False, 'notes')
         output = dm.insert_dlu_package(dpi_data, ddm_data)
@@ -29,7 +29,7 @@ class TestDataManagement(unittest.TestCase):
         mock_db = mock_mysqlconnection_constructor.return_value
         mock_db.get_db_connection.return_value = ''
         mock_connect.return_value = ""
-        dm = DluManagement()
+        dm = DataManagement()
         data = ('name', 'package_id', 'file_id', 12345, 'checksum')
         output = dm.insert_dlu_file(data)
         assert output == "INSERT INTO dlu_file (dlu_fileName, dlu_package_id, dlu_file_id, dlu_filesize, dlu_md5checksum) VALUES(name, package_id, file_id, 12345, checksum)"
