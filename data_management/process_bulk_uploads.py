@@ -124,7 +124,9 @@ class ProcessBulkUploads:
                     if package_type == PackageType.SEGMENTATION:
                         dlu_file_list.append(self.get_single_file(SEGMENTATION_README))
                         tis = "UFL"
+                    logger.info("here")
                     result = self.dlu_management.dlu_mongo.find_by_package_type_and_redcap_id(package_type.value, sample_id)
+                    logger.info("looked up package")
                     if result is None:
                         logger.info(f"Adding package for {redcap_id}")
                         package = DLUPackage()
