@@ -94,6 +94,8 @@ class ProcessBulkUploads:
                 package_type = PackageType.SEGMENTATION
             elif manifest_data["package_type"] == "Multimodal Images":
                 package_type = PackageType.MULTI_MODAL
+            elif manifest_data["package_type"] == "Single-cell RNA-Seq":
+                package_type = PackageType.SINGLE_CELL
             else:
                 package_type = PackageType.OTHER
             for experiment in manifest_data["experiments"]:
