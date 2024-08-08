@@ -113,7 +113,8 @@ class ProcessBulkUploads:
                 if not sample_id:
                     sample_id = redcap_id
 
-                if sample_id and len(self.dlu_management.get_participant_by_redcap_id(redcap_id)) > 0:
+                if (sample_id and len(self.dlu_management.get_participant_by_redcap_id(redcap_id)) > 0) or \
+                        (self.globus_only and sample_id):
                     if "recruitment_site" in experiment:
                         tis = experiment["recruitment_site"]
                     else:
