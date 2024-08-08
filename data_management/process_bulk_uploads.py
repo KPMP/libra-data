@@ -59,10 +59,12 @@ class ProcessBulkUploads:
         return DLUFile(file_info["file_name"], file_info["file_path"], checksum, size, {})
 
     def process_files(self, manifest_files_arr: list) -> list:
+        logger.info("processing files")
         dlu_files = []
         for file in manifest_files_arr:
             file_path = file["relative_file_path_and_name"]
             file_full_path = os.path.join(self.data_directory, file_path)
+            logger.info(file_full_path)
             size = os.path.getsize(file_full_path)
             file_info = self.dlu_file_handler.split_path(file_path, self.preserve_path)
             if file["file_metadata"] and "md5_hash" in file["file_metadata"]:
@@ -119,7 +121,7 @@ class ProcessBulkUploads:
                         tis = experiment["recruitment_site"]
                     else:
                         tis = ""
-                    logger.info(f"Trying to add package for {redcap_id}")
+                    logger.info(f"Trying to add package for {redcap_id} / {sample_id}")
                     dlu_file_list = self.process_files(experiment["files"])
                     if package_type == PackageType.SEGMENTATION:
                         dlu_file_list.append(self.get_single_file(SEGMENTATION_README))
