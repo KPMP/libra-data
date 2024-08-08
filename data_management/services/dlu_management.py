@@ -151,7 +151,7 @@ class DluManagement:
             response_msg = ready_status
         return response_msg
 
-   def get_redcapid_by_subjectid(self, subject_id: str):
+    def get_redcapid_by_subjectid(self, subject_id: str):
         result = self.db.get_data(
             "select spectrack_redcap_record_id from spectrack_specimen where spectrack_sample_id = %s", (subject_id,)
         )
