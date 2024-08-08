@@ -104,7 +104,7 @@ class ProcessBulkUploads:
                 sample_id = experiment["files"][0]["spectrack_sample_id"]
                 if redcap_id and redcap_id.startswith("S-"):
                     sample_id = redcap_id
-                    redcap_results = self.dlu_management.get_redcap_id_by_spectrack_sample_id(sample_id)
+                    redcap_results = self.dlu_management.get_redcapid_by_subjectid(sample_id)
                     if len(redcap_results) == 1:
                         redcap_id = redcap_results[0]["spectrack_redcap_record_id"]
                     else:
