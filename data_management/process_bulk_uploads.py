@@ -108,7 +108,7 @@ class ProcessBulkUploads:
                     if redcap_results is  not None and len(redcap_results) == 1:
                         redcap_id = redcap_results[0]["spectrack_redcap_record_id"]
                     else:
-                        redcap_id = " "
+                        redcap_id = ""
 
                 if not sample_id:
                     sample_id = redcap_id
@@ -173,7 +173,7 @@ class ProcessBulkUploads:
                         logger.info(f"A package for {redcap_id} already exists as package {package_id}, skipping.")
 
                 else:
-                    logger.info(f"No sample ID or Redcap ID {redcap_id} doesn't exist. Could this be a README? Skipping.")
+                    logger.info(f"No sample ID {sample_id} or Redcap ID {redcap_id} doesn't exist. Could this be a README? Skipping.")
 
         stream.close()
 
