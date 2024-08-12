@@ -59,10 +59,12 @@ class ProcessBulkUploads:
         return DLUFile(file_info["file_name"], file_info["file_path"], checksum, size, {})
 
     def process_files(self, manifest_files_arr: list) -> list:
+        logger.info("processing files")
         dlu_files = []
         for file in manifest_files_arr:
             file_path = file["relative_file_path_and_name"]
             file_full_path = os.path.join(self.data_directory, file_path)
+            logger.info(file_full_path)
             size = os.path.getsize(file_full_path)
             file_info = self.dlu_file_handler.split_path(file_path, self.preserve_path)
             if file["file_metadata"] and "md5_hash" in file["file_metadata"]:
@@ -104,8 +106,8 @@ class ProcessBulkUploads:
                 sample_id = experiment["files"][0]["spectrack_sample_id"]
                 if redcap_id and redcap_id.startswith("S-"):
                     sample_id = redcap_id
-                    redcap_results = self.dlu_management.get_redcap_id_by_spectrack_sample_id(sample_id)
-                    if len(redcap_results) == 1:
+                    redcap_results = self.dlu_management.get_redcapid_by_subjectid(sample_id)
+                    if redcap_results is  not None and len(redcap_results) == 1:
                         redcap_id = redcap_results[0]["spectrack_redcap_record_id"]
                     else:
                         redcap_id = ""
@@ -113,17 +115,20 @@ class ProcessBulkUploads:
                 if not sample_id:
                     sample_id = redcap_id
 
-                if sample_id and len(self.dlu_management.get_participant_by_redcap_id(redcap_id)) > 0:
+                if (sample_id and len(self.dlu_management.get_participant_by_redcap_id(redcap_id)) > 0) or \
+                        (self.globus_only and sample_id):
                     if "recruitment_site" in experiment:
                         tis = experiment["recruitment_site"]
                     else:
                         tis = ""
-                    logger.info(f"Trying to add package for {redcap_id}")
+                    logger.info(f"Trying to add package for {redcap_id} / {sample_id}")
                     dlu_file_list = self.process_files(experiment["files"])
                     if package_type == PackageType.SEGMENTATION:
                         dlu_file_list.append(self.get_single_file(SEGMENTATION_README))
                         tis = "UFL"
+                    logger.info("here")
                     result = self.dlu_management.dlu_mongo.find_by_package_type_and_redcap_id(package_type.value, sample_id)
+                    logger.info("looked up package")
                     if result is None:
                         logger.info(f"Adding package for {redcap_id}")
                         package = DLUPackage()
@@ -173,7 +178,7 @@ class ProcessBulkUploads:
                         logger.info(f"A package for {redcap_id} already exists as package {package_id}, skipping.")
 
                 else:
-                    logger.info(f"No sample ID or Redcap ID {redcap_id} doesn't exist. Could this be a README? Skipping.")
+                    logger.info(f"No sample ID {sample_id} or Redcap ID {redcap_id} doesn't exist. Could this be a README? Skipping.")
 
         stream.close()
 
