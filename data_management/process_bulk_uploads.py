@@ -24,7 +24,7 @@ SEGMENTATION_README = "README.md"
 
 
 class ProcessBulkUploads:
-    def __init__(self, data_directory: str, globus_only: bool = False, globus_root: str = None, preserve_path: bool = False):
+    def __init__(self, data_directory: str, globus_only: bool = False, globus_root: str = None, preserve_path: bool = False, bypass_dup_check: bool = False):
         try:
             self.dlu_management = DluManagement()
         except:
@@ -41,6 +41,7 @@ class ProcessBulkUploads:
         self.data_directory = data_directory
         self.preserve_path = preserve_path
         self.globus_only = globus_only
+        self.bypass_dup_check = bypass_dup_check
         self.dlu_file_handler = DLUFileHandler()
         self.dlu_file_handler.globus_data_directory = data_directory
         self.dlu_file_handler.dlu_data_directory = self.dlu_data_directory
@@ -129,7 +130,7 @@ class ProcessBulkUploads:
                     logger.info("here")
                     result = self.dlu_management.dlu_mongo.find_by_package_type_and_redcap_id(package_type.value, sample_id)
                     logger.info("looked up package")
-                    if result is None:
+                    if result is None or self.bypass_dup_check:
                         logger.info(f"Adding package for {redcap_id}")
                         package = DLUPackage()
                         package.dlu_package_type = package_type.value
@@ -213,8 +214,16 @@ if __name__ == "__main__":
         default=False,
         help='Preserve the file paths, i.e. do not flatten file structure.'
     )
+    parser.add_argument(
+        '-b',
+        '--bypass_dup_check',
+        action='store_true',
+        required=False,
+        default=False,
+        help='Bypass duplicate package check. Will create new packages when package exists for package type/redcap_id combo.'
+    )
     args = parser.parse_args()
     if args.globus_only and args.globus_root is None:
         parser.error("--globus_only requires --globus_root to be set.")
-    process_bulk_uploads = ProcessBulkUploads(args.data_directory, args.globus_only, args.globus_root, args.preserve_path)
+    process_bulk_uploads = ProcessBulkUploads(args.data_directory, args.globus_only, args.globus_root, args.preserve_path, args.bypass_dup_check)
     process_bulk_uploads.process_bulk_uploads()
