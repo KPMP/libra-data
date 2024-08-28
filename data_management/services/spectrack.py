@@ -59,7 +59,9 @@ class SpecTrack:
                 specimen["redcap_record_id"] is not None
             ):
                 specimen_kit = self.get_specimen_kit(specimen["specimen_kit_id"])
-                if "Biopsy Kit" in specimen_kit["kit_type_name"]:
+                if specimen["specimen_kit_id"] and "Biopsy Kit" in specimen_kit["kit_type_name"]:
+                    print(specimen["sample_id"])
+                    print(specimen["redcap_record_id"])
                     biopsy = self.get_biopsy(specimen["redcap_record_id"])
                     site = biopsy["collecting_org"]["org_name"]
                     disease_category = biopsy["disease_category"]
@@ -71,6 +73,7 @@ class SpecTrack:
                     biopsy_date = None
 
                 sample_type = self.get_sample_type(specimen["sample_type_id"])
+                kit_id = "N/A" if specimen['specimen_kit_id'] is None else specimen['specimen_kit_id']
                 dmd_specimen_tuple = (
                     specimen["id"],
                     specimen["sample_id"],
@@ -80,7 +83,7 @@ class SpecTrack:
                     specimen["redcap_record_id"],
                     specimen["level"],
                     sample_type["sample_type_code"],
-                    specimen["specimen_kit_id"],
+                    kit_id,
                     specimen_kit["kit_type_name"],
                     specimen_kit["redcap_project_type"],
                     site,

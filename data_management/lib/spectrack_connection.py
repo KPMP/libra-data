@@ -94,7 +94,7 @@ class SpectrackConnection:
                 "There was a problem decoding the JSON from: "
                 + url
                 + " with params "
-                + params
+                + str(params), error
             )
         return res_json
 
