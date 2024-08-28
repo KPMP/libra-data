@@ -60,8 +60,6 @@ class SpecTrack:
             ):
                 specimen_kit = self.get_specimen_kit(specimen["specimen_kit_id"])
                 if specimen["specimen_kit_id"] and "Biopsy Kit" in specimen_kit["kit_type_name"]:
-                    print(specimen["sample_id"])
-                    print(specimen["redcap_record_id"])
                     biopsy = self.get_biopsy(specimen["redcap_record_id"])
                     site = biopsy["collecting_org"]["org_name"]
                     disease_category = biopsy["disease_category"]
