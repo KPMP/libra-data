@@ -9,6 +9,7 @@ logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
 app = Flask(__name__)
 CORS(app)
+app.logger.info("For SpecTrack logs, check spectrack.log in the home directory")
 
 
 @app.route("/v1/dlu/package", methods=["POST"])
