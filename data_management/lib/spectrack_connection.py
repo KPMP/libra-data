@@ -72,11 +72,6 @@ class SpectrackConnection:
             self.get_url(self.SPECIMEN_KIT_URL_SUFFIX), {"kit_id": specimen_kit_id}
         )
 
-    def get_biopsy_by_redcap_id(self, redcap_id: str):
-        return self.get_results(
-            self.get_url(self.BIOPSY_URL_SUFFIX), {"redcap_record_id": redcap_id}
-        )
-
     def get_organization_by_id(self, org_id: int):
         return self.get_results(
             self.get_url(self.ORGANIZATION_URL_SUFFIX) + "/" + str(org_id)
