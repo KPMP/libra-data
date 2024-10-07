@@ -35,10 +35,6 @@ class SpecTrack:
             self.sample_types.update({sample_type_id: sample_type})
         return sample_type
 
-    def get_biopsy(self, redcap_id: str):
-        results = self.st.get_biopsy_by_redcap_id(redcap_id)
-        return results["results"][0]
-
     def get_specimen_kit(self, specimen_kit_id: str):
         results = self.st.get_specimen_kit_by_specimen_kit_id(specimen_kit_id)
         return results["results"][0]
@@ -55,15 +51,14 @@ class SpecTrack:
         dmd_specimens = list()
         for specimen in specimens:
             # We don't want any records without a kit ID or Redcap ID
-            if ("specimen_kit_id" in specimen) and (
+            if ("specimen_collection__specimen_kit__kit_id" in specimen) and (
                 specimen["redcap_record_id"] is not None
             ):
-                specimen_kit = self.get_specimen_kit(specimen["specimen_kit_id"])
-                if specimen["specimen_kit_id"] and "Biopsy Kit" in specimen_kit["kit_type_name"]:
-                    biopsy = self.get_biopsy(specimen["redcap_record_id"])
-                    site = biopsy["collecting_org"]["org_name"]
-                    disease_category = biopsy["disease_category"]
-                    biopsy_date = biopsy["biopsy_date"]
+                specimen_kit = self.get_specimen_kit(specimen["specimen_collection__specimen_kit__kit_id"])
+                if specimen["specimen_collection__specimen_kit__kit_id"] and "Biopsy Kit" in specimen_kit["kit_type_name"]:
+                    site = specimen["specimen_collection__collecting_org__org_name"]
+                    disease_category = specimen["disease_category"]
+                    biopsy_date = specimen["biopsy_date"]
                 else:
                     organization = self.st.get_by_url(specimen_kit["site"])
                     site = organization["org_name"]
@@ -71,7 +66,7 @@ class SpecTrack:
                     biopsy_date = None
 
                 sample_type = self.get_sample_type(specimen["sample_type_id"])
-                kit_id = "N/A" if specimen['specimen_kit_id'] is None else specimen['specimen_kit_id']
+                kit_id = "N/A" if specimen['specimen_collection__specimen_kit__kit_id'] is None else specimen['specimen_collection__specimen_kit__kit_id']
                 dmd_specimen_tuple = (
                     specimen["id"],
                     specimen["sample_id"],
