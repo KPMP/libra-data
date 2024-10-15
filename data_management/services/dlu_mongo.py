@@ -14,7 +14,10 @@ EM_IMAGE_TYPE = "EM Images"
 class PackageType(Enum):
     ELECTRON_MICROSCOPY = "Electron Microscopy Imaging"
     SEGMENTATION = "Segmentation Masks"
+    MULTI_MODAL = "Multimodal Mass Spectrometry"
+    SINGLE_CELL = "Single-cell RNA-Seq"
     OTHER = "Other"
+
 
 class DLUMongo:
 
@@ -44,3 +47,10 @@ class DLUMongo:
     def add_package(self, package: dict) -> str:
         result = self.package_collection.insert_one(package)
         return result.inserted_id
+
+    def find_all_packages_missing_md5s(self):
+        return self.package_collection.find({ "files": {"$elemMatch": {"md5Checksum": {"$exists": False}}}})
+
+    # WARNING!!! If you use this method, you MUST call .close() on the returned cursor
+    def find_all_packages(self):
+        return self.package_collection.find({}, no_cursor_timeout=True, batch_size=1)
