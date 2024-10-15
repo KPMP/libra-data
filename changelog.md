@@ -4,6 +4,8 @@
 Brief summary of what's in this release:
 
 - Added logic to change ownership of moved files off of root user
+- Removed logic that required connection to spectrack for dlu-watcher
+- updated logic for handling nested folders
 
 ### Breaking changes
 
