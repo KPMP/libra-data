@@ -6,6 +6,8 @@ Brief summary of what's in this release:
 - Added logic to change ownership of moved files off of root user
 - Removed logic that required connection to spectrack for dlu-watcher
 - updated logic for handling nested folders
+- updated base image of DluWatcher container
+- set install of requirements as 'progress-banner off' to address issue with installing Flask and using all threads in DluWatcher container
 
 ### Breaking changes
 

@@ -1,8 +1,10 @@
-FROM python:3.10-slim
+FROM python:3.10-slim-bullseye
 
 COPY requirements.txt ./
 
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --progress-bar off --no-cache-dir -r requirements.txt
+RUN pip3 install -U flask-cors
+
 COPY ./lib/ ./lib
 COPY ./services/dlu_filesystem.py ./services/dlu_filesystem.py
 COPY ./services/dlu_package_inventory.py ./services/dlu_package_inventory.py
