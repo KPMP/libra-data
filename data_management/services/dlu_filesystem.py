@@ -29,12 +29,12 @@ def calculate_checksum(file_path: str):
 
 class DLUFile:
     def __init__(self, name: str, path: str, checksum: str, size: int, metadata: dict = {},
-                 file_id: str = str(uuid.uuid4())):
+                 file_id: str = None):
         self.name = name
         self.path = path
         self.checksum = checksum
         self.size = size
-        self.file_id = file_id
+        self.file_id = file_id or str(uuid.uuid4())
         self.metadata = metadata
 
     # Returns path without top directory, i.e. package dir or participant dir (bulk uploads)

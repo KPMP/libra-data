@@ -79,7 +79,7 @@ class DLUWatcher:
                 file_list = self.dlu_file_handler.match_files(top_level_subdir)
             else:
               file_list = self.dlu_file_handler.match_files(package_id)
-              
+                            
             self.dlu_file_handler.copy_files(package_id, self.process_file_paths(directory_info.file_details))
             self.dlu_file_handler.chown_dir(package_id, file_list)
             self.dlu_management.insert_dlu_files(package_id, file_list)

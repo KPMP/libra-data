@@ -98,15 +98,16 @@ class DluManagement:
             query = "UPDATE data_manager_data_v SET " + query_info["set_clause"] + " WHERE dlu_package_id = %s"
             self.db.insert_data(query, values)
 
-    def insert_dlu_file(self, values):
+    def insert_dlu_file(self, dlu_fileName, dlu_package_id, dlu_file_id, dlu_filesize, dlu_md5checksum, dlu_metadata):
         query = "INSERT INTO dlu_file (dlu_fileName, dlu_package_id, dlu_file_id, dlu_filesize, dlu_md5checksum, dlu_metadata) VALUES(%s, %s, %s, %s, %s, %s)"
-        self.db.insert_data(query, values)
-        return query % values
+        return self.db.insert_data(
+            query, 
+            (dlu_fileName, dlu_package_id, dlu_file_id, dlu_filesize, dlu_md5checksum, dlu_metadata,),)
 
     def insert_dlu_files(self, package_id: str, file_list: List[DLUFile]):
         logger.info(f"Inserting files for package {package_id}")
         for file in file_list:
-            query_string = self.insert_dlu_file((file.name, package_id, file.file_id, file.size, file.checksum, json.dumps(file.metadata)))
+            query_string = self.insert_dlu_file(file.name, package_id, file.file_id, file.size, file.checksum, json.dumps(file.metadata)) 
             logger.info(query_string)
 
     def get_ready_to_move(self, package_id: str):
