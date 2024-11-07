@@ -107,8 +107,7 @@ class DluManagement:
     def insert_dlu_files(self, package_id: str, file_list: List[DLUFile]):
         logger.info(f"Inserting files for package {package_id}")
         for file in file_list:
-            query_string = self.insert_dlu_file(file.name, package_id, file.file_id, file.size, file.checksum, json.dumps(file.metadata)) 
-            logger.info(query_string)
+            self.insert_dlu_file(file.name, package_id, file.file_id, file.size, file.checksum, json.dumps(file.metadata)) 
 
     def get_ready_to_move(self, package_id: str):
         package_record = self.db.get_data(
