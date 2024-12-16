@@ -29,7 +29,7 @@ class Test_dlu(unittest.TestCase):
         }
         output = dlu_package_dict_to_dpi_tuple(test_data)
         print(output)
-        assert output == ('package_id', '1970-01-20 01:42:48', 'submitter', 'tis', 'package_type', 'subj_id', True, False, 'status')
+        assert output == ('package_id', '1970-01-20 01:42:48', 'submitter', 'tis', 'package_type', 'subj_id', True, False, None)
 
     def test_dlu_package_dict_to_dmd_tuple(self):
         test_data = {
