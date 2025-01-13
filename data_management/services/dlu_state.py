@@ -12,15 +12,16 @@ class PackageState(Enum):
 
 class DLUState:
     def __init__(self):
+        host_name = os.environ["dlu_hostname_with_underscores"]
         try:
             inside_docker = os.environ["INSIDE_DOCKER"]
         except:
             inside_docker = False
         if inside_docker:
-            self.state_url = "http://state-spring:3060/v1/state/host/upload_kpmp_org"
+            self.state_url = "http://state-spring:3060/v1/state/host/" + host_name
             self.cache_clear_url = "http://orion-spring:3030/v1/clearCache"
         else:
-            self.state_url = "http://localhost:3060/v1/state/host/upload_kpmp_org"
+            self.state_url = "http://localhost:3060/v1/state/host/" + host_name
             self.cache_clear_url = "http://localhost:3030/api/v1/clearCache"
 
     def set_package_state(self, package_id: str, state: PackageState):
