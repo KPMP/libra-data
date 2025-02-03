@@ -36,7 +36,7 @@ class Redcap:
             "redcap_id": "",
             "redcap_np_gender": "",
             "redcap_age_binned": "",
-            "redcap_tissue_type": "",
+            "redcap_enrollment_category": "",
             "redcap_protocol": "",
             "redcap_sample_type": "",
             "redcap_tissue_source": "",
@@ -123,7 +123,7 @@ class Redcap:
                             "redcap_id": record["record_id"],
                             "redcap_np_gender": "",
                             "redcap_age_binned": "",
-                            "redcap_tissue_type": "",
+                            "redcap_enrollment_category": "",
                             "redcap_protocol": "",
                             "redcap_sample_type": self.parse_redcap_records_by_participant(
                                 record["record_id"], "bp_type"
@@ -184,7 +184,7 @@ class Redcap:
                         participant["redcap_exp_egfr_bl_cat"] = record["field_value"]
 
                     elif record["field_name"] == "exp_disease_type":
-                        participant["redcap_tissue_type"] = record["field_value"]
+                        participant["redcap_enrollment_category"] = record["field_value"]
 
                     elif record["field_name"] == "adj_primary_categoryC":
                         participant["adj_primary_category"] = record["field_value"]
@@ -205,7 +205,7 @@ class Redcap:
                         participant["redcap_protocol"] = "KPMP_MAIN"
 
                     if participant["redcap_protocol"] == "KPMP_HRT":
-                        participant["redcap_tissue_type"] = "Healthy Reference"
+                        participant["redcap_enrollment_category"] = "Healthy Reference"
                         participant["redcap_sample_type"] = self.get_sample_type_from_tis_mapping(participant)
                         participant["redcap_tissue_source"] = "KPMP Opportunity Pool HRT Site"
 
