@@ -2,10 +2,13 @@ import os
 import mysql.connector
 from dotenv import load_dotenv
 import logging
+import requests
 
+load_dotenv()
+slack_passcode = os.environ.get('slack_passcode')
 logger = logging.getLogger("lib-MYSQLConnection")
 logging.basicConfig(level=logging.ERROR)
-
+slack_url = "https://hooks.slack.com/services/" + slack_passcode
 
 class MYSQLConnection:
     def __init__(self):
@@ -72,7 +75,13 @@ class MYSQLConnection:
             if warning is not None:
                 print(warning)
         except:
-            logger.error(f"Cannot insert with query: {sql}; and the data: {data}")
+            message = f"Error: Cannot insert with query: {sql}; and the data: {data}"
+            logger.error(message)
+            requests.post(
+                slack_url,
+                headers={'Content-type': 'application/json', },
+                data='{"text":"' + message + '"}'
+            )
         finally:
             self.database.commit()
             self.cursor.close()
@@ -86,7 +95,13 @@ class MYSQLConnection:
                 data.append(row)
             return data
         except:
-            logger.error("Can't get data_management data.")
+            message = "Error: Can't get data_management data."
+            logger.error(message)
+            requests.post(
+                slack_url,
+                headers={'Content-type': 'application/json', },
+                data='{"text":"' + message + '"}'
+            )
         finally:
             self.cursor.close()
 
