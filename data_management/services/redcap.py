@@ -141,7 +141,8 @@ class Redcap:
                             "redcap_exp_diabetes_duration": "",
                             "redcap_exp_ht_duration": "",
                             "redcap_exp_egfr_bl_cat": "",
-                            "adj_primary_category": ""
+                            "adj_primary_category": "",
+                            "redcap_exp_egfr_bl": ""
                         }
 
                     if record["field_name"] == "np_gender":
@@ -188,6 +189,9 @@ class Redcap:
 
                     elif record["field_name"] == "adj_primary_categoryC":
                         participant["adj_primary_category"] = record["field_value"]
+                        
+                    elif record["field_name"] == "exp_egfr_bl":
+                        participant["redcap_exp_egfr_bl"] = record["field_value"]    
 
                     else:
                         logger.error(
