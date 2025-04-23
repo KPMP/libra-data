@@ -57,7 +57,7 @@ class DLUPackage:
             self.submitter_name,
             self.dlu_tis,
             self.dlu_package_type,
-            self.redcap_id,
+            self.dlu_subject_id,
             self.dlu_error,
             self.dlu_lfu,
             self.globus_dlu_status
