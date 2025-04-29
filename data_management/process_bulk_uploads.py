@@ -101,6 +101,11 @@ class ProcessBulkUploads:
                 package_type = PackageType.SINGLE_CELL
             else:
                 package_type = PackageType.OTHER
+            if "tis" in manifest_data:
+                tis = manifest_data["tis"]
+            else:
+                logger.error("Error: Missing TIS in manifest file.")
+                sys.exit()
             for experiment in manifest_data["experiments"]:
                 experiment = experiment["experiment"]
                 redcap_id = experiment["files"][0]["redcap_id"]
@@ -118,10 +123,6 @@ class ProcessBulkUploads:
 
                 if (sample_id and len(self.dlu_management.get_participant_by_redcap_id(redcap_id)) > 0) or \
                         (self.globus_only and sample_id):
-                    if "recruitment_site" in experiment:
-                        tis = experiment["recruitment_site"]
-                    else:
-                        tis = ""
                     logger.info(f"Trying to add package for {redcap_id} / {sample_id}")
                     dlu_file_list = self.process_files(experiment["files"])
                     if package_type == PackageType.SEGMENTATION:
