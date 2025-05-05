@@ -28,6 +28,11 @@ class DLUPackageInventory:
             'UPDATE data_management.data_manager_data_v SET globus_dlu_status = "waiting" WHERE ready_to_move_from_globus = %s AND dlu_package_id = %s',
             (status, package_id,)
         )
+        
+    def get_waiting_files(self):
+        return self.db.get_data(
+            'Select * from data_management.data_manager_data_v where globus_dlu_status = "waiting" and ready_to_move_from_globus = "yes"'
+        )
     
     def get_ready_packages(self):
         return self.db.get_data(
