@@ -46,7 +46,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-d",
         "--data_source",
-        choices=["redcap", "spectrack"],
+        choices=["redcap", "spectrack", "tableau"],
         required=True,
         help="Data source",
     )
@@ -60,6 +60,10 @@ if __name__ == "__main__":
     if args.data_source == "redcap":
         if args.action == "insert":
             main.import_redcap_data()
+
+    if args.data_source == "tableau":
+        if args.action == "insert" or args.action == "update":
+            main.print_biopsy_tracking()
 
     if "records_modified" in locals():
         logger.info(f"{records_modified} records modified")
