@@ -96,7 +96,7 @@ class MYSQLConnection:
                 port=self.tableau_port,
                 password=self.tableau_password,
                 database=self.tableau_database_name,
-                ssl={'ca': self.tableau_ca_file}
+                ssl_ca=self.tableau_ca_file
             )
             self.database.get_warnings = True
             return self.database
