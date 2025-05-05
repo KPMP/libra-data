@@ -1,5 +1,5 @@
-from data_management.lib.mysql_connection import MYSQLConnection
-from data_management.services.dlu_management import DluManagement
+from lib.mysql_connection import MYSQLConnection
+from services.dlu_management import DluManagement
 
 
 class Tableau:
