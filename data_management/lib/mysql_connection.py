@@ -38,7 +38,7 @@ class MYSQLConnection:
             self.tableau_port = os.environ["tableau_port"]
             self.tableau_user = os.environ["tableau_user"]
             self.tableau_password = os.environ["tableau_password"]
-            self.tableau_database_name = os.environ["tableau_db"]
+            self.tableau_database_name = os.environ["tableau_database_name"]
             self.tableau_ca_file = os.environ["tableau_ca_file"]
 
         except:
@@ -60,7 +60,7 @@ class MYSQLConnection:
             self.tableau_port = os.environ.get("tableau_port")
             self.tableau_user = os.environ.get("tableau_user")
             self.tableau_password = os.environ.get("tableau_password")
-            self.tableau_database_name = os.environ.get("tableau_db")
+            self.tableau_database_name = os.environ.get("tableau_database_name")
             self.tableau_ca_file =  os.environ.get("tableau_ca_file")
         except:
             logger.warning("Can't load environment variables from local .env file")
