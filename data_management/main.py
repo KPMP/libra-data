@@ -1,5 +1,6 @@
 from services.dlu_management import DluManagement
 from services.spectrack_management import SpectrackManagement
+from services.tableau import Tableau
 from services.redcap import Redcap
 import argparse
 import logging
@@ -12,6 +13,7 @@ class Main:
     def __init__(self):
         self.dlu_management = DluManagement()
         self.spectrack_management = SpectrackManagement()
+        self.tableau = Tableau()
 
     def import_redcap_data(self):
         dlu_management = DluManagement()
@@ -26,6 +28,9 @@ class Main:
 
     def upsert_new_spectrack_specimens(self):
         return self.spectrack_management.upsert_new_spectrack_specimens()
+
+    def print_biopsy_tracking(self):
+        self.tableau.print_biopsy_tracking()
 
 
 if __name__ == "__main__":

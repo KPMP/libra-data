@@ -15,6 +15,11 @@ class Tableau:
         )
         return result
 
+    def print_biopsy_tracking(self):
+        bt_results = self.dlu_management.get_biopsy_tracking()
+        for result in bt_results:
+           print(result)
+
     def load_biopsy_tracking(self):
         self.truncate_biopsy_tracking()
         bt_results = self.dlu_management.get_biopsy_tracking()
