@@ -12,6 +12,7 @@ class PackageState(Enum):
 
 class DLUState:
     def __init__(self):
+        host_name = 'localhost'
         try:
             inside_docker = os.environ["INSIDE_DOCKER"]
             host_name = os.environ["dlu_hostname_with_underscores"]
