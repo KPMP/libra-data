@@ -53,9 +53,9 @@ class DLUWatcher:
     
     def pickup_waiting_files(self):
         files_in_waiting = self.db.get_waiting_files()
-        if files_in_waiting is None:
-            logger.info(
-                "No records were found with status 'waiting' "
+        if len(files_in_waiting) == 0:
+            return  logger.info(
+                "No records were found with status 'waiting'"
             )
         else:
             self.move_packages_to_DLU(files_in_waiting)
@@ -105,4 +105,4 @@ if __name__ == "__main__":
     dlu_watcher.pickup_waiting_files()
     while True:    
         dlu_watcher.watch_for_files()
-        time.sleep(60)
+        time.sleep(60) 

@@ -60,6 +60,7 @@ class MYSQLConnection:
                 port=self.port,
                 password=self.password,
                 database=self.database_name,
+                autocommit=True
             )
             self.database.get_warnings = True
             return self.database

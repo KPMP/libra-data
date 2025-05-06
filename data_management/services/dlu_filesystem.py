@@ -121,6 +121,24 @@ class DLUFileHandler:
             for o in os.listdir(source_package_directory)
               if os.path.isdir(os.path.join(source_package_directory, o))]
             dir = "".join(subdirs)
+            if len(os.listdir(source_package_directory)) == 1 and os.path.isdir(source_package_directory) and os.path.isdir(dir):
+            
+                os.chdir(dir)
+                allfiles = os.listdir(dir)
+                for f in allfiles:
+                    src_path = os.path.join(dir, f)
+                    dst_path = os.path.join(dest_package_directory, f)
+                    if not os.path.isdir(dest_package_directory):
+                        os.mkdir(dest_package_directory)
+                    if os.path.isfile(f):
+                        logger.info("Copying file " + f + " to " + dst_path)
+                        shutil.copy(src_path, dst_path)
+                        files_copied += 1
+                    else:
+                        logger.info("Copying directory " + src_path)
+                        files_copied += 1
+                        shutil.copytree(src_path, dst_path)
+                os.chdir(source_wd)
             
             if not os.path.exists(dest_package_directory):
                 logger.info("Creating directory " + dest_package_directory)
@@ -128,7 +146,7 @@ class DLUFileHandler:
             source_file = os.path.join(source_package_directory, file.get_short_filename())
             dest_file = os.path.join(dest_package_directory, file.get_short_filename())
             
-            if not os.path.exists(dest_file) and not dest_file.find(dir) == -1:
+            if not os.path.exists(dest_file):
                 if os.path.isdir(source_file):
                     logger.info("Copying directory to " + dest_file)
                     shutil.copytree(source_file, dest_file)
