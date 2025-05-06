@@ -1,7 +1,8 @@
 # Changelog
 
 ## Release 1.9 [unreleased]
-Brief summary of what's in this release:
+
+- Load Tableau database with biopsy_tracker data
 
 ### Breaking changes
 
