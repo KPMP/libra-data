@@ -30,7 +30,7 @@ class Main:
         return self.spectrack_management.upsert_new_spectrack_specimens()
 
     def load_biopsy_tracking(self):
-        self.tableau.load_biopsy_tracking()
+        return self.tableau.load_biopsy_tracking()
 
 
 if __name__ == "__main__":
@@ -63,7 +63,7 @@ if __name__ == "__main__":
 
     if args.data_source == "tableau":
         if args.action == "insert" or args.action == "update":
-            main.load_biopsy_tracking()
+            records_modified = main.load_biopsy_tracking()
 
     if "records_modified" in locals():
         logger.info(f"{records_modified} records modified")
