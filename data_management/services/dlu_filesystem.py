@@ -28,13 +28,12 @@ def calculate_checksum(file_path: str):
 
 
 class DLUFile:
-    def __init__(self, name: str, path: str, checksum: str, size: int, metadata: dict = {},
-                 file_id: str = str(uuid.uuid4())):
+    def __init__(self, name: str, path: str, checksum: str, size: int, metadata: dict = {}):
         self.name = name
         self.path = path
         self.checksum = checksum
         self.size = size
-        self.file_id = file_id
+        self.file_id = str(uuid.uuid4())
         self.metadata = metadata
 
     # Returns path without top directory, i.e. package dir or participant dir (bulk uploads)
@@ -118,22 +117,19 @@ class DLUFileHandler:
             else:
                 dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
 
-            # Is any of this code used? START >>
             subdirs = [os.path.join(source_package_directory, o)
             for o in os.listdir(source_package_directory)
               if os.path.isdir(os.path.join(source_package_directory, o))]
             dir = "".join(subdirs)
             if len(os.listdir(source_package_directory)) == 1 and os.path.isdir(source_package_directory) and os.path.isdir(dir):
-                
+            
                 os.chdir(dir)
                 allfiles = os.listdir(dir)
-
                 for f in allfiles:
                     src_path = os.path.join(dir, f)
                     dst_path = os.path.join(dest_package_directory, f)
                     if not os.path.isdir(dest_package_directory):
                         os.mkdir(dest_package_directory)
-
                     if os.path.isfile(f):
                         logger.info("Copying file " + f + " to " + dst_path)
                         shutil.copy(src_path, dst_path)
@@ -143,7 +139,6 @@ class DLUFileHandler:
                         files_copied += 1
                         shutil.copytree(src_path, dst_path)
                 os.chdir(source_wd)
-            # << END
             
             if not os.path.exists(dest_package_directory):
                 logger.info("Creating directory " + dest_package_directory)
@@ -151,7 +146,7 @@ class DLUFileHandler:
             source_file = os.path.join(source_package_directory, file.get_short_filename())
             dest_file = os.path.join(dest_package_directory, file.get_short_filename())
             
-            if not os.path.exists(dest_file) and not dest_file.find(dir) == -1:
+            if not os.path.exists(dest_file):
                 if os.path.isdir(source_file):
                     logger.info("Copying directory to " + dest_file)
                     shutil.copytree(source_file, dest_file)

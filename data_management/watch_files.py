@@ -50,6 +50,15 @@ class DLUWatcher:
             file.path = self.dlu_file_handler.split_path(file.path)['file_path']
             dlu_files.append(file)
         return dlu_files
+    
+    def pickup_waiting_files(self):
+        files_in_waiting = self.db.get_waiting_files()
+        if len(files_in_waiting) == 0:
+            return  logger.info(
+                "No records were found with status 'waiting'"
+            )
+        else:
+            self.move_packages_to_DLU(files_in_waiting)
 
     def move_packages_to_DLU(self, packages):
         file_list = None
@@ -92,7 +101,8 @@ class DLUWatcher:
 
 
 if __name__ == "__main__":
-    while True:
-        dlu_watcher = DLUWatcher()
+    dlu_watcher = DLUWatcher()
+    dlu_watcher.pickup_waiting_files()
+    while True:    
         dlu_watcher.watch_for_files()
-        time.sleep(60)
+        time.sleep(60) 
