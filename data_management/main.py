@@ -1,5 +1,6 @@
 from services.dlu_management import DluManagement
 from services.spectrack_management import SpectrackManagement
+from services.tableau import Tableau
 from services.redcap import Redcap
 import argparse
 import logging
@@ -12,6 +13,7 @@ class Main:
     def __init__(self):
         self.dlu_management = DluManagement()
         self.spectrack_management = SpectrackManagement()
+        self.tableau = Tableau()
 
     def import_redcap_data(self):
         dlu_management = DluManagement()
@@ -27,6 +29,9 @@ class Main:
     def upsert_new_spectrack_specimens(self):
         return self.spectrack_management.upsert_new_spectrack_specimens()
 
+    def load_biopsy_tracking(self):
+        return self.tableau.load_biopsy_tracking()
+
 
 if __name__ == "__main__":
     main = Main()
@@ -41,7 +46,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-d",
         "--data_source",
-        choices=["redcap", "spectrack"],
+        choices=["redcap", "spectrack", "tableau"],
         required=True,
         help="Data source",
     )
@@ -55,6 +60,10 @@ if __name__ == "__main__":
     if args.data_source == "redcap":
         if args.action == "insert":
             main.import_redcap_data()
+
+    if args.data_source == "tableau":
+        if args.action == "insert" or args.action == "update":
+            records_modified = main.load_biopsy_tracking()
 
     if "records_modified" in locals():
         logger.info(f"{records_modified} records modified")

@@ -160,6 +160,12 @@ class DluManagement:
         else:
             return None
 
+    def get_biopsy_tracking(self):
+        result = self.db.get_data(
+            "select * from biopsy_tracking_test_v"
+        )
+        return result
+
 
 if __name__ == "__main__":
     dlu_management = DluManagement()

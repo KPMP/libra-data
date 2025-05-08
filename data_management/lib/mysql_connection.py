@@ -21,12 +21,26 @@ class MYSQLConnection:
         self.password = None
         self.database_name = None
 
+        self.tableau_host = None
+        self.tableau_port = None
+        self.tableau_user = None
+        self.tableau_password = None
+        self.tableau_database_name = None
+
         try:
             self.host = os.environ["mysql_host"]
             self.port = os.environ["mysql_port"]
             self.user = os.environ["mysql_user"]
             self.password = os.environ["mysql_pwd"]
             self.database_name = os.environ["mysql_db"]
+
+            self.tableau_host = os.environ["tableau_host"]
+            self.tableau_port = os.environ["tableau_port"]
+            self.tableau_user = os.environ["tableau_user"]
+            self.tableau_password = os.environ["tableau_password"]
+            self.tableau_database_name = os.environ["tableau_database_name"]
+            self.tableau_ca_file = os.environ["tableau_ca_file"]
+
         except:
             logger.warning(
                 "Can't load environment variables from docker... trying local .env file instead..."
@@ -41,6 +55,13 @@ class MYSQLConnection:
             self.user = os.environ.get("mysql_user")
             self.password = os.environ.get("mysql_pwd")
             self.database_name = os.environ.get("mysql_db")
+
+            self.tableau_host = os.environ.get("tableau_host")
+            self.tableau_port = os.environ.get("tableau_port")
+            self.tableau_user = os.environ.get("tableau_user")
+            self.tableau_password = os.environ.get("tableau_password")
+            self.tableau_database_name = os.environ.get("tableau_database_name")
+            self.tableau_ca_file =  os.environ.get("tableau_ca_file")
         except:
             logger.warning("Can't load environment variables from local .env file")
 
@@ -66,6 +87,22 @@ class MYSQLConnection:
             return self.database
         except Exception as error:
             logger.error("Can't connect to MySQL: ", exec_info=error)
+            os.sys.exit()
+
+    def get_tableau_db_connection(self):
+        try:
+            self.database = mysql.connector.connect(
+                host=self.tableau_host,
+                user=self.tableau_user,
+                port=self.tableau_port,
+                password=self.tableau_password,
+                database=self.tableau_database_name,
+                ssl_ca=self.tableau_ca_file
+            )
+            self.database.get_warnings = True
+            return self.database
+        except Exception as error:
+            logger.error("Can't connect to MySQL: ", exc_info=error)
             os.sys.exit()
 
     def insert_data(self, sql, data):
