@@ -182,7 +182,7 @@ class DluManagement:
 
     def get_package(self, package_id: str) -> dict:
         result = self.db.get_data("SELECT * dlu_package_inventory WHERE dlu_package_id = %s", (package_id,))
-        if len(result) > 0:
+        if result:
             return result[0]
         else:
             return None
