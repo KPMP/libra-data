@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from lib.mysql_connection import MYSQLConnection
 from lib.mongo_connection import MongoConnection
 import logging
@@ -99,15 +101,27 @@ class DluManagement:
             self.db.insert_data(query, values)
 
     def insert_dlu_file(self, values):
-        query = "INSERT INTO dlu_file (dlu_fileName, dlu_package_id, dlu_file_id, dlu_filesize, dlu_md5checksum, dlu_metadata) VALUES(%s, %s, %s, %s, %s, %s)"
+        query = "INSERT INTO dlu_file (dlu_fileName, dlu_package_id, dlu_file_id, dlu_filesize, dlu_md5checksum, dlu_modified_at, dlu_metadata) VALUES(%s, %s, %s, %s, %s, %s, %s)"
         self.db.insert_data(query, values)
         return query % values
 
-    def insert_dlu_files(self, package_id: str, file_list: List[DLUFile]):
+    def insert_dlu_files(self, package_id: str, file_list: List[DLUFile]) -> dict:
         logger.info(f"Inserting files for package {package_id}")
+        existing_files = self.get_files_by_package_id(package_id)
+        if existing_files > 0:
+            logger.info(f"Deleting existing files for package {package_id}")
+            self.delete_files_by_package_id(package_id)
+
         for file in file_list:
-            query_string = self.insert_dlu_file((file.name, package_id, file.file_id, file.size, file.checksum, json.dumps(file.metadata)))
+            for existing_file in existing_files:
+                if existing_file["dlu_fileName"] == file.name:
+                    file.modified_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    file.file_id = existing_file["dlu_file_id"]
+                    existing_files.remove(existing_file)
+            query_string = self.insert_dlu_file((file.name, package_id, file.file_id, file.size, file.checksum, file.modified_at, json.dumps(file.metadata)))
             logger.info(query_string)
+
+        return {"files": file_list, "deleted_files": existing_files}
 
     def get_ready_to_move(self, package_id: str):
         package_record = self.db.get_data(
@@ -165,6 +179,19 @@ class DluManagement:
             "select * from biopsy_tracking_test_v"
         )
         return result
+
+    def get_package(self, package_id: str) -> dict:
+        result = self.db.get_data("SELECT * dlu_package_inventory WHERE dlu_package_id = %s", (package_id,))
+        if len(result) > 0:
+            return result[0]
+        else:
+            return None
+
+    def get_files_by_package_id(self, package_id: str):
+        return self.db.get_data("SELECT * FROM dlu_file WHERE dlu_package_id = %s", (package_id,))
+
+    def delete_files_by_package_id(self, package_id: str):
+        return self.db.get_data("DELETE * FROM dlu_file WHERE dlu_package_id = %s", (package_id,))
 
 
 if __name__ == "__main__":
