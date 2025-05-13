@@ -31,7 +31,7 @@ class DLUMongo:
         for file in file_info["files"]:
             if file.modified_at:
                 modifications.append("Modified " + file.name + " at " + now)
-            else:
+            elif file not in file_info["unmodified_files"]:
                 modifications.append("Added " + file.name + " at " + now)
         for file in file_info["deleted_files"]:
             modifications.append("Deleted " + file["dlu_fileName"] + " at " + now)

@@ -108,6 +108,7 @@ class DluManagement:
     def insert_dlu_files(self, package_id: str, file_list: List[DLUFile]) -> dict:
         logger.info(f"Inserting files for package {package_id}")
         existing_files = self.get_files_by_package_id(package_id)
+        unmodified_files = []
         if existing_files is not None and len(existing_files) > 0:
             logger.info(f"Deleting existing files for package {package_id}")
             self.delete_files_by_package_id(package_id)
@@ -115,13 +116,16 @@ class DluManagement:
         for file in file_list:
             for existing_file in existing_files:
                 if existing_file["dlu_fileName"] == file.name:
-                    file.modified_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    if file.checksum != existing_file["dlu_md5checksum"]:
+                        file.modified_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                    else:
+                        unmodified_files.append(file)
                     file.file_id = existing_file["dlu_file_id"]
                     existing_files.remove(existing_file)
             query_string = self.insert_dlu_file((file.name, package_id, file.file_id, file.size, file.checksum, file.modified_at, json.dumps(file.metadata)))
             logger.info(query_string)
 
-        return {"files": file_list, "deleted_files": existing_files}
+        return {"files": file_list, "deleted_files": existing_files, "unmodified_files": unmodified_files}
 
     def get_ready_to_move(self, package_id: str):
         package_record = self.db.get_data(
