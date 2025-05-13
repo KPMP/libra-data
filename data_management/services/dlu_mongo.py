@@ -44,6 +44,7 @@ class DLUMongo:
     def update_package_files(self, package_id: str, file_info: dict) -> int:
         mongo_files = []
         modifications = self.get_modification_info(file_info)
+        final_modifications = []
         for file in file_info["files"]:
             file_dict = {
                 "fileName": file.name,
@@ -56,7 +57,9 @@ class DLUMongo:
                 file_dict["metadata"] = file.metadata
             mongo_files.append(file_dict)
         package = self.find_by_package_id(package_id)
-        final_modifications = package["modifications"] + modifications
+        if "modifications" in package:
+            final_modifications = package["modifications"] + modifications
+
         result = self.package_collection.update_one({"_id": package_id}, {"$set": {"files": mongo_files, "modifications": final_modifications}})
         return result.modified_count
 
