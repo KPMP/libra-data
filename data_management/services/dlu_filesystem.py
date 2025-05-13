@@ -35,6 +35,7 @@ class DLUFile:
         self.size = size
         self.file_id = str(uuid.uuid4())
         self.metadata = metadata
+        self.modified_at = None
 
     # Returns path without top directory, i.e. package dir or participant dir (bulk uploads)
     def get_short_path(self):
@@ -104,6 +105,9 @@ class DLUFileHandler:
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
         source_wd = os.getcwd()
+        dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
+        if os.path.exists(dest_package_directory):
+            shutil.rmtree(dest_package_directory)
         for file in file_list:
             source_package_directory = self.globus_data_directory + '/'
             # I.e. isn't a bulk upload that doesn't already have a package ID.
@@ -112,10 +116,8 @@ class DLUFileHandler:
             if file.path:
                 source_package_directory = os.path.join(source_package_directory, file.path)
             if preserve_path:
-                dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id,
+                dest_package_directory = os.path.join(dest_package_directory,
                                                       file.get_short_path())
-            else:
-                dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
 
             subdirs = [os.path.join(source_package_directory, o)
             for o in os.listdir(source_package_directory)
