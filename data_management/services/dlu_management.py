@@ -112,7 +112,6 @@ class DluManagement:
         if existing_files is not None and len(existing_files) > 0:
             logger.info(f"Deleting existing files for package {package_id}")
             self.delete_files_by_package_id(package_id)
-
         for file in file_list:
             for existing_file in existing_files:
                 if existing_file["dlu_fileName"] == file.name:
