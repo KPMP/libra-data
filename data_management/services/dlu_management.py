@@ -191,7 +191,7 @@ class DluManagement:
         return self.db.get_data("SELECT * FROM dlu_file WHERE dlu_package_id = %s", (package_id,))
 
     def delete_files_by_package_id(self, package_id: str):
-        return self.db.get_data("DELETE * FROM dlu_file WHERE dlu_package_id = %s", (package_id,))
+        return self.db.get_data("DELETE FROM dlu_file WHERE dlu_package_id = %s", (package_id,))
 
 
 if __name__ == "__main__":
