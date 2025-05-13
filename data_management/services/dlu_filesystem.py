@@ -214,6 +214,3 @@ class DLUFileHandler:
                 file.name = prefix + file.name
                 fileList.append(file)
         return fileList
-
-    def delete_package_dir(self, package_id: str):
-        shutil.rmtree(os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id))
