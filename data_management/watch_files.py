@@ -89,10 +89,6 @@ class DLUWatcher:
             else:
               file_list = self.dlu_file_handler.match_files(package_id)
 
-            # If the package already exists, delete the existing directory
-            if delete:
-                self.dlu_file_handler.delete_package_dir(package_id)
-
             self.dlu_file_handler.copy_files(package_id, self.process_file_paths(directory_info.file_details))
             self.dlu_file_handler.chown_dir(package_id, file_list)
             file_info = self.dlu_management.insert_dlu_files(package_id, file_list)
