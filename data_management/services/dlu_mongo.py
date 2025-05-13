@@ -1,6 +1,4 @@
 from datetime import datetime
-
-import datetime
 from lib.mongo_connection import MongoConnection
 from services.dlu_filesystem import DLUFile
 from typing import List
