@@ -54,11 +54,16 @@ class DLUMongo:
             if len(file.metadata) != 0:
                 file_dict["metadata"] = file.metadata
             mongo_files.append(file_dict)
-        result = self.package_collection.update_one({"_id": package_id}, {"$set": {"files": mongo_files, "modifications": modifications}})
+        package = self.find_by_package_id(package_id)
+        final_modifications = package["modifications"] + modifications
+        result = self.package_collection.update_one({"_id": package_id}, {"$set": {"files": mongo_files, "modifications": final_modifications}})
         return result.modified_count
 
     def find_by_package_type_and_redcap_id(self, package_type: str, subject_id: str):
         return self.package_collection.find_one({"subjectId": subject_id, "packageType": package_type})
+
+    def find_by_package_id(self, package_id: str):
+        return self.package_collection.find_one({"_id": package_id})
 
     def add_package(self, package: dict) -> str:
         result = self.package_collection.insert_one(package)
