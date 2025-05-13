@@ -108,7 +108,7 @@ class DluManagement:
     def insert_dlu_files(self, package_id: str, file_list: List[DLUFile]) -> dict:
         logger.info(f"Inserting files for package {package_id}")
         existing_files = self.get_files_by_package_id(package_id)
-        if existing_files > 0:
+        if existing_files is not None and len(existing_files) > 0:
             logger.info(f"Deleting existing files for package {package_id}")
             self.delete_files_by_package_id(package_id)
 
