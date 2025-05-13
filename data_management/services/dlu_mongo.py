@@ -29,10 +29,11 @@ class DLUMongo:
         modifications = []
         now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         for file in file_info["files"]:
-            if file.modified_at:
-                modifications.append("Modified " + file.name + " at " + now)
-            elif file not in file_info["unmodified_files"]:
-                modifications.append("Added " + file.name + " at " + now)
+            if file not in file_info["unmodified_files"]:
+                if file.modified_at:
+                    modifications.append("Modified " + file.name + " at " + now)
+                else:
+                    modifications.append("Added " + file.name + " at " + now)
         for file in file_info["deleted_files"]:
             modifications.append("Deleted " + file["dlu_fileName"] + " at " + now)
         return modifications

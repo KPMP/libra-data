@@ -116,6 +116,7 @@ class DluManagement:
         for file in file_list:
             for existing_file in existing_files:
                 if existing_file["dlu_fileName"] == file.name:
+                    file.modified_at = existing_file["dlu_modified_at"]
                     if file.checksum != existing_file["dlu_md5checksum"]:
                         file.modified_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                     else:
