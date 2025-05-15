@@ -180,7 +180,7 @@ class DluManagement:
 
     def get_biopsy_tracking(self):
         result = self.db.get_data(
-            "select * from biopsy_tracking_test_v"
+            "select * from biopsy_tracking_v"
         )
         return result
 
