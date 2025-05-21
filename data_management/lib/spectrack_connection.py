@@ -45,7 +45,7 @@ class SpectrackConnection:
 
     def get_specimens(self, limit: int):
         return self.get_results(
-            self.get_url(self.SPECIMEN_URL_SUFFIX), {"limit": limit}
+            self.get_url(self.SPECIMEN_URL_SUFFIX), {"limit": limit, "has_biopsy_only": "true"}
         )
 
     def get_specimens_modified_greater_than(self, last_modified: datetime):
