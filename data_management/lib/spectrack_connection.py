@@ -79,6 +79,7 @@ class SpectrackConnection:
 
     def get_results(self, url: str, params: dict = {}):
         params.update(self.base_params)
+        res_json = {}
         if "?" in url:  # Don't use params if they're already in the URL
             params = {}
         res = self.session.get(url, params=params, headers=self.headers)
@@ -91,6 +92,7 @@ class SpectrackConnection:
                 + " with params "
                 + str(params), error
             )
+
         return res_json
 
 
