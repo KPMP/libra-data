@@ -184,6 +184,12 @@ class DluManagement:
         )
         return result
 
+    def get_data_manager_data(self):
+        result = self.db.get_data(
+            "select * from data_manager_data_v"
+        )
+        return result
+
     def get_package(self, package_id: str) -> dict:
         result = self.db.get_data("SELECT * dlu_package_inventory WHERE dlu_package_id = %s", (package_id,))
         if result:
