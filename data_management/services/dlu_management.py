@@ -186,7 +186,7 @@ class DluManagement:
 
     def get_data_manager_data(self):
         result = self.db.get_data(
-            "select * from data_manager_data_v"
+            "select id, dlu_package_id, dlu_created, dlu_submitter, dlu_tis, dlu_packageType, dlu_subject_id, dlu_error, redcap_id, known_specimen, user_package_ready, package_validated, ready_to_move_from_globus, globus_dlu_status, package_status, current_owner, ar_promotion_status, sv_promotion_status, release_version, removed_from_globus, notes from data_manager_data_v"
         )
         return result
 
