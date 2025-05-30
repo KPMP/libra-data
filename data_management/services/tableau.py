@@ -1,6 +1,6 @@
 from lib.mysql_connection import MYSQLConnection
 from services.dlu_management import DluManagement
-
+from datetime import datetime
 
 class Tableau:
     def __init__(self):
@@ -37,6 +37,7 @@ class Tableau:
         query = "INSERT INTO kpmp_dvc_integration.data_manager_data(id, dlu_package_id, dlu_created, dlu_submitter, dlu_tis, dlu_packageType, dlu_subject_id, dlu_error, redcap_id, known_specimen, user_package_ready, package_validated, ready_to_move_from_globus, globus_dlu_status, package_status, current_owner, ar_promotion_status, sv_promotion_status, release_version, removed_from_globus, notes) VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
         records_modified = 0
         for result in results:
+            result["dlu_created"] = result["dlu_created"].strftime('%Y-%m-%d %H:%M:%S')
             insert_result = self.db_tableau.insert_data(query, tuple(result.values()))
             records_modified = records_modified + 1
         return records_modified
