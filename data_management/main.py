@@ -66,8 +66,8 @@ if __name__ == "__main__":
 
     if args.data_source == "tableau":
         if args.action == "insert" or args.action == "update":
-            #records_modified = main.load_biopsy_tracking()
-            records_modified_2 = main.load_data_manager_data()
+            records_modified = main.load_biopsy_tracking()
+            records_modified = records_modified + main.load_data_manager_data()
 
     if "records_modified" in locals():
         logger.info(f"{records_modified} records modified")
