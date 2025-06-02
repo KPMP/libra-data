@@ -32,6 +32,9 @@ class Main:
     def load_biopsy_tracking(self):
         return self.tableau.load_biopsy_tracking()
 
+    def load_data_manager_data(self):
+        return self.tableau.load_data_manager_data()
+
 
 if __name__ == "__main__":
     main = Main()
@@ -64,6 +67,7 @@ if __name__ == "__main__":
     if args.data_source == "tableau":
         if args.action == "insert" or args.action == "update":
             records_modified = main.load_biopsy_tracking()
+            records_modified = records_modified + main.load_data_manager_data()
 
     if "records_modified" in locals():
         logger.info(f"{records_modified} records modified")
