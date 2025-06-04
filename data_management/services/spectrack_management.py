@@ -94,4 +94,4 @@ class SpectrackManagement:
         return record_count
 
     def update_biomarker_tracking_redcap_ids(self):
-        self.db.insert_data("INSERT INTO biomarker_tracking (spectrack_redcap_record_id) SELECT DISTINCT ss.spectrack_redcap_record_id FROM spectrack_specimen ss WHERE ss.spectrack_redcap_record_id NOT IN (SELECT bt.spectrack_redcap_record_id FROM biomarker_tracking bt)")
+        self.db.insert_data("INSERT INTO biomarker_tracking (spectrack_redcap_record_id) SELECT DISTINCT ss.spectrack_redcap_record_id FROM spectrack_specimen ss WHERE ss.spectrack_redcap_record_id NOT IN (SELECT bt.spectrack_redcap_record_id FROM biomarker_tracking bt)", ())
