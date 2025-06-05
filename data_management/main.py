@@ -35,6 +35,9 @@ class Main:
     def load_data_manager_data(self):
         return self.tableau.load_data_manager_data()
 
+    def update_biomarker_tracking_redcap_ids(self):
+        self.spectrack_management.update_biomarker_tracking_redcap_ids()
+
 
 if __name__ == "__main__":
     main = Main()
@@ -59,6 +62,9 @@ if __name__ == "__main__":
             records_modified = main.insert_all_spectrack_specimens()
         elif args.action == "update":
             records_modified = main.upsert_new_spectrack_specimens()
+
+        main.update_biomarker_tracking_redcap_ids()
+
 
     if args.data_source == "redcap":
         if args.action == "insert":
