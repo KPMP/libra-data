@@ -11,7 +11,7 @@ RUN apt-get update \
 RUN curl -sSL https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -o /tmp/miniconda.sh \
     && bash /tmp/miniconda.sh -bfp /usr/local/ \
     && rm -rf /tmp/miniconda.sh 
-RUN conda install --yes python=3 \
+RUN conda install --yes python=3.10 \
     && conda update conda \
     && conda clean --all --yes 
 RUN conda install -c conda-forge leidenalg --yes \
