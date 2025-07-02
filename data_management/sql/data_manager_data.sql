@@ -23,3 +23,5 @@ CREATE TABLE `data_manager_data` (
                                      `removed_from_globus` varchar(100) DEFAULT NULL,
                                      `notes` text DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+ALTER TABLE data_manager_data ADD release_date DATETIME AFTER release_version;
