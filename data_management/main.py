@@ -3,7 +3,9 @@ from services.spectrack_management import SpectrackManagement
 from services.tableau import Tableau
 from services.redcap import Redcap
 import argparse
+import os
 import logging
+import sys
 
 logger = logging.getLogger("Main")
 logger.setLevel(logging.INFO)
@@ -14,6 +16,8 @@ class Main:
         self.dlu_management = DluManagement()
         self.spectrack_management = SpectrackManagement()
         self.tableau = Tableau()
+        slack_passcode = os.environ['slack_passcode']
+        slack_url = "https://hooks.slack.com/services/" + slack_passcode
 
     def import_redcap_data(self):
         dlu_management = DluManagement()
@@ -42,6 +46,7 @@ class Main:
 if __name__ == "__main__":
     main = Main()
     parser = argparse.ArgumentParser()
+    records_modified = 0
     parser.add_argument(
         "-a",
         "--action",
@@ -60,11 +65,13 @@ if __name__ == "__main__":
     if args.data_source == "spectrack":
         if args.action == "insert":
             records_modified = main.insert_all_spectrack_specimens()
+            if records_modified == 0 or records_modified is None:
+                print("ERROR: No records were inserted.")
+                sys.exit(1)
         elif args.action == "update":
             records_modified = main.upsert_new_spectrack_specimens()
-
-        main.update_biomarker_tracking_redcap_ids()
-
+            if records_modified > 0:
+                main.update_biomarker_tracking_redcap_ids()
 
     if args.data_source == "redcap":
         if args.action == "insert":

@@ -24,6 +24,11 @@ NOTE: The (non-Flask app) service options for the Data Importer are:
 NOTE: The service options for the Bulk Uploader are:
 - [-h] -a {update,insert} -m 
 
+## Shell Script with Alerting
+
+Use the "update_st_with_alert.sh" script to run the Spectrack update with a Slack alert on errors. Provide a Slack passcode as a only parameter, e.g.:
+   - `./update_st_with_alert.sh abc123def456ghi789`
+
 ## Service Endpoints
 
 The following endpoints are available when running the script as a Flask web service:
