@@ -85,12 +85,16 @@ class SpectrackManagement:
         self.upsert_spectrack_record(values)
 
     def upsert_new_spectrack_specimens(self):
+        record_count = 0
         max_date = self.get_max_spectrack_date()
-        results = self.spectrack.get_specimens_modified_greater_than(max_date)
         logger.info("Retrieving specimens modified greater than " + max_date.strftime("%Y-%m-%dT%H:%M:%S"))
-        record_count = self.spectrack.get_next_with_callback(
-            results, self.upsert_dmd_records_from_spectrack
-        )
+        results = self.spectrack.get_specimens_modified_greater_than(max_date)
+        if len(results) > 0:
+            record_count = self.spectrack.get_next_with_callback(
+                results, self.upsert_dmd_records_from_spectrack
+            )
+        else:
+            logger.info("No new Spectrack records found.")
         return record_count
 
     def update_biomarker_tracking_redcap_ids(self):

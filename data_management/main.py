@@ -65,14 +65,13 @@ if __name__ == "__main__":
     if args.data_source == "spectrack":
         if args.action == "insert":
             records_modified = main.insert_all_spectrack_specimens()
+            if records_modified == 0 or records_modified is None:
+                print("ERROR: No records were inserted.")
+                sys.exit(1)
         elif args.action == "update":
             records_modified = main.upsert_new_spectrack_specimens()
-            if records_modified == 0 or records_modified is None:
-                print("ERROR: No records were modified.")
-                sys.exit(1)
-
-        main.update_biomarker_tracking_redcap_ids()
-
+            if records_modified > 0:
+                main.update_biomarker_tracking_redcap_ids()
 
     if args.data_source == "redcap":
         if args.action == "insert":
