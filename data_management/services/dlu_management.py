@@ -186,7 +186,11 @@ class DluManagement:
 
     def get_data_manager_data(self):
         result = self.db.get_data(
-            "select id, dlu_package_id, dlu_created, dlu_submitter, dlu_tis, dlu_packageType, dlu_subject_id, dlu_error, redcap_id, known_specimen, user_package_ready, package_validated, ready_to_move_from_globus, globus_dlu_status, package_status, current_owner, ar_promotion_status, sv_promotion_status, release_version, removed_from_globus, notes from data_manager_data_v"
+            """
+                select dm.id, dm.dlu_package_id, dm.dlu_created, dm.dlu_submitter, dm.dlu_tis, dm.dlu_packageType, dm.dlu_subject_id, dm.dlu_error, dm.redcap_id, dm.known_specimen, dm.user_package_ready, dm.package_validated, dm.ready_to_move_from_globus, dm.globus_dlu_status, dm.package_status, dm.current_owner, dm.ar_promotion_status, dm.sv_promotion_status, dm.release_version, r.release_date, dm.removed_from_globus, dm.notes 
+                from data_manager_data_v dm
+                left outer join `release` r on dm.release_version = r.release_version 
+            """
         )
         return result
 
