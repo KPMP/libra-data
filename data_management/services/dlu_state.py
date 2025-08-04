@@ -9,6 +9,7 @@ logger = logging.getLogger("DLUState")
 class PackageState(Enum):
     UPLOAD_SUCCEEDED = "UPLOAD_SUCCEEDED"
     METADATA_RECEIVED = "METADATA_RECEIVED"
+    RECALLED = "RECALLED"
 
 class DLUState:
     def __init__(self):

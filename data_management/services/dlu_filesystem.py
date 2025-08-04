@@ -79,6 +79,13 @@ class DLUFileHandler:
         self.globus_data_directory = '/globus'
         self.dlu_data_directory = '/data'
         self.dlu_package_dir_prefix = 'package_'
+        self.globus_dir_prefix = ''
+    
+    def set_recall_package_directories(self):
+        self.globus_data_directory = '/data'
+        self.dlu_data_directory = '/globus'
+        self.dlu_package_dir_prefix = ''
+        self.globus_dir_prefix = 'package_'
 
     def split_path(self, path: str, preserve_path: bool = False):
         if len(path.split("/")) > 0:
@@ -109,11 +116,11 @@ class DLUFileHandler:
         if os.path.exists(dest_package_directory):
             shutil.rmtree(dest_package_directory)
         for file in file_list:
-            source_package_directory = self.globus_data_directory + '/'
+            source_package_directory = self.globus_data_directory + '/' + self.globus_dir_prefix
             # I.e. isn't a bulk upload that doesn't already have a package ID.
             if not no_src_package:
                 source_package_directory = source_package_directory + package_id
-            if file.path:
+            if file.path and os.path.isdir(file.path):
                 source_package_directory = os.path.join(source_package_directory, file.path)
             if preserve_path:
                 dest_package_directory = os.path.join(dest_package_directory,
@@ -161,7 +168,7 @@ class DLUFileHandler:
         return files_copied
 
     def validate_package_directories(self, package_id: str):
-        source_package_directory = self.globus_data_directory + '/' + package_id
+        source_package_directory = self.globus_data_directory + '/' + self.globus_dir_prefix + package_id
         source_directory_info = DirectoryInfo(source_package_directory, False)
         success = True
 
@@ -191,7 +198,7 @@ class DLUFileHandler:
         return directoryListing
 
     def match_files(self, packageId) -> list[DLUFile]:
-        topLevelDir = DirectoryInfo(self.globus_data_directory + '/' + packageId)
+        topLevelDir = DirectoryInfo(self.globus_data_directory + '/' + self.globus_dir_prefix + packageId)
         globusFiles = []
         globusDirectories = []
         for obj in topLevelDir.file_details:

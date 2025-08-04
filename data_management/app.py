@@ -2,6 +2,7 @@ from flask import Flask, request
 from flask_cors import CORS
 from services.dlu_management import DluManagement
 from services.dlu_package_inventory import DLUPackageInventory
+from services.dlu_filesystem import DLUFileHandler, DirectoryInfo
 from services.dlu_utils import dlu_package_dict_to_dpi_tuple, dlu_package_dict_to_dmd_tuple, dlu_file_dict_to_tuple
 import logging
 
@@ -59,6 +60,43 @@ def move_dlu_file(package_id):
     dlu_management.reconnect()
     response = dlu_management.move_globus_files_to_dlu(package_id)
     return response
+
+@app.route("/v1/dlu/package/<package_id>/recall", methods=["POST"])
+def recall_dlu_package(package_id):
+    dlu_package_inventory = DLUPackageInventory()
+    dlu_management = DluManagement()
+    dlu_file_handler = DLUFileHandler()
+    dlu_package_inventory.reconnect()
+    dlu_management.reconnect()
+    dlu_file_handler.set_recall_package_directories()
+
+    dlu_data_directory = '/data/package_' + package_id
+    directory_info = DirectoryInfo(dlu_data_directory)
+    if directory_info.file_count == 0 and directory_info.subdir_count == 0:
+        error_msg = "Error: package " + package_id + " has no files or top level subdirectory"
+        logger.info(error_msg)
+        dlu_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
+        return error_msg
+    
+    if directory_info.file_count == 0 and directory_info.subdir_count == 1:
+        contents = "".join(directory_info.dir_contents)
+        top_level_subdir = package_id + "/" + contents
+        file_list = dlu_file_handler.match_files(top_level_subdir)
+    else:
+        file_list = dlu_file_handler.match_files(package_id)
+
+    dlu_files = []
+    for file in directory_info.file_details:
+        file.path = dlu_file_handler.split_path(file.path)['file_path']
+        dlu_files.append(file)
+
+    dlu_file_handler.copy_files(package_id, dlu_files)
+    dlu_file_handler.chown_dir(package_id, file_list)
+    
+    dlu_management.delete_files_by_package_id(package_id)
+    dlu_management.update_dlu_package(package_id, { "globus_dlu_status": "recalled" })
+    dlu_management.update_dlu_package(package_id, { "ready_to_move_from_globus": None })
+    return package_id
 
 @app.route("/v1/dlu/package/<package_id>/status", methods=["GET"])
 def get_package_status(package_id):
