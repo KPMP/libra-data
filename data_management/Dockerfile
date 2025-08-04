@@ -4,6 +4,7 @@ WORKDIR /usr/src/app
 
 ENV FLASK_APP=app.py
 ENV FLASK_RUN_HOST=0.0.0.0
+ENV CONDA_PLUGINS_AUTO_ACCEPT_TOS=true
 
 RUN apt-get update \
     && apt-get install -y curl
