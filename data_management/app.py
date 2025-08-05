@@ -106,8 +106,10 @@ def recall_dlu_package(package_id):
     dlu_management.update_dlu_package(package_id, { "globus_dlu_status": "recalled" })
     dlu_management.update_dlu_package(package_id, { "ready_to_move_from_globus": None })
 
+    content = request.json
+    codicil = content['codicil'] if 'codicil' in content else None
     dlu_mongo.update_package_files(package_id, [])
-    dlu_state.set_package_state(package_id, PackageState.RECALLED)
+    dlu_state.set_package_state(package_id, PackageState.RECALLED, codicil)
     dlu_state.clear_cache()
     return package_id
 
