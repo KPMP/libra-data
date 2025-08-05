@@ -3,6 +3,8 @@ from flask_cors import CORS
 from services.dlu_management import DluManagement
 from services.dlu_package_inventory import DLUPackageInventory
 from services.dlu_filesystem import DLUFileHandler, DirectoryInfo
+from services.dlu_mongo import DLUMongo
+from services.dlu_state import DLUState, PackageState
 from services.dlu_utils import dlu_package_dict_to_dpi_tuple, dlu_package_dict_to_dmd_tuple, dlu_file_dict_to_tuple
 import logging
 
@@ -63,12 +65,19 @@ def move_dlu_file(package_id):
 
 @app.route("/v1/dlu/package/<package_id>/recall", methods=["POST"])
 def recall_dlu_package(package_id):
-    dlu_package_inventory = DLUPackageInventory()
-    dlu_management = DluManagement()
-    dlu_file_handler = DLUFileHandler()
-    dlu_package_inventory.reconnect()
-    dlu_management.reconnect()
-    dlu_file_handler.set_recall_package_directories()
+    try:
+        dlu_package_inventory = DLUPackageInventory()
+        dlu_management = DluManagement()
+        dlu_file_handler = DLUFileHandler()
+        dlu_mongo = DLUMongo()
+        dlu_state = DLUState()
+        dlu_package_inventory.reconnect()
+        dlu_management.reconnect()
+        dlu_file_handler.set_recall_package_directories()
+    except:
+        error_msg = "Error: unable to connect to data manager services. Make sure that the necessary services (Mongo, State Manager, etc.) are running."
+        logger.info(error_msg)
+        return error_msg
 
     dlu_data_directory = '/data/package_' + package_id
     directory_info = DirectoryInfo(dlu_data_directory)
@@ -96,6 +105,10 @@ def recall_dlu_package(package_id):
     dlu_management.delete_files_by_package_id(package_id)
     dlu_management.update_dlu_package(package_id, { "globus_dlu_status": "recalled" })
     dlu_management.update_dlu_package(package_id, { "ready_to_move_from_globus": None })
+
+    dlu_mongo.update_package_files(package_id, [])
+    dlu_state.set_package_state(package_id, PackageState.RECALLED)
+    dlu_state.clear_cache()
     return package_id
 
 @app.route("/v1/dlu/package/<package_id>/status", methods=["GET"])
