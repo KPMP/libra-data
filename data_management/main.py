@@ -16,8 +16,13 @@ class Main:
         self.dlu_management = DluManagement()
         self.spectrack_management = SpectrackManagement()
         self.tableau = Tableau()
-        slack_passcode = os.environ['slack_passcode']
-        slack_url = "https://hooks.slack.com/services/" + slack_passcode
+        if 'slack_passcode' in os.environ:
+            slack_passcode = os.environ['slack_passcode']
+            slack_url = "https://hooks.slack.com/services/" + slack_passcode
+        else:
+            error_msg = "Error: Slack passcode not found in environment."
+            logger.error(error_msg)
+            raise Exception(error_msg)
 
     def import_redcap_data(self):
         dlu_management = DluManagement()
