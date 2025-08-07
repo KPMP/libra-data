@@ -15,6 +15,7 @@ def dlu_package_dict_to_dpi_tuple(dlu_inventory: dict):
         dlu_inventory["dluSubjectId"],
         dlu_inventory["dluError"],
         dlu_inventory["dluLfu"],
+        dlu_inventory['dluUploadType'],
         None
     )
 

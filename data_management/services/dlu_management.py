@@ -80,8 +80,8 @@ class DluManagement:
     def insert_dlu_package(self, dpi_values: tuple, dmd_values: tuple):
         logger.info(f"inserting DLU package with id: {dpi_values[0]}")
         query1 = ("INSERT INTO dlu_package_inventory (dlu_package_id, dlu_created, dlu_submitter, dlu_tis, "
-                 + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, globus_dlu_status) "
-                 + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s)")
+                 + "dlu_packageType, dlu_subject_id, dlu_error, dlu_lfu, dlu_upload_type, globus_dlu_status) "
+                 + "VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)")
         self.db.insert_data(query1, dpi_values)
         dmd_values = ((dmd_values[0],) + dmd_values)
         query2 = ("INSERT INTO dmd_data_manager (id, dlu_package_id, redcap_id, known_specimen, "

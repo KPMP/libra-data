@@ -3,6 +3,7 @@
 ## Release 1.9 [unreleased]
 
 - Load Tableau database with biopsy_tracker data
+- Insert dlu_upload_type to dlu_package_inventory table
 
 ### Breaking changes
 
