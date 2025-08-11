@@ -41,7 +41,7 @@ class DLUWatcher:
     
     def watch_for_side_manifest_records(self):
         equal_num_rows = self.dlu_management.get_equal_num_rows()
-        if equal_num_rows == 0:
+        if equal_num_rows == 1:
             logger.info("No new records found in slide_manifest_import")
         else:
             self.update_slide_scan_curation()
