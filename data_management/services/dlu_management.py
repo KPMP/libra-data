@@ -66,10 +66,12 @@ class DluManagement:
                 + "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                 (list(redcap_participant.values())),
             )
+            return 1
         else:
             logger.warning(
                 f"redcap participant with id: {redcap_participant['redcap_id']} already exists, skipping insert"
             )
+            return 0
 
     def get_participant_by_redcap_id(self, redcap_id: str):
         return self.db.get_data(

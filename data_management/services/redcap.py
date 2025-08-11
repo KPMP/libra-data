@@ -75,7 +75,7 @@ class Redcap:
         for redcap_chunk in self.redcap_data:
 
             for record in redcap_chunk["redcap_records"]:
-                if record["field_name"] == field_name and record["record_id"] == redcap_id:
+                if record["field_name"] == field_name and "record_id" in record and record["record_id"] == redcap_id:
                     if record["value"] == "1":
                         return "Percutaneous Needle Biopsy"
                     elif record["value"] == "2":
