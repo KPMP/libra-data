@@ -214,7 +214,7 @@ class DluManagement:
         return self.db.get_data("SELECT * FROM slide_manifest_import WHERE image_id NOT IN (SELECT image_id FROM slide_scan_curation)")
 
     def get_spectrack_redcap_record_id(self, kit_id):
-        return self.db.get_data("SELECT spectrack_redcap_record_id FROM spectrack_specimen WHERE spectrack_specimen_kit_id = %s", (kit_id,))
+        return self.db.get_data("SELECT spectrack_redcap_record_id FROM spectrack_specimen WHERE spectrack_specimen_kit_id = %s LIMIT 1", (kit_id,))
 
     def insert_into_slide_scan_curation(self, values):
         query = "INSERT INTO slide_scan_curation (image_id, kit_id, redcap_id) VALUES (%s, %s, %s)"
