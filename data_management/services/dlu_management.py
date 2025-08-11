@@ -208,13 +208,18 @@ class DluManagement:
         return self.db.get_data("DELETE FROM dlu_file WHERE dlu_package_id = %s", (package_id,))
 
     def get_equal_num_rows(self):
-        return self.db.get_data("SELECT (SELECT COUNT(*) FROM slide_manifest_import) = (SELECT COUNT(*) FROM slide_scan_curation) AS equal_num_rows")
+        result = self.db.get_data("SELECT (SELECT COUNT(*) FROM slide_manifest_import) = (SELECT COUNT(*) FROM slide_scan_curation) AS equal_num_rows")
+        return result[0]["equal_num_rows"]
     
     def get_new_slide_manifest_import_rows(self):
         return self.db.get_data("SELECT * FROM slide_manifest_import WHERE image_id NOT IN (SELECT image_id FROM slide_scan_curation)")
 
     def get_spectrack_redcap_record_id(self, kit_id):
-        return self.db.get_data("SELECT spectrack_redcap_record_id FROM spectrack_specimen WHERE spectrack_specimen_kit_id = %s LIMIT 1", (kit_id,))
+        result = self.db.get_data("SELECT spectrack_redcap_record_id FROM spectrack_specimen WHERE spectrack_specimen_kit_id = %s LIMIT 1", (kit_id,))
+        if len(result) > 0 and "spectrack_redcap_record_id" in result[0]:
+            return result[0]["spectrack_redcap_record_id"]
+        else:
+            return None
 
     def insert_into_slide_scan_curation(self, values):
         query = "INSERT INTO slide_scan_curation (image_id, kit_id, redcap_id) VALUES (%s, %s, %s)"
