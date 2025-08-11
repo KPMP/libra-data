@@ -207,6 +207,19 @@ class DluManagement:
     def delete_files_by_package_id(self, package_id: str):
         return self.db.get_data("DELETE FROM dlu_file WHERE dlu_package_id = %s", (package_id,))
 
+    def get_equal_num_rows(self):
+        return self.db.get_data("SELECT (SELECT COUNT(*) FROM slide_manifest_import) = (SELECT COUNT(*) FROM slide_scan_curation) AS equal_num_rows")
+    
+    def get_new_slide_manifest_import_rows(self):
+        return self.db.get_data("SELECT * FROM slide_manifest_import WHERE image_id NOT IN (SELECT image_id FROM slide_scan_curation)")
+
+    def get_spectrack_redcap_record_id(self, kit_id):
+        return self.db.get_data("SELECT spectrack_redcap_record_id FROM spectrack_specimen WHERE spectrack_specimen_kit_id = %s", (kit_id,))
+
+    def insert_into_slide_scan_curation(self, values):
+        query = "INSERT INTO slide_scan_curation (image_id, kit_id, redcap_id) VALUES (%s, %s, %s)"
+        self.db.insert_data(query, values)
+        return query % values
 
 if __name__ == "__main__":
     dlu_management = DluManagement()
