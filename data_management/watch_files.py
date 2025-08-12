@@ -90,7 +90,7 @@ class DLUWatcher:
               file_list = self.dlu_file_handler.match_files(package_id)
 
             self.dlu_file_handler.copy_files(package_id, self.process_file_paths(directory_info.file_details))
-            self.dlu_file_handler.chown_dir(package_id, file_list)
+            self.dlu_file_handler.chown_dir(package_id, file_list, int(os.environ['dlu_user']))
             file_info = self.dlu_management.insert_dlu_files(package_id, file_list)
             self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": "success" })
             self.dlu_management.update_dlu_package(package_id, { "ready_to_move_from_globus": "done" })
