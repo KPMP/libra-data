@@ -28,9 +28,11 @@ class Main:
         dlu_management = DluManagement()
         redcap = Redcap()
         redcap.set_redcap_participant_data()
+        records_modified = 0
         redcap_participant_data = redcap.get_redcap_participant_data()
         for redcap_participant in redcap_participant_data:
-            dlu_management.insert_redcap_participant(redcap_participant)
+            records_modified += dlu_management.insert_redcap_participant(redcap_participant)
+        return records_modified
 
     def insert_all_spectrack_specimens(self):
         return self.spectrack_management.insert_all_spectrack_specimens()
@@ -80,7 +82,7 @@ if __name__ == "__main__":
 
     if args.data_source == "redcap":
         if args.action == "insert":
-            main.import_redcap_data()
+            records_modified = main.import_redcap_data()
 
     if args.data_source == "tableau":
         if args.action == "insert" or args.action == "update":
