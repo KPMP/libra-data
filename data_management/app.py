@@ -111,7 +111,6 @@ def recall_dlu_package(package_id):
     codicil = content['codicil'] if 'codicil' in content else None
     dlu_mongo.update_package_files(package_id, {"files": [], "unmodified_files": [], "deleted_files": []})
     dlu_state.set_package_state(package_id, PackageState.RECALLED, codicil)
-    dlu_state.clear_cache()
     return package_id
 
 @app.route("/v1/dlu/package/<package_id>/status", methods=["GET"])
