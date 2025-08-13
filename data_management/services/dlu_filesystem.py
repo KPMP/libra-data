@@ -107,7 +107,11 @@ class DLUFileHandler:
             os.chown(package_path, user_id, int(os.environ['dlu_group']))
             for file in files:
                 os.chown(package_path + "/" + file.name, user_id, int(os.environ['dlu_group']))
-        
+        for root, dirs, _ in os.walk(package_path):
+            for dir in dirs:
+                subdir_path = os.path.join(root, dir)
+                if os.stat(subdir_path).st_uid != user_id or os.stat(subdir_path).st_gid != int(os.environ['dlu_group']):
+                    os.chown(subdir_path, user_id, int(os.environ['dlu_group']))
 
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
