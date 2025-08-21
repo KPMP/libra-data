@@ -7,6 +7,7 @@ import logging
 from bson.codec_options import CodecOptions
 
 logger = logging.getLogger("services-DLUMongo")
+logger.setLevel(logging.INFO)
 logging.basicConfig(level=logging.INFO)
 
 EM_IMAGE_TYPE = "EM Images"
