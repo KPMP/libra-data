@@ -1,5 +1,6 @@
 # Changelog
 
+
 ## Release 1.9 [unreleased]
 
 - Load Tableau database with biopsy_tracker data
@@ -7,6 +8,12 @@
 - Create recalled packages endpoint
 - Update Multi Modal package name
 - Tweak bulk upload fields
+
+
+## Release 1.8.1 [Released 11/8/2024]
+Brief summary of what's in this release:
+Fix to the dlu-watcher script to generate a new UUID for each file, rather than one at start up. This caused issues with moving files
+
 
 ### Breaking changes
 
@@ -16,6 +23,7 @@ Breaking changes include any database updates needed, if we need to edit any fil
 ### Non-breaking changes
 
 Just a place to keep track of things that have changed in the code that we may want to pay special attention to when smoke testing, etc.
+
 
 ---
 

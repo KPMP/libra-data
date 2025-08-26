@@ -28,6 +28,7 @@ def calculate_checksum(file_path: str):
 
 
 class DLUFile:
+
     def __init__(self, name: str, path: str, checksum: str, size: int, metadata: dict = {}):
         self.name = name
         self.path = path
