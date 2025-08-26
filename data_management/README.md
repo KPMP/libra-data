@@ -1,3 +1,11 @@
+# Bulk Upload Script
+
+process_bulk_uploads.py
+
+## How to use
+
+[Instructions here](https://docs.google.com/document/d/1M6wnlsYkw21HjGJC2u9mGEuPGpsyxj1m1U1NiSW7KIs/edit?tab=t.0#heading=h.azytq75vi7c1)
+
 # Data Manager Dashboard Importer 
 
 ## Command Line Usage
@@ -23,6 +31,11 @@ NOTE: The (non-Flask app) service options for the Data Importer are:
 
 NOTE: The service options for the Bulk Uploader are:
 - [-h] -a {update,insert} -m 
+
+## Shell Script with Alerting
+
+Use the "update_st_with_alert.sh" script to run the Spectrack update with a Slack alert on errors. Provide a Slack passcode as a only parameter, e.g.:
+   - `./update_st_with_alert.sh abc123def456ghi789`
 
 ## Service Endpoints
 

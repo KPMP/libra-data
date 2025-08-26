@@ -54,7 +54,7 @@ class TestRedcap(unittest.TestCase):
           'redcap_sample_type': 'xx',
           'redcap_np_gender': 'Male',
           'redcap_tissue_source': 'KPMP Recruitment Site',
-          'redcap_tissue_type': 'disease'}], result)
+          'redcap_enrollment_category': 'disease'}], result)
 
     def test_parse_participant_records_other_protocol(self):
         mock = Mock(Redcap)
@@ -85,7 +85,7 @@ class TestRedcap(unittest.TestCase):
           'redcap_sample_type': 'xx',
           'redcap_np_gender': '',
           'redcap_tissue_source': 'KPMP Recruitment Site',
-          'redcap_tissue_type': ''}], result)
+          'redcap_enrollment_category': ''}], result)
 
     def test_parse_participant_records_HRT_protocol(self):
         mock = Mock(Redcap)
@@ -117,7 +117,7 @@ class TestRedcap(unittest.TestCase):
           'redcap_sample_type': 'yy',
           'redcap_np_gender': '',
           'redcap_tissue_source': 'KPMP Recruitment Site',
-          'redcap_tissue_type': 'Healthy Reference'}], result)
+          'redcap_enrollment_category': 'Healthy Reference'}], result)
 
 if __name__ == '__main__':
     unittest.main()

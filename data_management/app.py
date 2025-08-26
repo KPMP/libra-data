@@ -2,6 +2,10 @@ from flask import Flask, request
 from flask_cors import CORS
 from services.dlu_management import DluManagement
 from services.dlu_package_inventory import DLUPackageInventory
+from services.dlu_filesystem import DLUFileHandler, DirectoryInfo
+from services.dlu_mongo import DLUMongo
+from services.dlu_state import DLUState, PackageState
+from lib.mongo_connection import MongoConnection
 from services.dlu_utils import dlu_package_dict_to_dpi_tuple, dlu_package_dict_to_dmd_tuple, dlu_file_dict_to_tuple
 import logging
 
@@ -59,6 +63,54 @@ def move_dlu_file(package_id):
     dlu_management.reconnect()
     response = dlu_management.move_globus_files_to_dlu(package_id)
     return response
+
+@app.route("/v1/dlu/package/<package_id>/recall", methods=["POST"])
+def recall_dlu_package(package_id):
+    try:
+        dlu_package_inventory = DLUPackageInventory()
+        dlu_management = DluManagement()
+        dlu_file_handler = DLUFileHandler()
+        mongo_connection = MongoConnection().get_mongo_connection()
+        dlu_mongo = DLUMongo(mongo_connection)
+        dlu_state = DLUState()
+        dlu_package_inventory.reconnect()
+        dlu_management.reconnect()
+        dlu_file_handler.set_recall_package_directories()
+    except:
+        error_msg = "Error: unable to connect to data manager services. Make sure that the necessary services (Mongo, State Manager, etc.) are running."
+        logger.info(error_msg)
+        return error_msg
+
+    dlu_data_directory = '/data/package_' + package_id
+    directory_info = DirectoryInfo(dlu_data_directory)
+    file_list = None
+    if directory_info.file_count == 0 and directory_info.subdir_count == 0:
+        error_msg = "Error: package " + package_id + " has no files or top level subdirectory"
+        logger.info(error_msg)
+        dlu_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
+        return error_msg
+    if directory_info.file_count == 0 and directory_info.subdir_count == 1:
+        contents = "".join(directory_info.dir_contents)
+        top_level_subdir = package_id + "/" + contents
+        file_list = dlu_file_handler.match_files(top_level_subdir)
+    else:
+        file_list = dlu_file_handler.match_files(package_id)
+
+    dlu_files = []
+    for file in directory_info.file_details:
+        file.path = dlu_file_handler.split_path(file.path)['file_path']
+        dlu_files.append(file)
+
+    dlu_file_handler.copy_files(package_id, dlu_files)
+    dlu_file_handler.chown_dir(package_id, file_list, 99413947)
+    dlu_management.update_dlu_package(package_id, { "globus_dlu_status": "recalled" })
+    dlu_management.update_dlu_package(package_id, { "ready_to_move_from_globus": None })
+
+    content = request.json
+    codicil = content['codicil'] if 'codicil' in content else None
+    dlu_state.set_package_state(package_id, PackageState.RECALLED, codicil)
+    dlu_state.clear_cache()
+    return package_id
 
 @app.route("/v1/dlu/package/<package_id>/status", methods=["GET"])
 def get_package_status(package_id):

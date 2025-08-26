@@ -28,14 +28,15 @@ def calculate_checksum(file_path: str):
 
 
 class DLUFile:
-    def __init__(self, name: str, path: str, checksum: str, size: int, metadata: dict = {},
-                 file_id: str = None):
+
+    def __init__(self, name: str, path: str, checksum: str, size: int, metadata: dict = {}):
         self.name = name
         self.path = path
         self.checksum = checksum
         self.size = size
-        self.file_id = file_id or str(uuid.uuid4())
+        self.file_id = str(uuid.uuid4())
         self.metadata = metadata
+        self.modified_at = None
 
     # Returns path without top directory, i.e. package dir or participant dir (bulk uploads)
     def get_short_path(self):
@@ -79,6 +80,13 @@ class DLUFileHandler:
         self.globus_data_directory = '/globus'
         self.dlu_data_directory = '/data'
         self.dlu_package_dir_prefix = 'package_'
+        self.globus_dir_prefix = ''
+    
+    def set_recall_package_directories(self):
+        self.globus_data_directory = '/data'
+        self.dlu_data_directory = '/globus'
+        self.dlu_package_dir_prefix = ''
+        self.globus_dir_prefix = 'package_'
 
     def split_path(self, path: str, preserve_path: bool = False):
         if len(path.split("/")) > 0:
@@ -94,46 +102,48 @@ class DLUFileHandler:
 
         return {"file_name": file_name, "file_path": file_path}
     
-    def chown_dir(self, package_id: str, files: list[DLUFile]):
+    def chown_dir(self, package_id: str, files: list[DLUFile], user_id):
         package_path = self.dlu_data_directory + "/" + self.dlu_package_dir_prefix + package_id
-        if os.stat(package_path).st_uid != int(os.environ['dlu_user']) or os.stat(package_path).st_gid != int(os.environ['dlu_group']):
-            os.chown(package_path, int(os.environ['dlu_user']), int(os.environ['dlu_group']))
+        if os.stat(package_path).st_uid != user_id or os.stat(package_path).st_gid != int(os.environ['dlu_group']):
+            os.chown(package_path, user_id, int(os.environ['dlu_group']))
             for file in files:
-                os.chown(package_path + "/" + file.name, int(os.environ['dlu_user']), int(os.environ['dlu_group']))
-        
+                os.chown(package_path + "/" + file.name, user_id, int(os.environ['dlu_group']))
+        for root, dirs, _ in os.walk(package_path):
+            for dir in dirs:
+                subdir_path = os.path.join(root, dir)
+                if os.stat(subdir_path).st_uid != user_id or os.stat(subdir_path).st_gid != int(os.environ['dlu_group']):
+                    os.chown(subdir_path, user_id, int(os.environ['dlu_group']))
 
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
         source_wd = os.getcwd()
+        dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
+        if os.path.exists(dest_package_directory):
+            shutil.rmtree(dest_package_directory)
         for file in file_list:
-            source_package_directory = self.globus_data_directory + '/'
+            source_package_directory = self.globus_data_directory + '/' + self.globus_dir_prefix
             # I.e. isn't a bulk upload that doesn't already have a package ID.
             if not no_src_package:
                 source_package_directory = source_package_directory + package_id
-            if file.path:
+            if file.path and os.path.isdir(file.path):
                 source_package_directory = os.path.join(source_package_directory, file.path)
             if preserve_path:
-                dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id,
+                dest_package_directory = os.path.join(dest_package_directory,
                                                       file.get_short_path())
-            else:
-                dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
 
-            # Is any of this code used? START >>
             subdirs = [os.path.join(source_package_directory, o)
             for o in os.listdir(source_package_directory)
               if os.path.isdir(os.path.join(source_package_directory, o))]
             dir = "".join(subdirs)
             if len(os.listdir(source_package_directory)) == 1 and os.path.isdir(source_package_directory) and os.path.isdir(dir):
-                
+            
                 os.chdir(dir)
                 allfiles = os.listdir(dir)
-
                 for f in allfiles:
                     src_path = os.path.join(dir, f)
                     dst_path = os.path.join(dest_package_directory, f)
                     if not os.path.isdir(dest_package_directory):
                         os.mkdir(dest_package_directory)
-
                     if os.path.isfile(f):
                         logger.info("Copying file " + f + " to " + dst_path)
                         shutil.copy(src_path, dst_path)
@@ -143,7 +153,6 @@ class DLUFileHandler:
                         files_copied += 1
                         shutil.copytree(src_path, dst_path)
                 os.chdir(source_wd)
-            # << END
             
             if not os.path.exists(dest_package_directory):
                 logger.info("Creating directory " + dest_package_directory)
@@ -151,7 +160,7 @@ class DLUFileHandler:
             source_file = os.path.join(source_package_directory, file.get_short_filename())
             dest_file = os.path.join(dest_package_directory, file.get_short_filename())
             
-            if not os.path.exists(dest_file) and not dest_file.find(dir) == -1:
+            if not os.path.exists(dest_file):
                 if os.path.isdir(source_file):
                     logger.info("Copying directory to " + dest_file)
                     shutil.copytree(source_file, dest_file)
@@ -164,7 +173,7 @@ class DLUFileHandler:
         return files_copied
 
     def validate_package_directories(self, package_id: str):
-        source_package_directory = self.globus_data_directory + '/' + package_id
+        source_package_directory = self.globus_data_directory + '/' + self.globus_dir_prefix + package_id
         source_directory_info = DirectoryInfo(source_package_directory, False)
         success = True
 
@@ -194,7 +203,7 @@ class DLUFileHandler:
         return directoryListing
 
     def match_files(self, packageId) -> list[DLUFile]:
-        topLevelDir = DirectoryInfo(self.globus_data_directory + '/' + packageId)
+        topLevelDir = DirectoryInfo(self.globus_data_directory + '/' + self.globus_dir_prefix + packageId)
         globusFiles = []
         globusDirectories = []
         for obj in topLevelDir.file_details:

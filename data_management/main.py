@@ -1,8 +1,11 @@
 from services.dlu_management import DluManagement
 from services.spectrack_management import SpectrackManagement
+from services.tableau import Tableau
 from services.redcap import Redcap
 import argparse
+import os
 import logging
+import sys
 
 logger = logging.getLogger("Main")
 logger.setLevel(logging.INFO)
@@ -12,14 +15,24 @@ class Main:
     def __init__(self):
         self.dlu_management = DluManagement()
         self.spectrack_management = SpectrackManagement()
+        self.tableau = Tableau()
+        if 'slack_passcode' in os.environ:
+            slack_passcode = os.environ['slack_passcode']
+            slack_url = "https://hooks.slack.com/services/" + slack_passcode
+        else:
+            error_msg = "Error: Slack passcode not found in environment."
+            logger.error(error_msg)
+            raise Exception(error_msg)
 
     def import_redcap_data(self):
         dlu_management = DluManagement()
         redcap = Redcap()
         redcap.set_redcap_participant_data()
+        records_modified = 0
         redcap_participant_data = redcap.get_redcap_participant_data()
         for redcap_participant in redcap_participant_data:
-            dlu_management.insert_redcap_participant(redcap_participant)
+            records_modified += dlu_management.insert_redcap_participant(redcap_participant)
+        return records_modified
 
     def insert_all_spectrack_specimens(self):
         return self.spectrack_management.insert_all_spectrack_specimens()
@@ -27,10 +40,20 @@ class Main:
     def upsert_new_spectrack_specimens(self):
         return self.spectrack_management.upsert_new_spectrack_specimens()
 
+    def load_biopsy_tracking(self):
+        return self.tableau.load_biopsy_tracking()
+
+    def load_data_manager_data(self):
+        return self.tableau.load_data_manager_data()
+
+    def update_biomarker_tracking_redcap_ids(self):
+        self.spectrack_management.update_biomarker_tracking_redcap_ids()
+
 
 if __name__ == "__main__":
     main = Main()
     parser = argparse.ArgumentParser()
+    records_modified = 0
     parser.add_argument(
         "-a",
         "--action",
@@ -41,7 +64,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "-d",
         "--data_source",
-        choices=["redcap", "spectrack"],
+        choices=["redcap", "spectrack", "tableau"],
         required=True,
         help="Data source",
     )
@@ -49,12 +72,22 @@ if __name__ == "__main__":
     if args.data_source == "spectrack":
         if args.action == "insert":
             records_modified = main.insert_all_spectrack_specimens()
+            if records_modified == 0 or records_modified is None:
+                print("ERROR: No records were inserted.")
+                sys.exit(1)
         elif args.action == "update":
             records_modified = main.upsert_new_spectrack_specimens()
+            if records_modified > 0:
+                main.update_biomarker_tracking_redcap_ids()
 
     if args.data_source == "redcap":
         if args.action == "insert":
-            main.import_redcap_data()
+            records_modified = main.import_redcap_data()
+
+    if args.data_source == "tableau":
+        if args.action == "insert" or args.action == "update":
+            records_modified = main.load_biopsy_tracking()
+            records_modified = records_modified + main.load_data_manager_data()
 
     if "records_modified" in locals():
         logger.info(f"{records_modified} records modified")

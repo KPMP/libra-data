@@ -46,7 +46,8 @@ class DLUPackage:
             "dataGenerators": self.dlu_data_generators,
             "files": self.dlu_files,
             "submitter": self.dlu_submitter,
-            "createdAt": self.dlu_created
+            "createdAt": self.dlu_created,
+            "modifications": []
         }
 
     def get_dmd_dpi_tuple(self):
@@ -57,7 +58,7 @@ class DLUPackage:
             self.submitter_name,
             self.dlu_tis,
             self.dlu_package_type,
-            self.redcap_id,
+            self.dlu_subject_id,
             self.dlu_error,
             self.dlu_lfu,
             self.globus_dlu_status

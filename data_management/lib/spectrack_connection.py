@@ -45,7 +45,7 @@ class SpectrackConnection:
 
     def get_specimens(self, limit: int):
         return self.get_results(
-            self.get_url(self.SPECIMEN_URL_SUFFIX), {"limit": limit}
+            self.get_url(self.SPECIMEN_URL_SUFFIX), {"limit": limit, "has_biopsy_only": "true"}
         )
 
     def get_specimens_modified_greater_than(self, last_modified: datetime):
@@ -79,6 +79,7 @@ class SpectrackConnection:
 
     def get_results(self, url: str, params: dict = {}):
         params.update(self.base_params)
+        res_json = {}
         if "?" in url:  # Don't use params if they're already in the URL
             params = {}
         res = self.session.get(url, params=params, headers=self.headers)
@@ -91,6 +92,7 @@ class SpectrackConnection:
                 + " with params "
                 + str(params), error
             )
+
         return res_json
 
 

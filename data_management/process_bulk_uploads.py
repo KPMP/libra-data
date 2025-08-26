@@ -101,6 +101,11 @@ class ProcessBulkUploads:
                 package_type = PackageType.SINGLE_CELL
             else:
                 package_type = PackageType.OTHER
+            if "tis" in manifest_data:
+                tis = manifest_data["tis"]
+            else:
+                logger.error("Error: Missing TIS in manifest file.")
+                sys.exit()
             for experiment in manifest_data["experiments"]:
                 experiment = experiment["experiment"]
                 redcap_id = experiment["files"][0]["redcap_id"]
@@ -109,7 +114,7 @@ class ProcessBulkUploads:
                     sample_id = redcap_id
                     redcap_results = self.dlu_management.get_redcapid_by_subjectid(sample_id)
                     if redcap_results is  not None and len(redcap_results) == 1:
-                        redcap_id = redcap_results[0]["spectrack_redcap_record_id"]
+                        redcap_id = redcap_results
                     else:
                         redcap_id = ""
 
@@ -118,10 +123,6 @@ class ProcessBulkUploads:
 
                 if (sample_id and len(self.dlu_management.get_participant_by_redcap_id(redcap_id)) > 0) or \
                         (self.globus_only and sample_id):
-                    if "recruitment_site" in experiment:
-                        tis = experiment["recruitment_site"]
-                    else:
-                        tis = ""
                     logger.info(f"Trying to add package for {redcap_id} / {sample_id}")
                     dlu_file_list = self.process_files(experiment["files"])
                     if package_type == PackageType.SEGMENTATION:
@@ -145,7 +146,7 @@ class ProcessBulkUploads:
                         package.dlu_subject_id = sample_id
                         package.dlu_lfu = True
                         package.redcap_id = redcap_id
-                        package.known_specimen = sample_id
+                        package.known_specimen = ""
                         package.dlu_version = 4
                         package.dlu_dataset_information_version = 1
                         package.dlu_error = 0
