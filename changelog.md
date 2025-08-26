@@ -4,6 +4,9 @@
 
 - Load Tableau database with biopsy_tracker data
 - Insert dlu_upload_type to dlu_package_inventory table
+- Create recalled packages endpoint
+- Update Multi Modal package name
+- Tweak bulk upload fields
 
 ### Breaking changes
 
