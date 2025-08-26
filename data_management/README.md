@@ -1,3 +1,11 @@
+# Bulk Upload Script
+
+process_bulk_uploads.py
+
+## How to use
+
+[Instructions here](https://docs.google.com/document/d/1M6wnlsYkw21HjGJC2u9mGEuPGpsyxj1m1U1NiSW7KIs/edit?tab=t.0#heading=h.azytq75vi7c1)
+
 # Data Manager Dashboard Importer 
 
 ## Command Line Usage
