@@ -1,14 +1,27 @@
 # Changelog
 
+## Release 1.10 [Unreleased]
+Breif summary:
 
-## Release 1.9 [unreleased]
+### Breaking changes
 
+### Other changes
+
+---
+
+## Release 1.9 [Released 9/2/2025]
+Brief summary
 - Load Tableau database with biopsy_tracker data
 - Insert dlu_upload_type to dlu_package_inventory table
 - Create recalled packages endpoint
 - Update Multi Modal package name
 - Tweak bulk upload fields
 
+### Breaking changes
+- changed column names in tables
+- added new columns to dlu_package_inventory table
+
+---
 
 ## Release 1.8.1 [Released 11/8/2024]
 Brief summary of what's in this release:
