@@ -9,7 +9,7 @@ Breif summary:
 
 ---
 
-## Release 1.9 [Released 8/2/2025]
+## Release 1.9 [Released 9/2/2025]
 Brief summary
 - Load Tableau database with biopsy_tracker data
 - Insert dlu_upload_type to dlu_package_inventory table
