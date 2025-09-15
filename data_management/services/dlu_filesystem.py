@@ -202,13 +202,13 @@ class DLUFileHandler:
                 self.process_globus_directory(directoryListing, globusDirectories, packageId, currentDir)
         return directoryListing
 
-    def match_files(self, packageId) -> list[DLUFile]:
+    def match_files(self, packageId, calculate_checksums: bool = True) -> list[DLUFile]:
         topLevelDir = DirectoryInfo(self.globus_data_directory + '/' + self.globus_dir_prefix + packageId)
         globusFiles = []
         globusDirectories = []
         for obj in topLevelDir.file_details:
             if os.path.isdir(obj.path):
-                directory = DirectoryInfo(obj.path)
+                directory = DirectoryInfo(obj.path, calculate_checksums = calculate_checksums)
                 globusDirectories.append(directory)
             else:
                 globusFiles.append(obj)
