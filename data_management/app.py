@@ -82,7 +82,7 @@ def recall_dlu_package(package_id):
         return error_msg
 
     dlu_data_directory = '/data/package_' + package_id
-    directory_info = DirectoryInfo(dlu_data_directory)
+    directory_info = DirectoryInfo(dlu_data_directory, calculate_checksums = False)
     file_list = None
     if directory_info.file_count == 0 and directory_info.subdir_count == 0:
         error_msg = "Error: package " + package_id + " has no files or top level subdirectory"
@@ -92,9 +92,9 @@ def recall_dlu_package(package_id):
     if directory_info.file_count == 0 and directory_info.subdir_count == 1:
         contents = "".join(directory_info.dir_contents)
         top_level_subdir = package_id + "/" + contents
-        file_list = dlu_file_handler.match_files(top_level_subdir)
+        file_list = dlu_file_handler.match_files(top_level_subdir,False)
     else:
-        file_list = dlu_file_handler.match_files(package_id)
+        file_list = dlu_file_handler.match_files(package_id,False)
 
     dlu_files = []
     for file in directory_info.file_details:
