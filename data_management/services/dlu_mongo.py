@@ -15,7 +15,7 @@ EM_IMAGE_TYPE = "EM Images"
 
 class PackageType(Enum):
     ELECTRON_MICROSCOPY = "Electron Microscopy Imaging"
-    SEGMENTATION = "Segmentation Masks"
+    SEGMENTATION = "Segmentation Masks & Pathomics Vectors"
     MULTI_MODAL = "Multimodal Imaging Mass Spectrometry"
     SINGLE_CELL = "Single-cell RNA-Seq"
     OTHER = "Other"

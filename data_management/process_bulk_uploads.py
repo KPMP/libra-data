@@ -27,8 +27,8 @@ class ProcessBulkUploads:
     def __init__(self, data_directory: str, globus_only: bool = False, globus_root: str = None, preserve_path: bool = False, bypass_dup_check: bool = False):
         try:
             self.dlu_management = DluManagement()
-        except:
-            logger.error("There was a problem loading the Data Management library.")
+        except Exception as e:
+            logger.exception("There was a problem loading the Data Management library.", e)
         try:
             self.submitter = os.environ["mongo_submitter_id"]
             self.submitter_name = os.environ["submitter_name"]
@@ -68,12 +68,12 @@ class ProcessBulkUploads:
             logger.info(file_full_path)
             size = os.path.getsize(file_full_path)
             file_info = self.dlu_file_handler.split_path(file_path, self.preserve_path)
-            if file["file_metadata"] and "md5_hash" in file["file_metadata"]:
+            if "file_metadata" in file and "md5_hash" in file["file_metadata"]:
                 checksum = file["file_metadata"]["md5_hash"]
                 del file["file_metadata"]["md5_hash"]
             else:
                 checksum = calculate_checksum(file_full_path)
-            if file["file_metadata"]:
+            if "file_metadata" in file:
                 metadata = file["file_metadata"]
             else:
                 metadata = {}
@@ -82,6 +82,7 @@ class ProcessBulkUploads:
         return dlu_files
 
     def process_bulk_uploads(self):
+        logger.info("in process bulk uploads")
         for manifest_name in MANIFEST_FILE_NAMES:
             manifest_file_path = os.path.join(self.data_directory, manifest_name)
             if os.path.isfile(manifest_file_path):
@@ -93,13 +94,14 @@ class ProcessBulkUploads:
             manifest_data = yaml.safe_load(stream)
             if manifest_data["package_type"] == "EM Images":
                 package_type = PackageType.ELECTRON_MICROSCOPY
-            elif manifest_data["package_type"] == "Segmentation Masks":
+            elif manifest_data["package_type"] == "Segmentation Masks & Pathomics Vectors":
                 package_type = PackageType.SEGMENTATION
             elif manifest_data["package_type"] == "Multimodal Images":
                 package_type = PackageType.MULTI_MODAL
             elif manifest_data["package_type"] == "Single-cell RNA-Seq":
                 package_type = PackageType.SINGLE_CELL
             else:
+                logger.info("package type is: ", manifest_data["package_type"])
                 package_type = PackageType.OTHER
             if "tis" in manifest_data:
                 tis = manifest_data["tis"]
@@ -150,6 +152,7 @@ class ProcessBulkUploads:
                         package.dlu_version = 4
                         package.dlu_dataset_information_version = 1
                         package.dlu_error = 0
+                        package.dlu_upload_type = 'KPMP Biopsy';
                         if self.globus_only:
                             package.globus_dlu_status = None
                         else:

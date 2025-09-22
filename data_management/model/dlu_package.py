@@ -19,6 +19,7 @@ class DLUPackage:
         self.dlu_protocol = None
         self.dlu_data_generators = None
         self.dlu_files = []
+        self.dlu_upload_type = None
         self.submitter_name = None
         self.known_specimen = None
         self.redcap_id = None
@@ -61,6 +62,7 @@ class DLUPackage:
             self.dlu_subject_id,
             self.dlu_error,
             self.dlu_lfu,
+            self.dlu_upload_type,
             self.globus_dlu_status
         )
 
