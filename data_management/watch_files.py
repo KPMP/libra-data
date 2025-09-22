@@ -5,6 +5,7 @@ from services.dlu_state import DLUState, PackageState
 from services.dlu_management import DluManagement
 from model.dlu_package import DLUPackage
 from services.dlu_mongo import DLUMongo
+from services.slide_management import SlideManagement
 
 from dotenv import load_dotenv
 import logging
@@ -28,6 +29,7 @@ class DLUWatcher:
         self.dlu_file_handler = DLUFileHandler()
         self.dluPackage = DLUPackage()
         self.dlu_state = DLUState()
+        self.slide_management = SlideManagement(self.dlu_management)
     
     def watch_for_files(self):
         files = self.db.get_dlu_file("yes")
@@ -48,12 +50,7 @@ class DLUWatcher:
     
     def update_slide_scan_curation(self):
         logger.info("Importing new row(s) into slide_scan_curation")
-        new_records = self.dlu_management.get_new_slide_manifest_import_rows()
-        for record in new_records:
-            redcap_id = self.dlu_management.get_spectrack_redcap_record_id(record["outside_acc"])
-            slide_scan_tuple = (record["image_id"], record["outside_acc"], redcap_id)
-            query_string = self.dlu_management.insert_into_slide_scan_curation(slide_scan_tuple)
-            logger.info(query_string)
+        self.slide_management.process_slide_manifest_imports()
             
     def update_files_for_globus(self, files):
         for index, file_result in enumerate(files):
