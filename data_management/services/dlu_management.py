@@ -236,8 +236,8 @@ class DluManagement:
         return query % values
 
     def get_slide_manifest_import_by_kit(self, kit_id, stain):
-        return self.db.get_data("SELECT * FROM slide_manifest_import WHERE outside_acc= %s AND stain = %s"
-                                "AND block_id NOT 'OCT' ORDER BY stain, block_id",
+        return self.db.get_data("SELECT * FROM slide_manifest_import WHERE outside_acc= %s AND stain = %s "
+                                "ORDER BY stain, block_id",
                                 (kit_id,stain,))
 
     def set_error_message_slide_scan_curation(self, error, image_id):
