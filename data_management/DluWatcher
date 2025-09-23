@@ -10,6 +10,7 @@ COPY ./services/dlu_filesystem.py ./services/dlu_filesystem.py
 COPY ./services/dlu_package_inventory.py ./services/dlu_package_inventory.py
 COPY ./services/dlu_state.py ./services/dlu_state.py
 COPY ./services/dlu_management.py ./services/dlu_management.py
+COPY ./services/slide_management.py ./services/slide_management.py
 COPY ./services/dlu_mongo.py ./services/dlu_mongo.py
 COPY ./model ./model
 COPY ./watch_files.py ./
