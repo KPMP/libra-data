@@ -121,8 +121,10 @@ class DLUFileHandler:
         if os.path.exists(dest_package_directory):
             shutil.rmtree(dest_package_directory)
         for file in file_list:
+
             source_package_directory = self.globus_data_directory + '/' + self.globus_dir_prefix
             # I.e. isn't a bulk upload that doesn't already have a package ID.
+            logger.info(source_package_directory)
             if not no_src_package:
                 source_package_directory = source_package_directory + package_id
             if file.path and os.path.isdir(file.path):
@@ -136,7 +138,6 @@ class DLUFileHandler:
               if os.path.isdir(os.path.join(source_package_directory, o))]
             dir = "".join(subdirs)
             if len(os.listdir(source_package_directory)) == 1 and os.path.isdir(source_package_directory) and os.path.isdir(dir):
-            
                 os.chdir(dir)
                 allfiles = os.listdir(dir)
                 for f in allfiles:
@@ -165,6 +166,10 @@ class DLUFileHandler:
                     logger.info("Copying directory to " + dest_file)
                     shutil.copytree(source_file, dest_file)
                 elif os.path.isfile(source_file):
+                    logger.info("Copying file to " + dest_file)
+                    shutil.copy(source_file, dest_file)
+                else:
+                    source_file = os.path.join(source_package_directory, file.path)
                     logger.info("Copying file to " + dest_file)
                     shutil.copy(source_file, dest_file)
                 files_copied = files_copied + 1
