@@ -191,7 +191,7 @@ class DluManagement:
             """
                 SELECT dm.id, dm.dlu_package_id, dm.dlu_created, dm.dlu_submitter, dm.dlu_tis, dm.dlu_packageType, 
                 dm.dlu_subject_id, dm.dlu_error, dm.redcap_id, dm.known_specimen, dm.user_package_ready, 
-                dm.package_validated, dm.ready_to_move_from_globus, dm.globus_dlu_status, dm.package_status, 
+                dm.package_validated, dm.ready_to_move_from_globus, dm.globus_dlu_status, dm.dlu_upload_type, dm.upload_type_detail, dm.atlas_status,
                 dm.current_owner, dm.ar_promotion_status, dm.sv_promotion_status, dm.release_version, r.release_date, 
                 dm.removed_from_globus, dm.notes 
                 FROM data_manager_data_v dm
