@@ -1,0 +1,25 @@
+FROM python:3.10-slim-bullseye
+
+WORKDIR /usr/src/app
+
+ENV FLASK_APP=app.py
+ENV FLASK_RUN_HOST=0.0.0.0
+
+RUN apt-get update \
+    && apt-get install -y curl
+
+COPY requirements.txt ./
+
+RUN pip3 config --user set global.progress_bar off
+RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install -U flask-cors
+
+COPY lib/ ./lib
+COPY main.py ./
+COPY app.py ./
+COPY process_bulk_uploads.py ./
+COPY services/ ./services
+COPY model/ ./model
+COPY .env ./.env
+
+ENTRYPOINT []

@@ -27,8 +27,8 @@ class ProcessBulkUploads:
     def __init__(self, data_directory: str, globus_only: bool = False, globus_root: str = None, preserve_path: bool = False, bypass_dup_check: bool = False):
         try:
             self.dlu_management = DluManagement()
-        except:
-            logger.error("There was a problem loading the Data Management library.")
+        except Exception as e:
+            logger.exception("There was a problem loading the Data Management library.", e)
         try:
             self.submitter = os.environ["mongo_submitter_id"]
             self.submitter_name = os.environ["submitter_name"]
@@ -68,12 +68,12 @@ class ProcessBulkUploads:
             logger.info(file_full_path)
             size = os.path.getsize(file_full_path)
             file_info = self.dlu_file_handler.split_path(file_path, self.preserve_path)
-            if file["file_metadata"] and "md5_hash" in file["file_metadata"]:
+            if "file_metadata" in file and "md5_hash" in file["file_metadata"]:
                 checksum = file["file_metadata"]["md5_hash"]
                 del file["file_metadata"]["md5_hash"]
             else:
                 checksum = calculate_checksum(file_full_path)
-            if file["file_metadata"]:
+            if "file_metadata" in file:
                 metadata = file["file_metadata"]
             else:
                 metadata = {}
@@ -81,7 +81,29 @@ class ProcessBulkUploads:
             dlu_files.append(dlu_file)
         return dlu_files
 
+    def process_globus_only_files(self, manifest_files_arr: list) -> list:
+        logger.info("globus only file processing")
+        files = []
+        for file in manifest_files_arr:
+            file_path = file["relative_file_path_and_name"]
+            file_full_path = os.path.join(self.data_directory, file_path)
+            file_info = self.dlu_file_handler.split_path(file_path, self.preserve_path)
+            if "file_metadata" in file and "md5_hash" in file["file_metadata"]:
+                checksum = file["file_metadata"]["md5_hash"]
+                del file["file_metadata"]["md5_hash"]
+            if "file_metadata" in file:
+                metadata = file["file_metadata"]
+            else:
+                metadata = {}
+
+            # Since this is going directly to globus, we don't need to calc checksum or filesize, and we need
+            # the path to the file on disk to actually copy it
+            dlu_file = DLUFile(file_info["file_name"], file_full_path, '', 0, metadata)
+            files.append(dlu_file)
+        return files
+
     def process_bulk_uploads(self):
+        logger.info("in process bulk uploads")
         for manifest_name in MANIFEST_FILE_NAMES:
             manifest_file_path = os.path.join(self.data_directory, manifest_name)
             if os.path.isfile(manifest_file_path):
@@ -93,13 +115,14 @@ class ProcessBulkUploads:
             manifest_data = yaml.safe_load(stream)
             if manifest_data["package_type"] == "EM Images":
                 package_type = PackageType.ELECTRON_MICROSCOPY
-            elif manifest_data["package_type"] == "Segmentation Masks":
+            elif manifest_data["package_type"] == "Segmentation Masks & Pathomics Vectors":
                 package_type = PackageType.SEGMENTATION
             elif manifest_data["package_type"] == "Multimodal Images":
                 package_type = PackageType.MULTI_MODAL
             elif manifest_data["package_type"] == "Single-cell RNA-Seq":
                 package_type = PackageType.SINGLE_CELL
             else:
+                logger.info("package type is: ", manifest_data["package_type"])
                 package_type = PackageType.OTHER
             if "tis" in manifest_data:
                 tis = manifest_data["tis"]
@@ -111,12 +134,13 @@ class ProcessBulkUploads:
                 redcap_id = experiment["files"][0]["redcap_id"]
                 sample_id = experiment["files"][0]["spectrack_sample_id"]
                 if redcap_id and redcap_id.startswith("S-"):
+                    logger.info("found redcap id starting with S-")
                     sample_id = redcap_id
                     redcap_results = self.dlu_management.get_redcapid_by_subjectid(sample_id)
-                    if redcap_results is  not None and len(redcap_results) == 1:
+                    if redcap_results is not None and len(redcap_results) > 1:
                         redcap_id = redcap_results
                     else:
-                        redcap_id = ""
+                        redcap_id = None
 
                 if not sample_id:
                     sample_id = redcap_id
@@ -124,7 +148,10 @@ class ProcessBulkUploads:
                 if (sample_id and len(self.dlu_management.get_participant_by_redcap_id(redcap_id)) > 0) or \
                         (self.globus_only and sample_id):
                     logger.info(f"Trying to add package for {redcap_id} / {sample_id}")
-                    dlu_file_list = self.process_files(experiment["files"])
+                    if self.globus_only:
+                        dlu_file_list = self.process_globus_only_files(experiment["files"])
+                    else:
+                        dlu_file_list = self.process_files(experiment["files"])
                     if package_type == PackageType.SEGMENTATION:
                         dlu_file_list.append(self.get_single_file(SEGMENTATION_README))
                         tis = "UFL"
@@ -150,6 +177,7 @@ class ProcessBulkUploads:
                         package.dlu_version = 4
                         package.dlu_dataset_information_version = 1
                         package.dlu_error = 0
+                        package.dlu_upload_type = 'KPMP Biopsy'
                         if self.globus_only:
                             package.globus_dlu_status = None
                         else:

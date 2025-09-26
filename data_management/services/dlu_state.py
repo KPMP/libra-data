@@ -41,7 +41,7 @@ class DLUState:
             if e and e.strerror:
                 logger.error("There was an error updating the state: " + e.strerror)
             else:
-                logger.error("There was an error updating the state.")
+                logger.exception("There was a problem updating state", e)
 
     def clear_cache(self):
         requests.get(self.cache_clear_url)
