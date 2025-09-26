@@ -231,7 +231,8 @@ class DluManagement:
             return None
 
     def insert_into_slide_scan_curation(self, values):
-        query = "INSERT INTO slide_scan_curation (image_id, kit_id, redcap_id, new_file_name) VALUES (%s, %s, %s, %s)"
+        query = "INSERT INTO slide_scan_curation (image_id, kit_id, redcap_id, new_file_name, source_file_name, " \
+                "source_folder_name) VALUES (%s, %s, %s, %s, %s, %s)"
         self.db.insert_data(query, values)
         return query % values
 

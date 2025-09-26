@@ -1,4 +1,5 @@
 import logging
+from pathlib import PureWindowsPath
 
 logger = logging.getLogger("services-dlu_package_watcher")
 logger.setLevel(logging.INFO)
@@ -6,18 +7,23 @@ logger.setLevel(logging.INFO)
 
 class SlideScanModel:
 
-    def __init__(self, image_id: str, redcap_id: str, kit_id: str, new_file_name: str):
+    def __init__(self, image_id: str, redcap_id: str, kit_id: str, new_file_name: str, source_file_name: str,
+                 source_folder_name: str):
         self.image_id = image_id
         self.redcap_id = redcap_id
         self.kit_id = kit_id
         self.new_file_name = new_file_name
+        self.source_file_name = source_file_name
+        self.source_folder_name = source_folder_name
 
     def get_dmd_tuple(self):
         return (
             self.image_id,
             self.kit_id,
             self.redcap_id,
-            self.new_file_name
+            self.new_file_name,
+            self.source_file_name,
+            self.source_folder_name
         )
 
 
@@ -73,8 +79,13 @@ class SlideManagement:
             redcap_id = self.db.get_spectrack_redcap_record_id(kit_id)
             new_file_name = self.determine_new_slide_name(sample_id=record["barcode_id"], kit_id=kit_id,
                                                           stain_info=record["stain"], block_id=record["block_id"])
+            file_location = PureWindowsPath(record['file_location'])
+            source_file_name = file_location.name
+            source_folder_name = file_location.parent.name
+            
             slide_scan = SlideScanModel(image_id=image_id, redcap_id=redcap_id, kit_id=kit_id,
-                                        new_file_name=new_file_name)
+                                        new_file_name=new_file_name, source_file_name=source_file_name,
+                                        source_folder_name=source_folder_name)
             self.db.insert_into_slide_scan_curation(slide_scan.get_dmd_tuple())
 
             # If we were unable to determine the filename, we want to update this with an error message, after a
