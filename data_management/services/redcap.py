@@ -82,7 +82,7 @@ class Redcap:
                         return "Intra-operative Needle Biopsy"
                     else:
                         logger.error(
-                            f'Error: unknown value for record: {record["record"]} with field_name: {record["field_name"]} value: {record["value"]}'
+                            f'Error: unknown value for record with field_name: {record["field_name"]} value: {record["value"]}'
                         )
                         os.sys.exit()
         logger.debug("End: parse_redcap_records_by_participant")
@@ -195,7 +195,7 @@ class Redcap:
 
                     else:
                         logger.error(
-                            f'Error: Additional fields found we are not mapping: {record["record"]} with field_name: {record["field_name"]} value: {record["value"]}'
+                            f'Error: Additional fields found we are not mapping: record with field_name: {record["field_name"]}'
                         )
 
                     participant["redcap_tissue_source"] = "KPMP Recruitment Site"  # hard-coded value provided by Jonas
