@@ -58,7 +58,7 @@ def calculate_numerator(block_id, sample_id, slides_for_kit):
     numerator = 1
     # Keep counting until we find this slide
     for slide in slides_for_kit:
-        if slide['barcode_id'] != sample_id:
+        if slide['accession'] != sample_id:
             if block_id != 'OCT' and slide['block_id'] != 'OCT':
                 numerator = numerator + 1
             elif block_id == 'OCT' and slide['block_id'] == 'OCT':
@@ -80,8 +80,8 @@ class SlideManagement:
             kit_id = record["outside_acc"]
             image_id = record["image_id"]
             redcap_id = self.db.get_spectrack_redcap_record_id(kit_id)
-            if record["barcode_id"] is not None:
-                new_file_name = self.determine_new_slide_name(sample_id=record["barcode_id"], kit_id=kit_id,
+            if record["accession"] is not None:
+                new_file_name = self.determine_new_slide_name(sample_id=record["accession"], kit_id=kit_id,
                                                               stain_info=record["stain"], block_id=record["block_id"])
             else:
                 new_file_name = None
