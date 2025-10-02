@@ -31,5 +31,5 @@ COPY app.py ./
 COPY process_bulk_uploads.py ./
 COPY services/ ./services
 
-ENTRYPOINT ["gunicorn", "-b", ":5000", "app:app"]
+ENTRYPOINT ["gunicorn", "-b", ":5000", "app:app", "-t", "600"]
 
