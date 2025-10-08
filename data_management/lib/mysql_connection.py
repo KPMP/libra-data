@@ -123,6 +123,20 @@ class MYSQLConnection:
         finally:
             self.database.commit()
             self.cursor.close()
+            
+    def insert_data_no_alert(self, sql, data):
+        try:
+            self.get_db_cursor()
+            self.cursor.execute(sql, data)
+            warning = self.cursor.fetchwarnings()
+            if warning is not None:
+                print(warning)
+        except:
+            message = f"Error: Cannot insert with query: {sql}; and the data: {data}"
+            logger.error(message)
+        finally:
+            self.database.commit()
+            self.cursor.close()
 
     def get_data(self, sql, query_data=None):
         try:
