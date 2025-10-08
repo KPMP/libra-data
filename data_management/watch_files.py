@@ -87,6 +87,11 @@ class DLUWatcher:
                 self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
                 continue
 
+            if package['dlu_packageType'] == 'Whole Slide Images' and package['globus_dlu_status'] != 'recalled':
+                success = self.do_wsi_file_renames(globus_data_directory, package_id)
+                if not success:
+                    continue
+
             directory_info = DirectoryInfo(globus_data_directory)
 
             if directory_info.file_count == 0 and directory_info.subdir_count == 0:
@@ -94,7 +99,7 @@ class DLUWatcher:
                 logger.info(error_msg + " Skipping.")
                 self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
                 continue
-            
+
             if directory_info.file_count == 0 and directory_info.subdir_count == 1:
                 contents = "".join(directory_info.dir_contents)
                 top_level_subdir = package_id + "/" + contents
@@ -111,6 +116,25 @@ class DLUWatcher:
             
             self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
             self.dlu_state.clear_cache()
+
+    def do_wsi_file_renames(self, globus_data_directory: str, package_id: str):
+        error_msg = ""
+        slide_scan_info = self.dlu_management.find_slide_scan_info_by_package_id(package_id)
+        if slide_scan_info is None or len(slide_scan_info) == 0:
+            error_msg = "Error: package " + package_id + " has no info in slide_scan_v"
+
+        missing_slides = self.dlu_management.is_package_missing_slides(package_id)
+        if missing_slides is not None and len(missing_slides) > 0:
+            error_msg = "Error: package " + package_id + " is missing slides"
+        slides_in_error = self.dlu_management.is_slides_in_error(package_id)
+        if slides_in_error is not None and len(slides_in_error) > 0:
+            error_msg = "Error: package " + package_id + " has slides in error"
+
+        if error_msg != "":
+            self.dlu_management.update_dlu_package(package_id, {"globus_dlu_status": error_msg})
+            return False
+
+        return True
 
 
 if __name__ == "__main__":
