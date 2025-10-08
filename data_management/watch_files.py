@@ -31,15 +31,15 @@ class DLUWatcher:
         self.dlu_state = DLUState()
         self.slide_management = SlideManagement(self.dlu_management)
     
-    def watch_for_files(self):
-        files = self.db.get_dlu_file("yes")
-        if len(files) == 0:
+    def watch_for_packages(self):
+        packages = self.db.get_dlu_package("yes")
+        if len(packages) == 0:
             logger.info(
                 "No records were found with status 'yes' "
             )
         else:
-            self.update_files_for_globus(files)
-            self.move_packages_to_DLU(files)
+            self.update_packages_for_globus(packages)
+            self.move_packages_to_DLU(packages)
     
     def watch_for_side_manifest_records(self):
         equal_num_rows = self.dlu_management.get_equal_num_rows()
@@ -52,10 +52,10 @@ class DLUWatcher:
         logger.info("Importing new row(s) into slide_scan_curation")
         self.slide_management.process_slide_manifest_imports()
             
-    def update_files_for_globus(self, files):
-        for index, file_result in enumerate(files):
-            logger.info("Setting file status to 'waiting' on package " + file_result['dlu_package_id'])
-            self.db.set_dlu_file_waiting("yes", file_result['dlu_package_id'])
+    def update_packages_for_globus(self, packages):
+        for index, package_result in enumerate(packages):
+            logger.info("Setting file status to 'waiting' on package " + package_result['dlu_package_id'])
+            self.db.set_dlu_package_waiting("yes", package_result['dlu_package_id'])
 
     def process_file_paths(self, file_list: list[DLUFile]) -> list:
         dlu_files = []
@@ -64,14 +64,14 @@ class DLUWatcher:
             dlu_files.append(file)
         return dlu_files
     
-    def pickup_waiting_files(self):
-        files_in_waiting = self.db.get_waiting_files()
-        if len(files_in_waiting) == 0:
+    def pickup_waiting_packages(self):
+        packages_in_waiting = self.db.get_waiting_packages()
+        if len(packages_in_waiting) == 0:
             return  logger.info(
                 "No records were found with status 'waiting'"
             )
         else:
-            self.move_packages_to_DLU(files_in_waiting)
+            self.move_packages_to_DLU(packages_in_waiting)
 
     def move_packages_to_DLU(self, packages):
         file_list = None
@@ -113,11 +113,10 @@ class DLUWatcher:
             self.dlu_state.clear_cache()
 
 
-
 if __name__ == "__main__":
     dlu_watcher = DLUWatcher()
-    dlu_watcher.pickup_waiting_files()
-    while True:    
-        dlu_watcher.watch_for_files()
+    dlu_watcher.pickup_waiting_packages()
+    while True:
+        dlu_watcher.watch_for_packages()
         dlu_watcher.watch_for_side_manifest_records()
-        time.sleep(60) 
+        time.sleep(60)
