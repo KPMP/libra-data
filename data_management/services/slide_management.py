@@ -86,24 +86,36 @@ class SlideManagement:
             else:
                 new_file_name = None
                 record_in_error = True
-                error_message = "Missing sample id, unable to determine file name."
+                error_message = "Missing sample id, unable to determine file name; "
 
             # Sometimes the file location gets copied in with a single leading slash
             if record["file_location"].count("\\") < 2:
                 source_file_name = None
                 source_folder_name = None
                 record_in_error = True
-                error_message = error_message + "Unable to determine source file or folder."
+                error_message = error_message + "Unable to determine source file or folder; "
             else:
                 file_location = PureWindowsPath(record['file_location'])
                 source_file_name = file_location.name
                 source_folder_name = file_location.parent.name
+                
+            check_missing_slides = self.db.get_missing_slides(redcap_id)
+            if len(check_missing_slides) >= 1:
 
-            slide_scan = SlideScanModel(image_id=image_id, redcap_id=redcap_id, kit_id=kit_id,
+                slide_scan = SlideScanModel(image_id=image_id, redcap_id=redcap_id, kit_id=kit_id,
                                         new_file_name=new_file_name, source_file_name=source_file_name,
                                         source_folder_name=source_folder_name)
 
-            self.db.insert_into_slide_scan_curation(slide_scan.get_dmd_tuple())
+                self.db.insert_into_slide_scan_curation(slide_scan.get_dmd_tuple())
+            else:
+                
+                error_message += "There are missing slides for participant " + redcap_id + ";"
+                logger.info(error_message)
+                self.db.update_missing_slides(redcap_id)
+                
+                # Can't use record_in_error here because we can't set an error message for an image_id that doens't exist
+                self.db.set_error_message_slide_scan_curation_redcap_id(error=error_message, redcap_id=redcap_id)
+                
             if record_in_error:
                 self.db.set_error_message_slide_scan_curation(image_id=image_id, error=error_message)
 

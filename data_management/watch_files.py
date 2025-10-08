@@ -119,5 +119,5 @@ if __name__ == "__main__":
     dlu_watcher.pickup_waiting_files()
     while True:    
         dlu_watcher.watch_for_files()
-        time.sleep(60) 
         dlu_watcher.watch_for_side_manifest_records()
+        time.sleep(60) 
