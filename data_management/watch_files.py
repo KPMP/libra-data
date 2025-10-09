@@ -92,6 +92,7 @@ class DLUWatcher:
                 if not success:
                     continue
 
+            # We do end up doing this check twice for WSIs but we are modifying the filenames, so it is probably good
             directory_info = DirectoryInfo(globus_data_directory)
             if not self.is_directory_valid(directory_info, package_id):
                 continue
@@ -101,7 +102,7 @@ class DLUWatcher:
                 top_level_subdir = package_id + "/" + contents
                 file_list = self.dlu_file_handler.match_files(top_level_subdir)
             else:
-              file_list = self.dlu_file_handler.match_files(package_id)
+                file_list = self.dlu_file_handler.match_files(package_id)
 
             self.dlu_file_handler.copy_files(package_id, self.process_file_paths(directory_info.file_details))
             self.dlu_file_handler.chown_dir(package_id, file_list, int(os.environ['dlu_user']))
@@ -131,15 +132,19 @@ class DLUWatcher:
 
         directory_info = DirectoryInfo(globus_data_directory)
         if not self.is_directory_valid(directory_info, package_id):
+            # This method logs errors in it, so no need to continue, or capture error message
             return False
 
         if directory_info.file_count == 0 or directory_info.file_count != len(slide_scan_info):
             error_msg = "Error: Globus file count does not match expectation"
 
-        file_list = self.dlu_file_handler.match_files(package_id)
+        # No need to calc checksums here, we just need the list of files
+        file_list = self.dlu_file_handler.match_files(package_id, calculate_checksums=False)
         expected_slides = []
+        slide_name_map = {}
         for slide in slide_scan_info:
             expected_slides.append(slide['source_file_name'])
+            slide_name_map[slide['source_file_name']] = slide['new_file_name']
         for file in file_list:
             if file.name not in expected_slides:
                 error_msg = "Error: Filenames in directory do not match slide_scan_curation info"
@@ -149,6 +154,7 @@ class DLUWatcher:
             self.dlu_management.update_dlu_package(package_id, {"globus_dlu_status": error_msg})
             return False
 
+        self.dlu_file_handler.rename_files(file_list, slide_name_map,package_id)
         return True
 
     def is_directory_valid(self, directory_info, package_id):

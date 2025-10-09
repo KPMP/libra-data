@@ -114,6 +114,12 @@ class DLUFileHandler:
                 if os.stat(subdir_path).st_uid != user_id or os.stat(subdir_path).st_gid != int(os.environ['dlu_group']):
                     os.chown(subdir_path, user_id, int(os.environ['dlu_group']))
 
+    def rename_files(self, file_list: list[DLUFile], slide_name_map, package_id ):
+        source_package_directory = self.globus_data_directory + '/' + self.globus_dir_prefix + package_id
+        for file in file_list:
+            os.rename(os.path.join(source_package_directory, file.name),
+                      os.path.join(source_package_directory, slide_name_map[file.name]))
+
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
         source_wd = os.getcwd()
