@@ -113,7 +113,7 @@ class SlideManagement:
                 logger.info(error_message)
                 self.db.update_missing_slides(redcap_id)
                 
-                # Can't use record_in_error here because we can't set an error message for an image_id that doens't exist
+                # Can't use record_in_error here because we can't set an error message for an image_id that doesn't exist
                 self.db.set_error_message_slide_scan_curation_redcap_id(error=error_message, redcap_id=redcap_id)
                 
             if record_in_error:
@@ -133,3 +133,18 @@ class SlideManagement:
             return None
         else:
             return sample_id + "_" + stain_type + "_" + str(numerator) + "of" + str(denominator) + ".svs"
+    
+    def fill_in_package_ids(self):
+        redcap_id_list = self.db.get_redcap_ids_with_null_package_id()
+        if len(redcap_id_list) != 0:
+            for row in redcap_id_list:
+                redcap_id = row['redcap_id']
+                package_id_list = self.db.get_package_ids_for_redcap_id(redcap_id)
+                if None not in package_id_list and len(package_id_list) == 1:
+                    package_id = package_id_list[0]['dlu_package_id']
+                    self.db.update_package_ids_in_slide_scan_curation(redcap_id=redcap_id, package_id=package_id)
+                    logger.info("Updated package id " + package_id + " for redcap id " + redcap_id)
+                elif len(package_id_list) > 1:
+                    error_message = "Multiple dlu_package_ids found for redcap_id " + redcap_id + ", unable to fill in package id."
+                    logger.info(error_message)
+                    self.db.set_error_message_slide_scan_curation_redcap_id(error=error_message, redcap_id=redcap_id)
