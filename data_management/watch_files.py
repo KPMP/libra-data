@@ -72,6 +72,9 @@ class DLUWatcher:
             )
         else:
             self.move_packages_to_DLU(files_in_waiting)
+    
+    def fill_in_null_package_ids(self):
+        self.slide_management.fill_in_package_ids()
 
     def move_packages_to_DLU(self, packages):
         file_list = None
@@ -120,4 +123,5 @@ if __name__ == "__main__":
     while True:    
         dlu_watcher.watch_for_files()
         dlu_watcher.watch_for_side_manifest_records()
+        dlu_watcher.fill_in_null_package_ids()
         time.sleep(60) 
