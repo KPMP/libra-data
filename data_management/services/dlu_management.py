@@ -271,6 +271,10 @@ class DluManagement:
         self.db.get_data("SELECT * FROM slide_scan_curation WHERE dlu_package_id = %s and error_message IS NOT NULL",
                          (package_id,))
 
+    def find_not_approved_filenames(self, package_id):
+        self.db.get_data("SELECT * FROM slide_scan_curation WHERE approve_file_name = 'yes' AND dlu_package_id = %s",
+                         (package_id,))
+
 
 if __name__ == "__main__":
     dlu_management = DluManagement()

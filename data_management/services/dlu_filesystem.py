@@ -235,3 +235,6 @@ class DLUFileHandler:
                 file.name = prefix + file.name
                 fileList.append(file)
         return fileList
+
+    def validate_all_wsi_files_present(self, ):
+        return True

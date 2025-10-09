@@ -93,11 +93,7 @@ class DLUWatcher:
                     continue
 
             directory_info = DirectoryInfo(globus_data_directory)
-
-            if directory_info.file_count == 0 and directory_info.subdir_count == 0:
-                error_msg = "Error: package " + package_id + " has no files or top level subdirectory"
-                logger.info(error_msg + " Skipping.")
-                self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
+            if not self.is_directory_valid(directory_info, package_id):
                 continue
 
             if directory_info.file_count == 0 and directory_info.subdir_count == 1:
@@ -121,20 +117,46 @@ class DLUWatcher:
         error_msg = ""
         slide_scan_info = self.dlu_management.find_slide_scan_info_by_package_id(package_id)
         if slide_scan_info is None or len(slide_scan_info) == 0:
-            error_msg = "Error: package " + package_id + " has no info in slide_scan_v"
+            error_msg = "Error: Package not found in slide_scan_v"
 
         missing_slides = self.dlu_management.is_package_missing_slides(package_id)
         if missing_slides is not None and len(missing_slides) > 0:
-            error_msg = "Error: package " + package_id + " is missing slides"
+            error_msg = "Error: Package is missing slides"
         slides_in_error = self.dlu_management.is_slides_in_error(package_id)
         if slides_in_error is not None and len(slides_in_error) > 0:
-            error_msg = "Error: package " + package_id + " has slides in error"
+            error_msg = "Error: Package has some slides in error"
+        unapproved_files = self.dlu_management.find_not_approved_filenames(package_id)
+        if unapproved_files is not None and len(unapproved_files) > 0:
+            error_msg = "Error: Package has unapproved filenames"
+
+        directory_info = DirectoryInfo(globus_data_directory)
+        if not self.is_directory_valid(directory_info, package_id):
+            return False
+
+        if directory_info.file_count == 0 or directory_info.file_count != len(slide_scan_info):
+            error_msg = "Error: Globus file count does not match expectation"
+
+        file_list = self.dlu_file_handler.match_files(package_id)
+        expected_slides = []
+        for slide in slide_scan_info:
+            expected_slides.append(slide['source_file_name'])
+        for file in file_list:
+            if file.name not in expected_slides:
+                error_msg = "Error: Filenames in directory do not match slide_scan_curation info"
+                continue
 
         if error_msg != "":
             self.dlu_management.update_dlu_package(package_id, {"globus_dlu_status": error_msg})
             return False
 
         return True
+
+    def is_directory_valid(self, directory_info, package_id):
+        if directory_info.file_count == 0 and directory_info.subdir_count == 0:
+            error_msg = "Error: package " + package_id + " has no files or top level subdirectory"
+            logger.info(error_msg + " Skipping.")
+            self.dlu_management.update_dlu_package(package_id, {"globus_dlu_status": error_msg})
+            return False
 
 
 if __name__ == "__main__":
