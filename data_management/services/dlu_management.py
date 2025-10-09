@@ -104,12 +104,12 @@ class DluManagement:
             
     def get_missing_slides(self, redcap_id: str):
         return self.db.get_data(
-            "select * from missing_slides_v where spectrack_redcap_record_id = %", 
-            redcap_id,),
+            "select * from missing_slides_v where spectrack_redcap_record_id = %s", 
+            (redcap_id,)),
         
     def update_missing_slides(self, redcap_id: str):
         return self.db.get_data(
-            "update slide_scan_curation set missing_slides = 1 where redcap_id = %s", redcap_id,
+            "update slide_scan_curation set missing_slides = 1 where redcap_id = %s", (redcap_id,)
         ),
 
     def insert_dlu_file(self, values):
