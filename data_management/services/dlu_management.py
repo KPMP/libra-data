@@ -275,6 +275,22 @@ class DluManagement:
         self.db.insert_data_no_alert("UPDATE slide_scan_curation set error_message = %s where redcap_id = %s",
                        (error, redcap_id,))
 
+    def find_slide_scan_info_by_package_id(self, package_id):
+        self.db.get_data("SELECT * FROM slide_scan_v WHERE dlu_package_id = %s",
+                         (package_id,))
+
+    def is_package_missing_slides(self, package_id):
+        self.db.get_data("SELECT * FROM slide_scan_v WHERE dlu_package_id = %s and missing_slides = 1",
+                         (package_id,))
+
+    def is_slides_in_error(self, package_id):
+        self.db.get_data("SELECT * FROM slide_scan_curation WHERE dlu_package_id = %s and error_message IS NOT NULL",
+                         (package_id,))
+
+    def find_not_approved_filenames(self, package_id):
+        self.db.get_data("SELECT * FROM slide_scan_curation WHERE approve_file_name = 'yes' AND dlu_package_id = %s",
+                         (package_id,))
+
 
 if __name__ == "__main__":
     dlu_management = DluManagement()

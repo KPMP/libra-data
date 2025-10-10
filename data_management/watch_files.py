@@ -31,15 +31,15 @@ class DLUWatcher:
         self.dlu_state = DLUState()
         self.slide_management = SlideManagement(self.dlu_management)
     
-    def watch_for_files(self):
-        files = self.db.get_dlu_file("yes")
-        if len(files) == 0:
+    def watch_for_packages(self):
+        packages = self.db.get_dlu_package("yes")
+        if len(packages) == 0:
             logger.info(
                 "No records were found with status 'yes' "
             )
         else:
-            self.update_files_for_globus(files)
-            self.move_packages_to_DLU(files)
+            self.update_packages_for_globus(packages)
+            self.move_packages_to_DLU(packages)
     
     def watch_for_side_manifest_records(self):
         equal_num_rows = self.dlu_management.get_equal_num_rows()
@@ -52,10 +52,10 @@ class DLUWatcher:
         logger.info("Importing new row(s) into slide_scan_curation")
         self.slide_management.process_slide_manifest_imports()
             
-    def update_files_for_globus(self, files):
-        for index, file_result in enumerate(files):
-            logger.info("Setting file status to 'waiting' on package " + file_result['dlu_package_id'])
-            self.db.set_dlu_file_waiting("yes", file_result['dlu_package_id'])
+    def update_packages_for_globus(self, packages):
+        for index, package_result in enumerate(packages):
+            logger.info("Setting file status to 'waiting' on package " + package_result['dlu_package_id'])
+            self.db.set_dlu_package_waiting("yes", package_result['dlu_package_id'])
 
     def process_file_paths(self, file_list: list[DLUFile]) -> list:
         dlu_files = []
@@ -64,17 +64,14 @@ class DLUWatcher:
             dlu_files.append(file)
         return dlu_files
     
-    def pickup_waiting_files(self):
-        files_in_waiting = self.db.get_waiting_files()
-        if len(files_in_waiting) == 0:
+    def pickup_waiting_packages(self):
+        packages_in_waiting = self.db.get_waiting_packages()
+        if len(packages_in_waiting) == 0:
             return  logger.info(
                 "No records were found with status 'waiting'"
             )
         else:
-            self.move_packages_to_DLU(files_in_waiting)
-    
-    def fill_in_null_package_ids(self):
-        self.slide_management.fill_in_package_ids()
+            self.move_packages_to_DLU(packages_in_waiting)
 
     def move_packages_to_DLU(self, packages):
         file_list = None
@@ -90,20 +87,22 @@ class DLUWatcher:
                 self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
                 continue
 
-            directory_info = DirectoryInfo(globus_data_directory)
+            if package['dlu_packageType'] == 'Whole Slide Images' and package['globus_dlu_status'] != 'recalled':
+                success = self.do_wsi_file_renames(globus_data_directory, package_id)
+                if not success:
+                    continue
 
-            if directory_info.file_count == 0 and directory_info.subdir_count == 0:
-                error_msg = "Error: package " + package_id + " has no files or top level subdirectory"
-                logger.info(error_msg + " Skipping.")
-                self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
+            # We do end up doing this check twice for WSIs but we are modifying the filenames, so it is probably good
+            directory_info = DirectoryInfo(globus_data_directory)
+            if not self.is_directory_valid(directory_info, package_id):
                 continue
-            
+
             if directory_info.file_count == 0 and directory_info.subdir_count == 1:
                 contents = "".join(directory_info.dir_contents)
                 top_level_subdir = package_id + "/" + contents
                 file_list = self.dlu_file_handler.match_files(top_level_subdir)
             else:
-              file_list = self.dlu_file_handler.match_files(package_id)
+                file_list = self.dlu_file_handler.match_files(package_id)
 
             self.dlu_file_handler.copy_files(package_id, self.process_file_paths(directory_info.file_details))
             self.dlu_file_handler.chown_dir(package_id, file_list, int(os.environ['dlu_user']))
@@ -115,13 +114,62 @@ class DLUWatcher:
             self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
             self.dlu_state.clear_cache()
 
+    def do_wsi_file_renames(self, globus_data_directory: str, package_id: str):
+        error_msg = ""
+        slide_scan_info = self.dlu_management.find_slide_scan_info_by_package_id(package_id)
+        if slide_scan_info is None or len(slide_scan_info) == 0:
+            error_msg = "Error: Package not found in slide_scan_v"
+
+        missing_slides = self.dlu_management.is_package_missing_slides(package_id)
+        if missing_slides is not None and len(missing_slides) > 0:
+            error_msg = "Error: Package is missing slides"
+        slides_in_error = self.dlu_management.is_slides_in_error(package_id)
+        if slides_in_error is not None and len(slides_in_error) > 0:
+            error_msg = "Error: Package has some slides in error"
+        unapproved_files = self.dlu_management.find_not_approved_filenames(package_id)
+        if unapproved_files is not None and len(unapproved_files) > 0:
+            error_msg = "Error: Package has unapproved filenames"
+
+        directory_info = DirectoryInfo(globus_data_directory)
+        if not self.is_directory_valid(directory_info, package_id):
+            # This method logs errors in it, so no need to continue, or capture error message
+            return False
+
+        if directory_info.file_count == 0 or directory_info.file_count != len(slide_scan_info):
+            error_msg = "Error: Globus file count does not match expectation"
+
+        # No need to calc checksums here, we just need the list of files
+        file_list = self.dlu_file_handler.match_files(package_id, calculate_checksums=False)
+        expected_slides = []
+        slide_name_map = {}
+        for slide in slide_scan_info:
+            expected_slides.append(slide['source_file_name'])
+            slide_name_map[slide['source_file_name']] = slide['new_file_name']
+        for file in file_list:
+            if file.name not in expected_slides:
+                error_msg = "Error: Filenames in directory do not match slide_scan_curation info"
+                continue
+
+        if error_msg != "":
+            self.dlu_management.update_dlu_package(package_id, {"globus_dlu_status": error_msg})
+            return False
+
+        self.dlu_file_handler.rename_files(file_list, slide_name_map,package_id)
+        return True
+
+    def is_directory_valid(self, directory_info, package_id):
+        if directory_info.file_count == 0 and directory_info.subdir_count == 0:
+            error_msg = "Error: package " + package_id + " has no files or top level subdirectory"
+            logger.info(error_msg + " Skipping.")
+            self.dlu_management.update_dlu_package(package_id, {"globus_dlu_status": error_msg})
+            return False
 
 
 if __name__ == "__main__":
     dlu_watcher = DLUWatcher()
-    dlu_watcher.pickup_waiting_files()
-    while True:    
-        dlu_watcher.watch_for_files()
+    dlu_watcher.pickup_waiting_packages()
+    while True:
+        dlu_watcher.watch_for_packages()
         dlu_watcher.watch_for_side_manifest_records()
         dlu_watcher.fill_in_null_package_ids()
         time.sleep(60) 

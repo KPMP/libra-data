@@ -114,6 +114,12 @@ class DLUFileHandler:
                 if os.stat(subdir_path).st_uid != user_id or os.stat(subdir_path).st_gid != int(os.environ['dlu_group']):
                     os.chown(subdir_path, user_id, int(os.environ['dlu_group']))
 
+    def rename_files(self, file_list: list[DLUFile], slide_name_map, package_id ):
+        source_package_directory = self.globus_data_directory + '/' + self.globus_dir_prefix + package_id
+        for file in file_list:
+            os.rename(os.path.join(source_package_directory, file.name),
+                      os.path.join(source_package_directory, slide_name_map[file.name]))
+
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
         source_wd = os.getcwd()
@@ -188,46 +194,53 @@ class DLUFileHandler:
             logger.error("Directory for package " + package_id + " failed validation.")
         return success
 
-    def process_globus_directory(self, directoryListing, globusDirectories: list[DirectoryInfo], packageId, initialDir, calculate_checksums: bool = True):
-        for dir in globusDirectories:
+    def process_globus_directory(self, directory_listing, globus_directories: list[DirectoryInfo], package_id,
+                                 initial_dir, calculate_checksums: bool = True):
+        for dir in globus_directories:
             prefix = ""
-            if not initialDir == "":
-                prefix = initialDir + "/"
-            currentDir = prefix + os.path.basename(dir.directory_path)
+            if not initial_dir == "":
+                prefix = initial_dir + "/"
+            current_dir = prefix + os.path.basename(dir.directory_path)
 
-            globusFiles = []
-            globusDirectories = []
+            globus_files = []
+            globus_directories = []
             for item in dir.file_details:
                 if os.path.isdir(item.path):
-                    globusDirectories.append(DirectoryInfo(item.path, calculate_checksums = calculate_checksums))
+                    globus_directories.append(DirectoryInfo(item.path, calculate_checksums=calculate_checksums))
                 else:
-                    globusFiles.append(item)
-            directoryListing[currentDir] = globusFiles
-            if len(globusDirectories) > 0:
-                self.process_globus_directory(directoryListing, globusDirectories, packageId, currentDir,calculate_checksums)
-        return directoryListing
+                    globus_files.append(item)
+            directory_listing[current_dir] = globus_files
+            if len(globus_directories) > 0:
+                self.process_globus_directory(directory_listing, globus_directories, package_id, current_dir,
+                                              calculate_checksums)
+        return directory_listing
 
-    def match_files(self, packageId, calculate_checksums: bool = True) -> list[DLUFile]:
-        topLevelDir = DirectoryInfo(self.globus_data_directory + '/' + self.globus_dir_prefix + packageId, calculate_checksums = calculate_checksums)
-        globusFiles = []
-        globusDirectories = []
-        for obj in topLevelDir.file_details:
+    def match_files(self, package_id: str, calculate_checksums: bool = True) -> list[DLUFile]:
+        top_level_dir = DirectoryInfo(self.globus_data_directory + '/' + self.globus_dir_prefix + package_id,
+                                      calculate_checksums=calculate_checksums)
+        globus_files = []
+        globus_directories = []
+        for obj in top_level_dir.file_details:
             if os.path.isdir(obj.path):
-                directory = DirectoryInfo(obj.path, calculate_checksums = calculate_checksums)
-                globusDirectories.append(directory)
+                directory = DirectoryInfo(obj.path, calculate_checksums=calculate_checksums)
+                globus_directories.append(directory)
             else:
-                globusFiles.append(obj)
-        filesInGlobusDirectories = {}
-        filesInGlobusDirectories[""] = globusFiles
-        currentDir = ""
-        filesInGlobusDirectories = self.process_globus_directory(filesInGlobusDirectories, globusDirectories, packageId, currentDir, calculate_checksums)
-        return self.get_globus_file_paths(filesInGlobusDirectories)
+                globus_files.append(obj)
+        files_in_globus_directories = {}
+        files_in_globus_directories[""] = globus_files
+        current_dir = ""
+        files_in_globus_directories = self.process_globus_directory(files_in_globus_directories, globus_directories,
+                                                                    package_id, current_dir, calculate_checksums)
+        return self.get_globus_file_paths(files_in_globus_directories)
 
-    def get_globus_file_paths(self, filesInGlobusDirectories: dict[str, list[DLUFile]]) -> list[DLUFile]:
+    def get_globus_file_paths(self, files_in_globus_directories: dict[str, list[DLUFile]]) -> list[DLUFile]:
         fileList = []
-        for dir, files in filesInGlobusDirectories.items():
+        for dir, files in files_in_globus_directories.items():
             for file in files:
                 prefix = dir + "/" if dir else ""
                 file.name = prefix + file.name
                 fileList.append(file)
         return fileList
+
+    def validate_all_wsi_files_present(self, ):
+        return True

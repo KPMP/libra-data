@@ -17,19 +17,19 @@ class DLUPackageInventory:
         self.db = MYSQLConnection()
         self.database = self.db.get_db_connection()
         
-    def get_dlu_file(self, status):
+    def get_dlu_package(self, status):
         return self.db.get_data(
             'SELECT * FROM data_management.data_manager_data_v WHERE ready_to_move_from_globus = %s AND (globus_dlu_status IS NULL OR globus_dlu_status = "recalled")',
             (status,)
         )
     
-    def set_dlu_file_waiting(self, status, package_id):
+    def set_dlu_package_waiting(self, status, package_id):
         return self.db.insert_data(
             'UPDATE data_management.data_manager_data_v SET globus_dlu_status = "waiting" WHERE ready_to_move_from_globus = %s AND dlu_package_id = %s',
             (status, package_id,)
         )
         
-    def get_waiting_files(self):
+    def get_waiting_packages(self):
         return self.db.get_data(
             'Select * from data_management.data_manager_data_v where globus_dlu_status = "waiting" and ready_to_move_from_globus = "yes"'
         )
