@@ -102,19 +102,19 @@ class SlideManagement:
             check_missing_slides = self.db.get_missing_slides(redcap_id)
             if len(check_missing_slides) >= 1:
 
-                slide_scan = SlideScanModel(image_id=image_id, redcap_id=redcap_id, kit_id=kit_id,
-                                        new_file_name=new_file_name, source_file_name=source_file_name,
-                                        source_folder_name=source_folder_name)
-
-                self.db.insert_into_slide_scan_curation(slide_scan.get_dmd_tuple())
-            else:
-                
-                error_message += "There are missing slides for participant " + redcap_id + ";"
+                error_message += "There are missing slide(s) for participant " + redcap_id + ";"
                 logger.info(error_message)
                 self.db.update_missing_slides(redcap_id)
                 
                 # Can't use record_in_error here because we can't set an error message for an image_id that doesn't exist
                 self.db.set_error_message_slide_scan_curation_redcap_id(error=error_message, redcap_id=redcap_id)
+            else:
+                slide_scan = SlideScanModel(image_id=image_id, redcap_id=redcap_id, kit_id=kit_id,
+                                        new_file_name=new_file_name, source_file_name=source_file_name,
+                                        source_folder_name=source_folder_name)
+
+                self.db.insert_into_slide_scan_curation(slide_scan.get_dmd_tuple())
+                
                 
             if record_in_error:
                 self.db.set_error_message_slide_scan_curation(image_id=image_id, error=error_message)
