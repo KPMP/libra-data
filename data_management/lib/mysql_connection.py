@@ -146,13 +146,12 @@ class MYSQLConnection:
             for row in self.cursor:
                 data.append(row)
             return data
-        except:
-            message = "Error: Can't get data_management data."
-            logger.error(message)
+        except Exception as error:
+            logger.error(str(error))
             requests.post(
                 slack_url,
                 headers={'Content-type': 'application/json', },
-                data='{"text":"' + message + '"}'
+                data='{"text":"' + "Error: " + str(error) + '"}'
             )
         finally:
             self.cursor.close()

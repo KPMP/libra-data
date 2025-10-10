@@ -171,4 +171,5 @@ if __name__ == "__main__":
     while True:
         dlu_watcher.watch_for_packages()
         dlu_watcher.watch_for_side_manifest_records()
-        time.sleep(60)
+        dlu_watcher.fill_in_null_package_ids()
+        time.sleep(60) 

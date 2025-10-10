@@ -239,6 +239,22 @@ class DluManagement:
             return result[0]["spectrack_redcap_record_id"]
         else:
             return None
+        
+    def get_redcap_ids_with_null_package_id(self):
+        return self.db.get_data(
+            "select unique redcap_id from slide_scan_curation where dlu_package_id is null and error_message is null", 
+            (None),
+        )
+        
+    def get_package_ids_for_redcap_id(self, redcap_id):
+        return self.db.get_data(
+            "select dlu_package_id from dlu_package_inventory where dlu_subject_id = %s and globus_dlu_status = 'success'", (redcap_id,)
+        )
+        
+    def update_package_ids_in_slide_scan_curation(self, redcap_id, package_id):
+        return self.db.insert_data(
+            "update slide_scan_curation set dlu_package_id = %s where redcap_id = %s and dlu_package_id is null and error_message is null",
+            (package_id, redcap_id,))
 
     def insert_into_slide_scan_curation(self, values):
         query = "INSERT INTO slide_scan_curation (image_id, kit_id, redcap_id, new_file_name, source_file_name, " \
