@@ -138,6 +138,9 @@ class SlideManagement:
         redcap_id_list = self.db.get_redcap_ids_with_null_package_id()
         if len(redcap_id_list) != 0:
             for row in redcap_id_list:
+                if row['redcap_id'] is None or row['redcap_id'] == "":
+                    logger.info("Skipping null redcap_id")
+                    continue
                 redcap_id = row['redcap_id']
                 package_id_list = self.db.get_package_ids_for_redcap_id(redcap_id)
                 if None not in package_id_list and len(package_id_list) == 1:
