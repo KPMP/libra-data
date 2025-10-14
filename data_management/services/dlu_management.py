@@ -242,7 +242,7 @@ class DluManagement:
         
     def get_redcap_ids_with_null_package_id(self):
         return self.db.get_data(
-            "select unique redcap_id from slide_scan_curation where dlu_package_id is null and error_message is null", 
+            "select unique redcap_id from slide_scan_curation where dlu_package_id is null and error_message is null and redcap_id is not null", 
             (None),
         )
         
