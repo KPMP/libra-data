@@ -99,14 +99,14 @@ class SlideManagement:
                 source_file_name = file_location.name
                 source_folder_name = file_location.parent.name
                 
-            check_missing_slides = self.db.get_missing_slides(redcap_id)
             slide_scan = SlideScanModel(image_id=image_id, redcap_id=redcap_id, kit_id=kit_id,
                                     new_file_name=new_file_name, source_file_name=source_file_name,
                                     source_folder_name=source_folder_name)
             self.db.insert_into_slide_scan_curation(slide_scan.get_dmd_tuple())
+            check_missing_slides = self.db.get_missing_slides(redcap_id)
             if len(check_missing_slides) >= 1:
 
-                error_message += "There are missing slide(s) for participant " + redcap_id + ";"
+                error_message += "There are missing slide(s) for participant " + redcap_id + "; "
                 logger.info(error_message)
                 self.db.update_missing_slides(redcap_id)
                 
