@@ -230,7 +230,7 @@ class DluManagement:
     
     def get_new_slide_manifest_import_rows(self):
         return self.db.get_data("SELECT * FROM slide_manifest_import WHERE image_id NOT IN "
-                                "(SELECT image_id FROM slide_scan_curation where missing_slides = 0)")
+                                "(SELECT image_id FROM slide_scan_curation)")
 
     def get_spectrack_redcap_record_id(self, kit_id):
         result = self.db.get_data("SELECT spectrack_redcap_record_id FROM spectrack_specimen "
