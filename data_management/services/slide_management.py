@@ -80,6 +80,11 @@ class SlideManagement:
             kit_id = record["outside_acc"]
             image_id = record["image_id"]
             redcap_id = self.db.get_spectrack_redcap_record_id(kit_id)
+            if redcap_id is None:
+                error_message = "No redcap_id found for kit_id " + kit_id + "; "
+                logger.error(error_message)
+                continue
+                
             if record["accession"] is not None:
                 new_file_name = self.determine_new_slide_name(sample_id=record["accession"], kit_id=kit_id,
                                                               stain_info=record["stain"], block_id=record["block_id"])
@@ -105,8 +110,11 @@ class SlideManagement:
             self.db.insert_into_slide_scan_curation(slide_scan.get_dmd_tuple())
             check_missing_slides = self.db.get_missing_slides(redcap_id)
             if len(check_missing_slides) >= 1:
-
-                error_message += "There are missing slide(s) for participant " + redcap_id + "; "
+                if error_message != None: 
+                    
+                    error_message += "There are missing slide(s) for participant " + redcap_id + "; "
+                elif error_message is None:
+                    error_message = "There are missing slide(s) for participant " + redcap_id + "; "
                 logger.info(error_message)
                 self.db.update_missing_slides(redcap_id)
                 
