@@ -109,7 +109,7 @@ class SlideManagement:
                                     source_folder_name=source_folder_name)
             self.db.insert_into_slide_scan_curation(slide_scan.get_dmd_tuple())
             check_missing_slides = self.db.get_missing_slides(redcap_id)
-            if not all(check_missing_slides):
+            if all(check_missing_slides):
                 if error_message != None: 
                     
                     error_message += "There are missing slide(s) for participant " + redcap_id + "; "
