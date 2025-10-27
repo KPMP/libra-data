@@ -109,7 +109,7 @@ class SlideManagement:
                                     source_folder_name=source_folder_name)
             self.db.insert_into_slide_scan_curation(slide_scan.get_dmd_tuple())
             check_missing_slides = self.db.get_missing_slides(redcap_id)
-            if not all(check_missing_slides):
+            if all(check_missing_slides):
                 if error_message != None: 
                     
                     error_message += "There are missing slide(s) for participant " + redcap_id + "; "
@@ -123,6 +123,7 @@ class SlideManagement:
                 
             if record_in_error:
                 self.db.set_error_message_slide_scan_curation(image_id=image_id, error=error_message)
+        logger.info("Processed " + str(len(new_records)) + " new slide_manifest_import records.")
 
     def determine_new_slide_name(self, sample_id: str, kit_id: str, stain_info: str, block_id: str):
         slides_for_kit = self.db.get_slide_manifest_import_by_kit(kit_id, stain_info)
