@@ -109,13 +109,15 @@ class SlideManagement:
                                     new_file_name=new_file_name, source_file_name=source_file_name,
                                     source_folder_name=source_folder_name)
             self.db.insert_into_slide_scan_curation(slide_scan.get_dmd_tuple())
+
             check_missing_slides = self.db.get_missing_slides_from_view(redcap_id)
             redcap_ids_processed.append(redcap_id)
-            if not all(check_missing_slides):
+            if all(check_missing_slides):
                 self.db.update_missing_slides(redcap_id)
 
             if record_in_error:
                 self.db.set_error_message_slide_scan_curation(image_id=image_id, error=error_message)
+        logger.info("Processed " + str(len(new_records)) + " new slide_manifest_import records.")
 
         for redcap_id in redcap_ids_processed:
             self.update_missing_slides(redcap_id)

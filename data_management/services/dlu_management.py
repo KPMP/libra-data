@@ -243,7 +243,7 @@ class DluManagement:
         
     def get_package_ids_for_redcap_id(self, redcap_id):
         return self.db.get_data(
-            "select dlu_package_id from dlu_package_inventory where dlu_subject_id = %s and globus_dlu_status = 'success'", (redcap_id,)
+            "select dlu_package_id from dlu_package_inventory where dlu_subject_id = %s and globus_dlu_status IS NULL", (redcap_id,)
         )
         
     def update_package_ids_in_slide_scan_curation(self, redcap_id, package_id):
