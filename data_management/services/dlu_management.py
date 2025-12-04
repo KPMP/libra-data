@@ -155,7 +155,7 @@ class DluManagement:
         )
 
     def update_md5(self, file_id: str, checksum: str, package_id: str):
-        self.db.insert_data("UPDATE dlu_file SET dlu_md5checksum = %s WHERE dlu_file_id = %s and dlu_package_id = %s",
+        return self.db.insert_data("UPDATE dlu_file SET dlu_md5checksum = %s WHERE dlu_file_id = %s and dlu_package_id = %s",
                             (checksum, file_id,package_id))
 
     def move_globus_files_to_dlu(self, package_id: str):
@@ -263,8 +263,12 @@ class DluManagement:
                                 (kit_id,stain,))
 
     def set_error_message_slide_scan_curation(self, error, image_id):
-        self.db.insert_data("UPDATE slide_scan_curation set error_message = %s where image_id = %s",
+        return self.db.insert_data("UPDATE slide_scan_curation set error_message = %s where image_id = %s",
                        (error, image_id,))
+        
+    def set_error_message_slide_scan_curation_redcap_id(self, error, redcap_id):
+        return self.db.insert_data_no_alert("UPDATE slide_scan_curation set error_message = %s where redcap_id = %s",
+                       (error, redcap_id,))
 
     def find_slide_scan_info_by_package_id(self, package_id):
         return self.db.get_data("SELECT * FROM slide_scan_v WHERE dlu_package_id = %s",

@@ -75,7 +75,9 @@ class DLUWatcher:
 
     def move_packages_to_DLU(self, packages):
         file_list = None
+
         for _, package in enumerate(packages):
+            skip_copy = False
             package_id = package['dlu_package_id']
             logger.info("Moving package " + package_id)
 
@@ -91,55 +93,65 @@ class DLUWatcher:
                 success = self.do_wsi_file_renames(globus_data_directory, package_id)
                 if not success:
                     continue
+                else:
+                    skip_copy = True
 
-            # We do end up doing this check twice for WSIs but we are modifying the filenames, so it is probably good
-            directory_info = DirectoryInfo(globus_data_directory)
-            if not self.is_directory_valid(directory_info, package_id):
-                continue
+            if not skip_copy:
+                directory_info = DirectoryInfo(globus_data_directory)
+                if not self.is_directory_valid(directory_info, package_id):
+                    continue
 
-            if directory_info.file_count == 0 and directory_info.subdir_count == 1:
-                contents = "".join(directory_info.dir_contents)
-                top_level_subdir = package_id + "/" + contents
-                file_list = self.dlu_file_handler.match_files(top_level_subdir)
-            else:
-                file_list = self.dlu_file_handler.match_files(package_id)
+                if directory_info.file_count == 0 and directory_info.subdir_count == 1:
+                    contents = "".join(directory_info.dir_contents)
+                    top_level_subdir = package_id + "/" + contents
+                    file_list = self.dlu_file_handler.match_files(top_level_subdir)
+                else:
+                    file_list = self.dlu_file_handler.match_files(package_id)
 
-            self.dlu_file_handler.copy_files(package_id, self.process_file_paths(directory_info.file_details))
-            self.dlu_file_handler.chown_dir(package_id, file_list, int(os.environ['dlu_user']))
-            file_info = self.dlu_management.insert_dlu_files(package_id, file_list)
-            self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": "success" })
-            self.dlu_management.update_dlu_package(package_id, { "ready_to_move_from_globus": "done" })
-            self.dlu_mongo.update_package_files(package_id, file_info)
-            
-            self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
-            self.dlu_state.clear_cache()
+                self.dlu_file_handler.copy_files(package_id, self.process_file_paths(directory_info.file_details))
+                self.dlu_file_handler.chown_dir(package_id, file_list, int(os.environ['dlu_user']))
+                file_info = self.dlu_management.insert_dlu_files(package_id, file_list)
+                self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": "success" })
+                self.dlu_management.update_dlu_package(package_id, { "ready_to_move_from_globus": "done" })
+                self.dlu_mongo.update_package_files(package_id, file_info)
+
+                self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
+                self.dlu_state.clear_cache()
 
     def fill_in_null_package_ids(self):
         self.slide_management.fill_in_package_ids()
 
     def do_wsi_file_renames(self, globus_data_directory: str, package_id: str):
+        logger.info("starting rename process")
         error_msg = ""
         slide_scan_info = self.dlu_management.find_slide_scan_info_by_package_id(package_id)
         if slide_scan_info is None or len(slide_scan_info) == 0:
-            error_msg = "Error: Package not found in slide_scan_v"
+            self.log_err_message_slide_rename("Error: Package not found in slide_scan_v", package_id)
+            return False
 
         missing_slides = self.dlu_management.is_package_missing_slides(package_id)
         if missing_slides is not None and len(missing_slides) > 0:
-            error_msg = "Error: Package is missing slides"
+            self.log_err_message_slide_rename( "Error: Package is missing slides", package_id)
+            return False
+
         slides_in_error = self.dlu_management.is_slides_in_error(package_id)
         if slides_in_error is not None and len(slides_in_error) > 0:
-            error_msg = "Error: Package has some slides in error"
+            self.log_err_message_slide_rename("Error: Package has some slides in error", package_id)
+            return False
+
         unapproved_files = self.dlu_management.find_not_approved_filenames(package_id)
         if unapproved_files is not None and len(unapproved_files) > 0:
-            error_msg = "Error: Package has unapproved filenames"
+            self.log_err_message_slide_rename("Error: Package has unapproved filenames", package_id)
+            return False
 
-        directory_info = DirectoryInfo(globus_data_directory)
+        directory_info = DirectoryInfo(globus_data_directory, calculate_checksums=False)
         if not self.is_directory_valid(directory_info, package_id):
             # This method logs errors in it, so no need to continue, or capture error message
             return False
 
         if directory_info.file_count == 0 or directory_info.file_count != len(slide_scan_info):
-            error_msg = "Error: Globus file count does not match expectation"
+            self.log_err_message_slide_rename("Error: Globus file count does not match expectation", package_id)
+            return False
 
         # No need to calc checksums here, we just need the list of files
         file_list = self.dlu_file_handler.match_files(package_id, calculate_checksums=False)
@@ -157,15 +169,33 @@ class DLUWatcher:
             self.dlu_management.update_dlu_package(package_id, {"globus_dlu_status": error_msg})
             return False
 
-        self.dlu_file_handler.rename_files(file_list, slide_name_map,package_id)
+        copied_files = self.dlu_file_handler.rename_and_move_files(file_list, slide_name_map, package_id)
+        if len(copied_files) == 0:
+            return False
+
+        self.dlu_file_handler.chown_dir(package_id, copied_files, int(os.environ['dlu_user']))
+        file_info = self.dlu_management.insert_dlu_files(package_id=package_id, file_list=copied_files)
+        self.dlu_management.update_dlu_package(package_id, {"globus_dlu_status": "success"})
+        self.dlu_management.update_dlu_package(package_id, {"ready_to_move_from_globus": "done"})
+        self.dlu_mongo.update_package_files(package_id, file_info)
+
+        self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
+        self.dlu_state.clear_cache()
+
         return True
 
+    def log_err_message_slide_rename(self, error_msg, package_id):
+        logger.error(error_msg + " for package: " + package_id)
+        self.dlu_management.update_dlu_package(package_id, {"globus_dlu_status": error_msg})
+
     def is_directory_valid(self, directory_info, package_id):
+        logger.info("checking if directory is valid")
         if directory_info.file_count == 0 and directory_info.subdir_count == 0:
             error_msg = "Error: package " + package_id + " has no files or top level subdirectory"
             logger.info(error_msg + " Skipping.")
             self.dlu_management.update_dlu_package(package_id, {"globus_dlu_status": error_msg})
             return False
+        return True
 
 
 if __name__ == "__main__":

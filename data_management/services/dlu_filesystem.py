@@ -8,6 +8,7 @@ import uuid
 from zarr_checksum import compute_zarr_checksum
 from zarr_checksum.generators import yield_files_local
 from mmap import mmap, ACCESS_READ
+import subprocess
 
 logger = logging.getLogger("DLUFilesystem")
 logger.setLevel(logging.INFO)
@@ -114,11 +115,26 @@ class DLUFileHandler:
                 if os.stat(subdir_path).st_uid != user_id or os.stat(subdir_path).st_gid != int(os.environ['dlu_group']):
                     os.chown(subdir_path, user_id, int(os.environ['dlu_group']))
 
-    def rename_files(self, file_list: list[DLUFile], slide_name_map, package_id ):
+    def rename_and_move_files(self, file_list: list[DLUFile], slide_name_map, package_id ):
+        dluFiles = []
+        dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
+        if os.path.exists(dest_package_directory):
+            shutil.rmtree(dest_package_directory)
+        if not os.path.exists(dest_package_directory):
+            logger.info("Creating directory " + dest_package_directory)
+            os.makedirs(dest_package_directory, exist_ok=True)
+
         source_package_directory = self.globus_data_directory + '/' + self.globus_dir_prefix + package_id
         for file in file_list:
-            os.rename(os.path.join(source_package_directory, file.name),
-                      os.path.join(source_package_directory, slide_name_map[file.name]))
+            dest_file = os.path.join(dest_package_directory, slide_name_map[file.name])
+            logger.info("Copying file " + os.path.join(source_package_directory, file.name) + " to "
+                        + os.path.join(dest_package_directory, slide_name_map[file.name]))
+            shutil.copy(os.path.join(source_package_directory, file.name),
+                        dest_file)
+            file = DLUFile(name=slide_name_map[file.name], path=dest_package_directory,
+                           checksum=calculate_checksum(dest_file), size=os.path.getsize(dest_file))
+            dluFiles.append(file)
+        return dluFiles
 
     def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
