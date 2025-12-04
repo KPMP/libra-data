@@ -101,15 +101,10 @@ class DluManagement:
             values = query_info["values"][0:] + (package_id,)
             query = "UPDATE data_manager_data_v SET " + query_info["set_clause"] + " WHERE dlu_package_id = %s"
             self.db.insert_data(query, values)
-            
-    def get_missing_slides(self, redcap_id: str):
-        return self.db.get_data(
-            "select * from missing_slides_v where spectrack_redcap_record_id = %", 
-            redcap_id,),
         
     def update_missing_slides(self, redcap_id: str):
         return self.db.get_data(
-            "update slide_scan_curation set missing_slides = 1 where redcap_id = %s", redcap_id,
+            "update slide_scan_curation set missing_slides = 1 where redcap_id = %s", (redcap_id,)
         ),
 
     def insert_dlu_file(self, values):
@@ -230,7 +225,7 @@ class DluManagement:
     
     def get_new_slide_manifest_import_rows(self):
         return self.db.get_data("SELECT * FROM slide_manifest_import WHERE image_id NOT IN "
-                                "(SELECT image_id FROM slide_scan_curation where missing_slides = 0)")
+                                "(SELECT image_id FROM slide_scan_curation)")
 
     def get_spectrack_redcap_record_id(self, kit_id):
         result = self.db.get_data("SELECT spectrack_redcap_record_id FROM spectrack_specimen "
@@ -239,6 +234,22 @@ class DluManagement:
             return result[0]["spectrack_redcap_record_id"]
         else:
             return None
+        
+    def get_redcap_ids_with_null_package_id(self):
+        return self.db.get_data(
+            "select unique redcap_id from slide_scan_curation where dlu_package_id is null and error_message is null and redcap_id is not null", 
+            (None),
+        )
+        
+    def get_package_ids_for_redcap_id(self, redcap_id):
+        return self.db.get_data(
+            "select dlu_package_id from dlu_package_inventory where dlu_subject_id = %s and globus_dlu_status IS NULL", (redcap_id,)
+        )
+        
+    def update_package_ids_in_slide_scan_curation(self, redcap_id, package_id):
+        return self.db.insert_data(
+            "update slide_scan_curation set dlu_package_id = %s where redcap_id = %s and dlu_package_id is null and error_message is null",
+            (package_id, redcap_id,))
 
     def insert_into_slide_scan_curation(self, values):
         query = "INSERT INTO slide_scan_curation (image_id, kit_id, redcap_id, new_file_name, source_file_name, " \
@@ -267,6 +278,14 @@ class DluManagement:
         return self.db.get_data("SELECT * FROM slide_scan_v WHERE dlu_package_id = %s and missing_slides = 1",
                          (package_id,))
 
+    def slides_marked_missing_by_redcap_id(self, redcap_id: str):
+        return self.db.get_data("SELECT * FROM slide_scan_v WHERE redcap_id = %s AND missing_slides = 1",
+                         (redcap_id,))
+
+    def get_missing_slides_from_view(self, redcap_id: str):
+        return self.db.get_data("select * from missing_slides_v where spectrack_redcap_record_id = %s",
+                                (redcap_id,))
+
     def is_slides_in_error(self, package_id):
         return self.db.get_data("SELECT * FROM slide_scan_curation WHERE dlu_package_id = %s and error_message IS NOT NULL",
                          (package_id,))
@@ -275,6 +294,9 @@ class DluManagement:
         return self.db.get_data("SELECT * FROM slide_scan_curation WHERE approve_file_name = 'yes' AND dlu_package_id = %s",
                          (package_id,))
 
+    def update_missing_slide_flag(self, image_id):
+        return self.db.insert_data("UPDATE slide_scan_curation SET missing_slides = 0 WHERE image_id = %s",
+                                   (image_id,))
 
 if __name__ == "__main__":
     dlu_management = DluManagement()

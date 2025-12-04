@@ -118,6 +118,9 @@ class DLUWatcher:
                 self.dlu_state.set_package_state(package_id, PackageState.UPLOAD_SUCCEEDED)
                 self.dlu_state.clear_cache()
 
+    def fill_in_null_package_ids(self):
+        self.slide_management.fill_in_package_ids()
+
     def do_wsi_file_renames(self, globus_data_directory: str, package_id: str):
         logger.info("starting rename process")
         error_msg = ""
@@ -201,4 +204,5 @@ if __name__ == "__main__":
     while True:
         dlu_watcher.watch_for_packages()
         dlu_watcher.watch_for_side_manifest_records()
-        time.sleep(60)
+        dlu_watcher.fill_in_null_package_ids()
+        time.sleep(60) 

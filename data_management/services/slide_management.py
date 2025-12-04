@@ -74,12 +74,18 @@ class SlideManagement:
 
     def process_slide_manifest_imports(self):
         new_records = self.db.get_new_slide_manifest_import_rows()
+        redcap_ids_processed = []
         for record in new_records:
             record_in_error = False
             error_message = ""
             kit_id = record["outside_acc"]
             image_id = record["image_id"]
             redcap_id = self.db.get_spectrack_redcap_record_id(kit_id)
+            if redcap_id is None:
+                error_message = "No redcap_id found for kit_id " + kit_id + "; "
+                logger.error(error_message)
+                continue
+
             if record["accession"] is not None:
                 new_file_name = self.determine_new_slide_name(sample_id=record["accession"], kit_id=kit_id,
                                                               stain_info=record["stain"], block_id=record["block_id"])
@@ -99,25 +105,32 @@ class SlideManagement:
                 source_file_name = file_location.name
                 source_folder_name = file_location.parent.name
                 
-            check_missing_slides = self.db.get_missing_slides(redcap_id)
-            if len(check_missing_slides) >= 1:
+            slide_scan = SlideScanModel(image_id=image_id, redcap_id=redcap_id, kit_id=kit_id,
+                                    new_file_name=new_file_name, source_file_name=source_file_name,
+                                    source_folder_name=source_folder_name)
+            self.db.insert_into_slide_scan_curation(slide_scan.get_dmd_tuple())
 
-                slide_scan = SlideScanModel(image_id=image_id, redcap_id=redcap_id, kit_id=kit_id,
-                                        new_file_name=new_file_name, source_file_name=source_file_name,
-                                        source_folder_name=source_folder_name)
-
-                self.db.insert_into_slide_scan_curation(slide_scan.get_dmd_tuple())
-            else:
-                
-                error_message += "There are missing slides for participant " + redcap_id + ";"
-                logger.info(error_message)
+            check_missing_slides = self.db.get_missing_slides_from_view(redcap_id)
+            redcap_ids_processed.append(redcap_id)
+            if all(check_missing_slides):
                 self.db.update_missing_slides(redcap_id)
-                
-                # Can't use record_in_error here because we can't set an error message for an image_id that doens't exist
-                self.db.set_error_message_slide_scan_curation_redcap_id(error=error_message, redcap_id=redcap_id)
-                
+
             if record_in_error:
                 self.db.set_error_message_slide_scan_curation(image_id=image_id, error=error_message)
+        logger.info("Processed " + str(len(new_records)) + " new slide_manifest_import records.")
+
+        for redcap_id in redcap_ids_processed:
+            self.update_missing_slides(redcap_id)
+
+    def update_missing_slides(self, redcap_id: str):
+        # This MAY seem redundant, however this will ensure that we unmark any missing slides records that just got
+        # the missing one added
+        missing_slides = self.db.get_missing_slides_from_view(redcap_id)
+        if not missing_slides or len(missing_slides) ==0 :
+            slides_marked_missing = self.db.slides_marked_missing_by_redcap_id(redcap_id)
+            if slides_marked_missing and len(slides_marked_missing) > 0:
+                for slide in slides_marked_missing:
+                    self.db.update_missing_slide_flag(slide['image_id'])
 
     def determine_new_slide_name(self, sample_id: str, kit_id: str, stain_info: str, block_id: str):
         slides_for_kit = self.db.get_slide_manifest_import_by_kit(kit_id, stain_info)
@@ -133,3 +146,18 @@ class SlideManagement:
             return None
         else:
             return sample_id + "_" + stain_type + "_" + str(numerator) + "of" + str(denominator) + ".svs"
+    
+    def fill_in_package_ids(self):
+        redcap_id_list = self.db.get_redcap_ids_with_null_package_id()
+        if len(redcap_id_list) != 0:
+            for row in redcap_id_list:
+                redcap_id = row['redcap_id']
+                package_id_list = self.db.get_package_ids_for_redcap_id(redcap_id)
+                if None not in package_id_list and len(package_id_list) == 1:
+                    package_id = package_id_list[0]['dlu_package_id']
+                    self.db.update_package_ids_in_slide_scan_curation(redcap_id=redcap_id, package_id=package_id)
+                    logger.info("Updated package id " + package_id + " for redcap id " + redcap_id)
+                elif len(package_id_list) > 1:
+                    error_message = "Multiple dlu_package_ids found for redcap_id " + redcap_id + ", unable to fill in package id."
+                    logger.info(error_message)
+                    self.db.set_error_message_slide_scan_curation_redcap_id(error=error_message, redcap_id=redcap_id)
