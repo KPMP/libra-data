@@ -32,7 +32,7 @@ class Tableau:
         return records_modified
 
     def load_biopsy_tracking_long(self):
-        self.truncate_biopsy_tracking()
+        self.truncate_biopsy_tracking_long()
         bt_results = self.dlu_management.get_biopsy_tracking_long()
         query = "INSERT INTO biopsy_tracking_long(redcap_id, specimen_id, dlu_packageType, status) VALUES(%s, %s, %s, %s)"
         records_modified = 0
