@@ -191,6 +191,12 @@ class DluManagement:
         )
         return result
 
+    def get_biopsy_tracking_long(self):
+        result = self.db.get_data(
+            "select * from biopsy_tracking_long_v"
+        )
+        return result
+
     def get_data_manager_data(self):
         result = self.db.get_data(
             """
