@@ -15,6 +15,12 @@ class Tableau:
         )
         return result
 
+    def truncate_biopsy_tracking_long(self):
+        result = self.db_tableau.get_data(
+            "truncate table biopsy_tracking_long"
+        )
+        return result
+
     def truncate_data_manager_data(self):
         result = self.db_tableau.get_data(
             "truncate table data_manager_data"
