@@ -40,7 +40,7 @@ class Tableau:
     def load_biopsy_tracking_long(self):
         self.truncate_biopsy_tracking_long()
         bt_results = self.dlu_management.get_biopsy_tracking_long()
-        query = "INSERT INTO biopsy_tracking_long(redcap_id, specimen_id, dlu_packageType, status) VALUES(%s, %s, %s, %s)"
+        query = "INSERT INTO biopsy_tracking_long(redcap_id, specimen_id, dlu_tis, dlu_packageType, status) VALUES(%s, %s, %s, %s)"
         records_modified = 0
         for result in bt_results:
             self.db_tableau.insert_data(query, tuple(result.values()))
