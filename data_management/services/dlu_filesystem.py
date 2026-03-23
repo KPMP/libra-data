@@ -15,15 +15,19 @@ logger.setLevel(logging.INFO)
 
 
 def calculate_checksum(file_path: str):
-
     if os.path.isdir(file_path):
         return "0"
+
     if os.path.getsize(file_path) == 0:
-        # This is apparently the md5 returned for an empty file
         return 'd41d8cd98f00b204e9800998ecf8427e'
-    elif ".zarr" not in file_path:
-        with open(file_path) as f, mmap(f.fileno(), 0, access=ACCESS_READ) as f:
-            return md5(f).hexdigest()
+
+    if ".zarr" not in file_path:
+        hash_md5 = hashlib.md5()
+        with open(file_path, "rb") as f:
+            # Read in 1MB chunks to keep RAM usage low
+            for chunk in iter(lambda: f.read(1024 * 1024), b""):
+                hash_md5.update(chunk)
+        return hash_md5.hexdigest()
     else:
         return compute_zarr_checksum(yield_files_local(file_path)).md5
 
