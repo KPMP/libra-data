@@ -77,6 +77,11 @@ class DluManagement:
         return self.db.get_data(
             "SELECT * FROM data_management.redcap_participant WHERE redcap_id = %s",(redcap_id,),
         )
+        
+    def set_dlu_package_error(self, package_id: str):
+        return self.db.insert_data(
+            "UPDATE dlu_package_inventory SET dlu_error = 1 WHERE dlu_package_id = %s", (package_id,)
+        )
 
 
     def insert_dlu_package(self, dpi_values: tuple, dmd_values: tuple):
@@ -212,7 +217,7 @@ class DluManagement:
         return result
 
     def get_package(self, package_id: str) -> dict:
-        result = self.db.get_data("SELECT * dlu_package_inventory WHERE dlu_package_id = %s", (package_id,))
+        result = self.db.get_data("SELECT * FROM dlu_package_inventory WHERE dlu_package_id = %s", (package_id,))
         if result:
             return result[0]
         else:

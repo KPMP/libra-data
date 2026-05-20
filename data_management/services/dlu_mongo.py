@@ -25,6 +25,7 @@ class DLUMongo:
 
     def __init__(self, mongo_connection: MongoConnection):
         self.package_collection = mongo_connection.packages.with_options(codec_options=CodecOptions(tz_aware=True))
+        self.state_collection = mongo_connection.state.with_options(codec_options=CodecOptions(tz_aware=True))
 
     def get_modification_info(self, file_info: dict):
         modifications = []
@@ -63,6 +64,9 @@ class DLUMongo:
 
         result = self.package_collection.update_one({"_id": package_id}, {"$set": {"files": mongo_files, "modifications": final_modifications}})
         return result.modified_count
+    
+    def find_by_upload_failed(self):
+        return self.state_collection.find({"state": "UPLOAD_FAILED"})
 
     def find_by_package_type_and_redcap_id(self, package_type: str, subject_id: str):
         return self.package_collection.find_one({"subjectId": subject_id, "packageType": package_type})
