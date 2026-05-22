@@ -102,7 +102,7 @@ def recall_dlu_package(package_id):
         dlu_files.append(file)
 
     dlu_file_handler.copy_files(package_id, dlu_files)
-    dlu_file_handler.chown_dir(package_id, file_list, 99413947)
+    dlu_file_handler.chown_dir(package_id, file_list, 29164)
     dlu_management.update_dlu_package(package_id, { "globus_dlu_status": "recalled" })
     dlu_management.update_dlu_package(package_id, { "ready_to_move_from_globus": None })
 
