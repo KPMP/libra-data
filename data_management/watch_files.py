@@ -196,7 +196,20 @@ class DLUWatcher:
             self.dlu_management.update_dlu_package(package_id, {"globus_dlu_status": error_msg})
             return False
         return True
-
+    
+    def mark_packages_with_error(self):
+        failed_uploads = self.dlu_mongo.find_by_upload_failed()
+        for failed_upload in failed_uploads:
+            package_id = failed_upload["packageId"]
+            package = self.dlu_management.get_package(package_id)
+            if package is not None:
+                if package['dlu_error'] == 1:
+                    continue
+                else:
+                    self.dlu_management.set_dlu_package_error(failed_upload["packageId"])
+                    logger.info("Marked package " + failed_upload["packageId"] + " as error due to UPLOAD_FAILED in MongoDB")
+            
+        
 
 if __name__ == "__main__":
     dlu_watcher = DLUWatcher()
@@ -205,4 +218,5 @@ if __name__ == "__main__":
         dlu_watcher.watch_for_packages()
         dlu_watcher.watch_for_side_manifest_records()
         dlu_watcher.fill_in_null_package_ids()
+        dlu_watcher.mark_packages_with_error()
         time.sleep(60) 
