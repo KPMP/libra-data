@@ -97,6 +97,7 @@ class DLUWatcher:
                             f"Available: {self.format_size(available_space)}. Skipping.")
                 logger.warning(error_msg)
                 self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": f"Error: Insufficient disk space for package {package_id}" })
+                self.dlu_management.set_dlu_package_error(package_id)
                 return False
             
             logger.info(f"Package {package_id}: Space check passed. "
@@ -108,6 +109,7 @@ class DLUWatcher:
             error_msg = f"Error: Failed to check disk space for package {package_id}: {str(e)}"
             logger.error(error_msg)
             self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
+            self.dlu_management.set_dlu_package_error(package_id)
             return False
         
     def get_directory_size(self, directory):
