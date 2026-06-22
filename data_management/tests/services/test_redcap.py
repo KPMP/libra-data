@@ -22,7 +22,7 @@ class TestRedcap(unittest.TestCase):
                 {"field_name": "exp_race", "field_value": "race", "record_id": "123"},
                 {"field_name": "exp_alb_cat_most_recent", "field_value": "a1b recent", "record_id": "123"},
                 {"field_name": "mh_ht_yn", "field_value": "mh_ht y", "record_id": "123"},
-                {"field_name": "np_gender", "field_value": "Male", "record_id": "123"},
+                {"field_name": "np_sex", "field_value": "Male", "record_id": "123"},
                 {"field_name": "mh_diabetes_yn", "field_value": "diabetes y", "record_id": "123"},
                 {"field_name": "exp_has_med_raas", "field_value": "med_raas y", "record_id": "123"},
                 {"field_name": "exp_a1c_cat_most_recent", "field_value": "a1c recent", "record_id": "123"},
@@ -52,7 +52,7 @@ class TestRedcap(unittest.TestCase):
           'redcap_mh_ht_yn': 'mh_ht y',
           'redcap_protocol': 'KPMP_MAIN',
           'redcap_sample_type': 'xx',
-          'redcap_np_gender': 'Male',
+          'redcap_np_sex': 'Male',
           'redcap_tissue_source': 'KPMP Recruitment Site',
           'redcap_enrollment_category': 'disease'}], result)
 
@@ -83,7 +83,7 @@ class TestRedcap(unittest.TestCase):
           'redcap_mh_ht_yn': '',
           'redcap_protocol': 'Side hustle',
           'redcap_sample_type': 'xx',
-          'redcap_np_gender': '',
+          'redcap_np_sex': '',
           'redcap_tissue_source': 'KPMP Recruitment Site',
           'redcap_enrollment_category': ''}], result)
 
@@ -115,7 +115,7 @@ class TestRedcap(unittest.TestCase):
           'redcap_mh_ht_yn': '',
           'redcap_protocol': 'KPMP_HRT',
           'redcap_sample_type': 'yy',
-          'redcap_np_gender': '',
+          'redcap_np_sex': '',
           'redcap_tissue_source': 'KPMP Recruitment Site',
           'redcap_enrollment_category': 'Healthy Reference'}], result)
 
