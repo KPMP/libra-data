@@ -86,7 +86,7 @@ class MYSQLConnection:
             self.database.get_warnings = True
             return self.database
         except Exception as error:
-            logger.error("Can't connect to MySQL: ", exec_info=error)
+            logger.error("Can't connect to MySQL: %s", error, exc_info=True)
             os.sys.exit()
 
     def get_tableau_db_connection(self):
@@ -102,7 +102,7 @@ class MYSQLConnection:
             self.database.get_warnings = True
             return self.database
         except Exception as error:
-            logger.error("Can't connect to MySQL: ", exc_info=error)
+            logger.error("Can't connect to MySQL: %s", error, exc_info=True)
             os.sys.exit()
 
     def insert_data(self, sql, data):
