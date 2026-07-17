@@ -135,68 +135,300 @@ class DLUFileHandler:
                            checksum=calculate_checksum(dest_file), size=os.path.getsize(dest_file))
             dluFiles.append(file)
         return dluFiles
+    
+    def copy_directory_contents(src_dir: str, dst_dir: str) -> int:
+        if not os.path.isdir(src_dir):
+            raise FileNotFoundError(f"Source directory does not exist: {src_dir}")
 
-    def copy_files(self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
+        logger.info("Copying contents of %s into %s", src_dir, dst_dir)
+
+        os.makedirs(dst_dir, exist_ok=True)
+
         files_copied = 0
-        source_wd = os.getcwd()
-        dest_package_directory = os.path.join(self.dlu_data_directory, self.dlu_package_dir_prefix + package_id)
-        if os.path.exists(dest_package_directory):
-            shutil.rmtree(dest_package_directory)
-        for file in file_list:
 
-            source_package_directory = self.globus_data_directory + '/' + self.globus_dir_prefix
-            # I.e. isn't a bulk upload that doesn't already have a package ID.
-            logger.info(source_package_directory)
-            if not no_src_package:
-                source_package_directory = source_package_directory + package_id
-            if file.path and os.path.isdir(file.path):
-                source_package_directory = os.path.join(source_package_directory, file.path)
-            if preserve_path:
-                dest_package_directory = os.path.join(dest_package_directory,
-                                                      file.get_short_path())
+        for root, dirnames, filenames in os.walk(src_dir):
+            relative_root = os.path.relpath(root, src_dir)
 
-            subdirs = [os.path.join(source_package_directory, o)
-            for o in os.listdir(source_package_directory)
-              if os.path.isdir(os.path.join(source_package_directory, o))]
-            dir = "".join(subdirs)
-            if len(os.listdir(source_package_directory)) == 1 and os.path.isdir(source_package_directory) and os.path.isdir(dir):
-                os.chdir(dir)
-                allfiles = os.listdir(dir)
-                for f in allfiles:
-                    src_path = os.path.join(dir, f)
-                    dst_path = os.path.join(dest_package_directory, f)
-                    if not os.path.isdir(dest_package_directory):
-                        os.mkdir(dest_package_directory)
-                    if os.path.isfile(f):
-                        logger.info("Copying file " + f + " to " + dst_path)
-                        shutil.copy(src_path, dst_path)
-                        files_copied += 1
-                    else:
-                        logger.info("Copying directory " + src_path)
-                        files_copied += 1
-                        shutil.copytree(src_path, dst_path)
-                os.chdir(source_wd)
-            
-            if not os.path.exists(dest_package_directory):
-                logger.info("Creating directory " + dest_package_directory)
-                os.makedirs(dest_package_directory, exist_ok=True)
-            source_file = os.path.join(source_package_directory, file.get_short_filename())
-            dest_file = os.path.join(dest_package_directory, file.get_short_filename())
-            
-            if not os.path.exists(dest_file):
-                if os.path.isdir(source_file):
-                    logger.info("Copying directory to " + dest_file)
-                    shutil.copytree(source_file, dest_file)
-                elif os.path.isfile(source_file):
-                    logger.info("Copying file to " + dest_file)
-                    shutil.copy(source_file, dest_file)
-                else:
-                    source_file = os.path.join(source_package_directory, file.path)
-                    logger.info("Copying file to " + dest_file)
-                    shutil.copy(source_file, dest_file)
-                files_copied = files_copied + 1
+            if relative_root == ".":
+                target_root = dst_dir
             else:
-                logger.warning(dest_file + " already exists. Skipping.")
+                target_root = os.path.join(dst_dir, relative_root)
+
+            os.makedirs(target_root, exist_ok=True)
+
+            # Create directories even if they are empty.
+            for dirname in dirnames:
+                target_dir = os.path.join(target_root, dirname)
+                os.makedirs(target_dir, exist_ok=True)
+
+            for filename in filenames:
+                src_file = os.path.join(root, filename)
+                dst_file = os.path.join(target_root, filename)
+
+                if os.path.exists(dst_file):
+                    logger.warning("%s already exists. Skipping.", dst_file)
+                    continue
+
+                logger.info("Copying file %s to %s", src_file, dst_file)
+                shutil.copy2(src_file, dst_file)
+                files_copied += 1
+
+        return files_copied
+    
+    def copy_files(self,package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
+        files_copied = 0
+
+        base_dest_package_directory = os.path.join(
+            self.dlu_data_directory,
+            self.dlu_package_dir_prefix + package_id,
+        )
+
+        if os.path.exists(base_dest_package_directory):
+            logger.info(
+                "Removing existing destination directory %s",
+                base_dest_package_directory,
+            )
+            shutil.rmtree(base_dest_package_directory)
+
+        # Used to prevent copying the same wrapper directory repeatedly if file_list has multiple files from the same package.
+        copied_wrapper_directories = set()
+
+        def count_files(path: str) -> int:
+            """
+            Count regular files under path.
+            If path is a file, returns 1.
+            If path is a directory, recursively counts files.
+            """
+            if os.path.isfile(path):
+                return 1
+
+            total = 0
+
+            for _, _, filenames in os.walk(path):
+                total += len(filenames)
+
+            return total
+
+        def copy_path(src_path: str, dst_path: str) -> int:
+            """
+            Copy a file or directory from src_path to dst_path.
+
+            Returns the number of files copied.
+            """
+
+            logger.info("Preparing to copy from %s to %s", src_path, dst_path)
+
+            if not os.path.exists(src_path):
+                raise FileNotFoundError(f"Source path does not exist: {src_path}")
+
+            dst_parent = os.path.dirname(dst_path)
+
+            if dst_parent:
+                os.makedirs(dst_parent, exist_ok=True)
+
+            if os.path.exists(dst_path):
+                logger.warning("%s already exists. Skipping.", dst_path)
+                return 0
+
+            try:
+                if os.path.isdir(src_path):
+                    logger.info("Copying directory %s to %s", src_path, dst_path)
+                    shutil.copytree(src_path, dst_path)
+                    return count_files(src_path)
+
+                if os.path.isfile(src_path):
+                    logger.info("Copying file %s to %s", src_path, dst_path)
+                    shutil.copy2(src_path, dst_path)
+                    return 1
+
+                raise FileNotFoundError(
+                    f"Source path exists but is neither a regular file nor directory: "
+                    f"{src_path}"
+                )
+
+            except FileNotFoundError:
+                logger.exception(
+                    "Source disappeared or destination parent was missing during copy."
+                )
+                raise
+
+        def copy_directory_contents(src_dir: str, dst_dir: str) -> int:
+
+            if not os.path.isdir(src_dir):
+                raise FileNotFoundError(f"Source directory does not exist: {src_dir}")
+
+            logger.info("Copying contents of %s into %s", src_dir, dst_dir)
+
+            os.makedirs(dst_dir, exist_ok=True)
+
+            copied_count = 0
+
+            for root, dirnames, filenames in os.walk(src_dir):
+                relative_root = os.path.relpath(root, src_dir)
+
+                if relative_root == ".":
+                    target_root = dst_dir
+                else:
+                    target_root = os.path.join(dst_dir, relative_root)
+
+                os.makedirs(target_root, exist_ok=True)
+
+                # Create directories even if they are empty.
+                for dirname in dirnames:
+                    target_dir = os.path.join(target_root, dirname)
+                    os.makedirs(target_dir, exist_ok=True)
+
+                for filename in filenames:
+                    src_file = os.path.join(root, filename)
+                    dst_file = os.path.join(target_root, filename)
+
+                    if os.path.exists(dst_file):
+                        logger.warning("%s already exists. Skipping.", dst_file)
+                        continue
+
+                    logger.info("Copying file %s to %s", src_file, dst_file)
+                    shutil.copy2(src_file, dst_file)
+                    copied_count += 1
+
+            return copied_count
+
+        for file in file_list:
+            source_package_directory = os.path.join(
+                self.globus_data_directory,
+                self.globus_dir_prefix + ("" if no_src_package else package_id),
+            )
+
+            dest_package_directory = base_dest_package_directory
+
+            if preserve_path:
+                short_path = file.get_short_path()
+
+                if short_path:
+                    dest_package_directory = os.path.join(
+                        dest_package_directory,
+                        short_path,
+                    )
+
+            logger.info("Base source package directory: %s", source_package_directory)
+            logger.info("Destination package directory: %s", dest_package_directory)
+            logger.info("File path: %s", getattr(file, "path", None))
+            logger.info("Short filename: %s", file.get_short_filename())
+
+            if not os.path.isdir(source_package_directory):
+                raise FileNotFoundError(
+                    f"Source package directory does not exist or is not a directory: "
+                    f"{source_package_directory}"
+                )
+
+            os.makedirs(dest_package_directory, exist_ok=True)
+            # Special top-level wrapper directory behavior.
+            # Copy the contents of top_level_dir, but do not copy top_level_dir itself.
+
+            try:
+                top_level_items = os.listdir(source_package_directory)
+            except FileNotFoundError:
+                raise FileNotFoundError(
+                    f"Cannot list source package directory because it does not exist: "
+                    f"{source_package_directory}"
+                )
+
+            if len(top_level_items) == 1:
+                only_item_name = top_level_items[0]
+                only_item_path = os.path.join(source_package_directory, only_item_name)
+
+                if os.path.isdir(only_item_path):
+                    wrapper_key = (
+                        os.path.abspath(only_item_path),
+                        os.path.abspath(dest_package_directory),
+                    )
+
+                    if wrapper_key not in copied_wrapper_directories:
+                        logger.info(
+                            "Source package directory contains a single wrapper directory. "
+                            "Copying contents of %s into %s",
+                            only_item_path,
+                            dest_package_directory,
+                        )
+
+                        files_copied += copy_directory_contents(
+                            src_dir=only_item_path,
+                            dst_dir=dest_package_directory,
+                        )
+
+                        copied_wrapper_directories.add(wrapper_key)
+
+                    else:
+                        logger.info(
+                            "Wrapper directory %s has already been copied to %s. Skipping.",
+                            only_item_path,
+                            dest_package_directory,
+                        )
+
+                    # Since the entire wrapper directory contents were copied,
+                    # do not continue into individual file copy logic for this file.
+                    continue
+
+            source_directory_for_file = source_package_directory
+
+            # If file.path points to a directory under the source package directory,
+            # use that as the source directory for this file.
+            if file.path:
+                candidate_source_directory = os.path.join(
+                    source_package_directory,
+                    file.path,
+                )
+
+                if os.path.isdir(candidate_source_directory):
+                    source_directory_for_file = candidate_source_directory
+
+            short_filename = file.get_short_filename()
+
+            source_file = os.path.join(
+                source_directory_for_file,
+                short_filename,
+            )
+
+            dest_file = os.path.join(
+                dest_package_directory,
+                short_filename,
+            )
+
+            if os.path.exists(source_file):
+                files_copied += copy_path(source_file, dest_file)
+                continue
+
+            # Fallback: if source_file was not found, try file.path directly.
+            fallback_source_file = None
+
+            if file.path:
+                fallback_source_file = os.path.join(
+                    source_package_directory,
+                    file.path,
+                )
+
+                if os.path.exists(fallback_source_file):
+                    fallback_dest_file = os.path.join(
+                        dest_package_directory,
+                        os.path.basename(file.path.rstrip(os.sep)),
+                    )
+
+                    files_copied += copy_path(
+                        fallback_source_file,
+                        fallback_dest_file,
+                    )
+
+                    continue
+
+            raise FileNotFoundError(
+                "Could not find source file or directory. Tried:\n"
+                f"  source_file={source_file}\n"
+                f"  fallback_source_file={fallback_source_file}\n"
+                f"  source_package_directory={source_package_directory}\n"
+                f"  source_directory_for_file={source_directory_for_file}\n"
+                f"  file.path={getattr(file, 'path', None)}\n"
+                f"  short_filename={short_filename}"
+            )
+
         return files_copied
 
     def validate_package_directories(self, package_id: str):
