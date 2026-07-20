@@ -117,8 +117,9 @@ class DLUFileHandler:
                     if os.stat(subdir_path).st_uid != user_id or os.stat(subdir_path).st_gid != int(os.environ['dlu_group']):
                         os.chown(subdir_path, user_id, int(os.environ['dlu_group']))
         except Exception as e:
+            self.dlu_management.set_dlu_package_error(package_id)
             logger.error("Error changing ownership of directory %s: %s", package_path, str(e))
-            
+            raise e
 
     def rename_and_move_files(self, file_list: list[DLUFile], slide_name_map, package_id ):
         dluFiles = []
