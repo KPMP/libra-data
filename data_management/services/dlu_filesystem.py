@@ -160,11 +160,13 @@ class DLUFileHandler:
             return 0
 
         if not os.path.isdir(dest_parent_directory):
+            self.dlu_management.set_dlu_package_error(package_id)
             raise FileNotFoundError(
                 f"Destination parent directory does not exist: {dest_parent_directory}"
             )
 
         if not os.access(dest_parent_directory, os.W_OK | os.X_OK):
+            self.dlu_management.set_dlu_package_error(package_id)
             raise PermissionError(
                 f"Process does not have permission to write to destination parent directory: "
                 f"{dest_parent_directory}"
@@ -173,6 +175,7 @@ class DLUFileHandler:
         if os.path.exists(final_dest_package_directory) and not os.path.isdir(
             final_dest_package_directory
         ):
+            self.dlu_management.set_dlu_package_error(package_id)
             raise NotADirectoryError(
                 f"Destination package path exists but is not a directory: "
                 f"{final_dest_package_directory}"
@@ -210,6 +213,7 @@ class DLUFileHandler:
             logger.info("Preparing to copy from %s to %s", src_path, dst_path)
 
             if not os.path.exists(src_path):
+                self.dlu_management.set_dlu_package_error(package_id)
                 raise FileNotFoundError(f"Source path does not exist: {src_path}")
 
             dst_parent = os.path.dirname(dst_path)
@@ -238,6 +242,7 @@ class DLUFileHandler:
                 )
 
             except FileNotFoundError:
+                self.dlu_management.set_dlu_package_error(package_id)
                 logger.exception(
                     "Source disappeared or destination parent was missing during copy."
                 )
@@ -245,6 +250,7 @@ class DLUFileHandler:
 
         def copy_directory_contents(src_dir: str, dst_dir: str) -> int:
             if not os.path.isdir(src_dir):
+                self.dlu_management.set_dlu_package_error(package_id)
                 raise FileNotFoundError(f"Source directory does not exist: {src_dir}")
 
             logger.info("Copying contents of %s into %s", src_dir, dst_dir)
@@ -320,6 +326,7 @@ class DLUFileHandler:
                 )
 
             except Exception:
+                self.dlu_management.set_dlu_package_error(package_id)
                 logger.exception(
                     "Failed to move temporary package into final destination."
                 )
@@ -385,6 +392,7 @@ class DLUFileHandler:
                 logger.info("Short filename: %s", file.get_short_filename())
 
                 if not os.path.isdir(source_package_directory):
+                    self.dlu_management.set_dlu_package_error(package_id)
                     raise FileNotFoundError(
                         f"Source package directory does not exist or is not a directory: "
                         f"{source_package_directory}"
