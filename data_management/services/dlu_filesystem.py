@@ -132,13 +132,16 @@ class DLUFileHandler:
 
         source_package_directory = self.globus_data_directory + '/' + self.globus_dir_prefix + package_id
         for file in file_list:
-            dest_file = os.path.join(dest_package_directory, slide_name_map[file.name])
-            logger.info("Copying file " + os.path.join(source_package_directory, file.name) + " to "
-                        + os.path.join(dest_package_directory, slide_name_map[file.name]))
-            shutil.copy(os.path.join(source_package_directory, file.name),
-                        dest_file)
-            file = DLUFile(name=slide_name_map[file.name], path=dest_package_directory,
-                           checksum=calculate_checksum(dest_file), size=os.path.getsize(dest_file))
+            dest_file_name = slide_name_map[file.name]
+            renamed_src_path = os.path.join(source_package_directory, dest_file_name)
+            dest_path = os.path.join(dest_package_directory, dest_file_name)
+
+            logger.info("Renaming file " + os.path.join(source_package_directory, file.name) + " to " + renamed_src_path)
+            os.rename(os.path.join(source_package_directory, file.name), renamed_src_path)
+            logger.info("Copying file " + renamed_src_path + " to " + dest_path)
+            shutil.copy(renamed_src_path, dest_path)
+            file = DLUFile(name=dest_file_name, path=dest_package_directory,
+                           checksum=calculate_checksum(dest_path), size=os.path.getsize(dest_path))
             dluFiles.append(file)
         return dluFiles
     
