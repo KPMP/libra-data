@@ -302,7 +302,7 @@ class DluManagement:
                          (package_id,))
 
     def find_not_approved_filenames(self, package_id):
-        return self.db.get_data("SELECT * FROM slide_scan_curation WHERE approve_file_name = 'yes' AND dlu_package_id = %s",
+        return self.db.get_data("SELECT * FROM slide_scan_curation WHERE approve_file_name is NULL AND dlu_package_id = %s",
                          (package_id,))
 
     def update_missing_slide_flag(self, image_id):
