@@ -133,10 +133,19 @@ class DLUFileHandler:
         source_package_directory = self.globus_data_directory + '/' + self.globus_dir_prefix + package_id
         for file in file_list:
             dest_file = os.path.join(dest_package_directory, slide_name_map[file.name])
-            logger.info("Copying file " + os.path.join(source_package_directory, file.name) + " to "
-                        + os.path.join(dest_package_directory, slide_name_map[file.name]))
-            shutil.copy(os.path.join(source_package_directory, file.name),
-                        dest_file)
+            rename_str = os.path.join(source_package_directory, file.name) + " to " + os.path.join(source_package_directory, slide_name_map[file.name])
+            try:
+                logger.info("Renaming file " + rename_str)
+                os.rename(os.path.join(source_package_directory, file.name), os.path.join(source_package_directory, slide_name_map[file.name]))
+            except PermissionError:
+                logger.error("Error: Permission denied while renaming file " + rename_str)
+                continue
+            except Exception as e:
+                logger.error("Something went wrong while renaming file "+ rename_str)
+                logger.error(e)
+                continue
+            logger.info("Copying file to " + os.path.join(dest_package_directory, slide_name_map[file.name]))
+            shutil.copy(os.path.join(source_package_directory, slide_name_map[file.name]), dest_file)
             file = DLUFile(name=slide_name_map[file.name], path=dest_package_directory,
                            checksum=calculate_checksum(dest_file), size=os.path.getsize(dest_file))
             dluFiles.append(file)
