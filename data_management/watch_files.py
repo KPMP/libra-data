@@ -81,6 +81,14 @@ class DLUWatcher:
     def check_disk_space(self, source_dir, target_dir, package_id):
         try:
             source_size = self.get_directory_size(source_dir)
+            logger.info(f"Package {package_id}: Source directory size: {self.format_size(source_size)}")
+            
+            if source_size == 0:
+                error_msg = f"Error: Source directory {source_dir} is empty for package {package_id}. Skipping."
+                logger.warning(error_msg)
+                self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": f"Error: Source directory {source_dir} is empty for package {package_id}" })
+                self.dlu_management.set_dlu_package_error(package_id)
+                return False
             
             target_check_path = target_dir
             if not os.path.exists(target_check_path):
@@ -90,8 +98,8 @@ class DLUWatcher:
             
             # Add 5% buffer
             required_space = int(source_size * 1.05)
-            
-            if available_space < required_space or source_size == 0:
+
+            if available_space < required_space:
                 error_msg = (f"Error: Insufficient disk space for package {package_id}. "
                             f"Required: {self.format_size(required_space)}, "
                             f"Available: {self.format_size(available_space)}. Skipping.")
