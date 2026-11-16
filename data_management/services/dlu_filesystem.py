@@ -10,6 +10,7 @@ from zarr_checksum.generators import yield_files_local
 from mmap import mmap, ACCESS_READ
 import subprocess
 import tempfile
+import stat
 
 logger = logging.getLogger("DLUFilesystem")
 logger.setLevel(logging.INFO)
@@ -150,7 +151,7 @@ class DLUFileHandler:
                            checksum=calculate_checksum(dest_file), size=os.path.getsize(dest_file))
             dluFiles.append(file)
         return dluFiles
-    
+
     def copy_files( self, package_id: str, file_list: list[DLUFile], preserve_path: bool = False, no_src_package: bool = False):
         files_copied = 0
 
@@ -190,6 +191,30 @@ class DLUFileHandler:
                 f"Destination package path exists but is not a directory: "
                 f"{final_dest_package_directory}"
             )
+
+        original_stat = None
+        original_xattrs = {}
+
+        if os.path.isdir(final_dest_package_directory):
+            original_stat = os.stat(final_dest_package_directory)
+
+            if hasattr(os, "listxattr"):
+                try:
+                    for attr_name in os.listxattr(final_dest_package_directory):
+                        try:
+                            original_xattrs[attr_name] = os.getxattr(
+                                final_dest_package_directory, attr_name
+                            )
+                        except OSError:
+                            logger.warning(
+                                "Could not read xattr %s from %s",
+                                attr_name,
+                                final_dest_package_directory,
+                            )
+                except OSError:
+                    logger.warning(
+                        "Could not list xattrs on %s", final_dest_package_directory
+                    )
 
         temp_dest_package_directory = tempfile.mkdtemp(
             prefix=f".{dest_package_basename}.tmp-",
@@ -297,6 +322,64 @@ class DLUFileHandler:
                     copied_count += 1
 
             return copied_count
+
+        def apply_original_metadata():
+            if original_stat is None:
+
+                current_umask = os.umask(0)
+                os.umask(current_umask)
+                new_mode = 0o777 & ~current_umask
+
+                logger.info(
+                    "No existing package directory; setting temp directory mode to %o",
+                    new_mode,
+                )
+                os.chmod(temp_dest_package_directory, new_mode)
+                return
+
+            try:
+                os.chown(
+                    temp_dest_package_directory,
+                    original_stat.st_uid,
+                    original_stat.st_gid,
+                )
+            except PermissionError:
+                logger.warning(
+                    "Could not restore owner on %s (uid=%s). Trying group only.",
+                    temp_dest_package_directory,
+                    original_stat.st_uid,
+                )
+                try:
+                    os.chown(temp_dest_package_directory, -1, original_stat.st_gid)
+                except PermissionError:
+                    logger.warning(
+                        "Could not restore group on %s (gid=%s).",
+                        temp_dest_package_directory,
+                        original_stat.st_gid,
+                    )
+
+            os.chmod(
+                temp_dest_package_directory,
+                stat.S_IMODE(original_stat.st_mode),
+            )
+
+            for attr_name, attr_value in original_xattrs.items():
+                try:
+                    os.setxattr(temp_dest_package_directory, attr_name, attr_value)
+                except OSError:
+                    logger.warning(
+                        "Could not copy xattr %s to %s",
+                        attr_name,
+                        temp_dest_package_directory,
+                    )
+
+            logger.info(
+                "Applied original metadata (mode=%o, uid=%s, gid=%s) to %s",
+                stat.S_IMODE(original_stat.st_mode),
+                original_stat.st_uid,
+                original_stat.st_gid,
+                temp_dest_package_directory,
+            )
 
         def replace_destination_with_temp():
 
@@ -409,13 +492,7 @@ class DLUFileHandler:
                     )
 
                 os.makedirs(dest_package_directory, exist_ok=True)
-                
-                # If source_package_directory contains exactly one item and that
-                # item is a directory, treat it as a top-level wrapper directory.
-                # Important:
-                # Even with preserve_path=True, wrapper contents are copied into
-                # temp_dest_package_directory, not dest_package_directory.
-                
+
                 try:
                     top_level_items = os.listdir(source_package_directory)
                 except FileNotFoundError:
@@ -524,8 +601,7 @@ class DLUFileHandler:
                     f"  short_filename={short_filename}"
                 )
 
-            # The entire temporary package was built successfully.
-            # Only now replace the existing package.
+            apply_original_metadata()
             replace_destination_with_temp()
 
             logger.info(
@@ -543,7 +619,6 @@ class DLUFileHandler:
                 package_id,
             )
 
-            # If failure happens before final replacement, remove temp dir.
             if os.path.exists(temp_dest_package_directory):
                 logger.info(
                     "Removing failed temporary package directory %s",
@@ -555,6 +630,7 @@ class DLUFileHandler:
                     ignore_errors=True,
                 )
             raise
+        
     def validate_package_directories(self, package_id: str):
         source_package_directory = self.globus_data_directory + '/' + self.globus_dir_prefix + package_id
         source_directory_info = DirectoryInfo(source_package_directory, False)

@@ -19,8 +19,7 @@ logger = logging.getLogger("services-dlu_package_watcher")
 logger.setLevel(logging.INFO)
 load_dotenv()
 
-
-class DLUWatcher:   
+class DLUWatcher:
     def __init__ (self, db: DLUPackageInventory = None):
         if db:
             self.db = db
@@ -35,7 +34,7 @@ class DLUWatcher:
         self.slide_management = SlideManagement(self.dlu_management)
         self.globus_data_directory = '/globus'
         self.dlu_data_directory = '/data'
-    
+
     def watch_for_packages(self):
         packages = self.db.get_dlu_package("yes")
         if len(packages) == 0:
@@ -44,19 +43,19 @@ class DLUWatcher:
             )
         else:
             self.update_packages_for_globus(packages)
-            self.move_packages_to_DLU(packages)
-    
+            self.copy_packages_to_DLU(packages)
+            
     def watch_for_side_manifest_records(self):
         equal_num_rows = self.dlu_management.get_equal_num_rows()
         if equal_num_rows == 1:
             logger.info("No new records found in slide_manifest_import")
         else:
             self.update_slide_scan_curation()
-    
+            
     def update_slide_scan_curation(self):
         logger.info("Importing new row(s) into slide_scan_curation")
         self.slide_management.process_slide_manifest_imports()
-            
+        
     def update_packages_for_globus(self, packages):
         for index, package_result in enumerate(packages):
             logger.info("Setting file status to 'waiting' on package " + package_result['dlu_package_id'])
@@ -76,26 +75,26 @@ class DLUWatcher:
                 "No records were found with status 'waiting'"
             )
         else:
-            self.move_packages_to_DLU(packages_in_waiting)
+            self.copy_packages_to_DLU(packages_in_waiting)
             
     def check_disk_space(self, source_dir, target_dir, package_id):
         try:
             source_size = self.get_directory_size(source_dir)
             logger.info(f"Package {package_id}: Source directory size: {self.format_size(source_size)}")
-            
+
             if source_size == 0:
                 error_msg = f"Error: Source directory {source_dir} is empty for package {package_id}. Skipping."
                 logger.warning(error_msg)
                 self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": f"Error: Source directory {source_dir} is empty for package {package_id}" })
                 self.dlu_management.set_dlu_package_error(package_id)
                 return False
-            
+
             target_check_path = target_dir
             if not os.path.exists(target_check_path):
                 target_check_path = os.path.dirname(target_check_path)
-            
+
             available_space = shutil.disk_usage(target_check_path).free
-            
+
             # Add 5% buffer
             required_space = int(source_size * 1.05)
 
@@ -107,34 +106,38 @@ class DLUWatcher:
                 self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": f"Error: Insufficient disk space for package {package_id}" })
                 self.dlu_management.set_dlu_package_error(package_id)
                 return False
-            
+
             logger.info(f"Package {package_id}: Space check passed. "
                     f"Source size: {self.format_size(source_size)}, "
                     f"Available: {self.format_size(available_space)}")
             return True
-        
+
         except Exception as e:
             error_msg = f"Error: Failed to check disk space for package {package_id}: {str(e)}"
             logger.error(error_msg)
             self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
             self.dlu_management.set_dlu_package_error(package_id)
             return False
-        
+
     def get_directory_size(self, directory):
         total_size = 0
-        try:
-            for dirpath, dirnames, filenames in os.walk(directory):
-                for filename in filenames:
-                    filepath = os.path.join(dirpath, filename)
-                    try:
-                        total_size += os.path.getsize(filepath)
-                    except (OSError, IOError):
-                        logger.warning(f"Could not access file: {filepath}")
-                        continue
-            return total_size
-        except Exception as e:
-            logger.error(f"Error calculating directory size for {directory}: {str(e)}")
-            raise
+        logger.info(f"Exists: {os.path.exists(directory)}, isdir: {os.path.isdir(directory)}")
+        logger.info(f"Absolute path: {os.path.abspath(directory)}")
+
+        def on_error(err):
+            logger.error(f"os.walk error: {err}")
+
+        file_count = 0
+        for dirpath, dirnames, filenames in os.walk(directory, onerror=on_error):
+            for filename in filenames:
+                file_count += 1
+                filepath = os.path.join(dirpath, filename)
+                try:
+                    total_size += os.path.getsize(filepath)
+                except (OSError, IOError) as e:
+                    logger.warning(f"Could not access file: {filepath} ({e})")
+        logger.info(f"Files seen: {file_count}, total_size: {total_size}")
+        return total_size
 
     def format_size(self, size_in_bytes):
         for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
@@ -143,13 +146,13 @@ class DLUWatcher:
             size_in_bytes /= 1024.0
         return f"{size_in_bytes:.2f} PB"
 
-    def move_packages_to_DLU(self, packages):
+    def copy_packages_to_DLU(self, packages):
         file_list = None
 
         for _, package in enumerate(packages):
             skip_copy = False
             package_id = package['dlu_package_id']
-            logger.info("Moving package " + package_id)
+            logger.info("Copying package " + package_id)
 
             self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": "processing" })
             globus_data_directory = '/globus/' + package_id
@@ -160,7 +163,7 @@ class DLUWatcher:
                 logger.info(error_msg + " Skipping.")
                 self.dlu_management.update_dlu_package(package_id, { "globus_dlu_status": error_msg })
                 continue
-            
+
             if not self.check_disk_space(globus_data_directory, target_directory, package_id):
                 continue
 
@@ -271,7 +274,7 @@ class DLUWatcher:
             self.dlu_management.update_dlu_package(package_id, {"globus_dlu_status": error_msg})
             return False
         return True
-    
+
     def mark_packages_with_error(self):
         failed_uploads = self.dlu_mongo.find_by_upload_failed()
         for failed_upload in failed_uploads:
