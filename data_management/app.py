@@ -8,6 +8,7 @@ from services.dlu_state import DLUState, PackageState
 from lib.mongo_connection import MongoConnection
 from services.dlu_utils import dlu_package_dict_to_dpi_tuple, dlu_package_dict_to_dmd_tuple, dlu_file_dict_to_tuple
 import logging
+import os
 
 logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
@@ -82,6 +83,12 @@ def recall_dlu_package(package_id):
         return error_msg
 
     dlu_data_directory = '/data/package_' + package_id
+    globus_dir = "/globus" + package_id
+    if not os.path.isdir(globus_dir):
+        logger.info("Globus directory not found, creating directory" + globus_dir)
+        os.mkdir(globus_dir)
+        os.chown(globus_dir, 29164, int(os.environ['dlu_group']))
+
     directory_info = DirectoryInfo(dlu_data_directory, calculate_checksums = False)
     file_list = None
     if directory_info.file_count == 0 and directory_info.subdir_count == 0:
@@ -100,6 +107,8 @@ def recall_dlu_package(package_id):
     for file in directory_info.file_details:
         file.path = dlu_file_handler.split_path(file.path)['file_path']
         dlu_files.append(file)
+
+
 
     dlu_file_handler.copy_files(package_id, dlu_files)
     dlu_file_handler.chown_dir(package_id, file_list, 29164)
